@@ -20,6 +20,7 @@ import { accessToken } from "../../utilities/session";
 import formatTime from "../../utilities/time";
 import { MessageContext, type NowPlaying as NowPlayingState } from "../../utilities/context";
 import type { Album, Track } from "../../utilities/types";
+import "../../styles/player.css";
 
 export type PlayerHandle = { updateState: () => void };
 

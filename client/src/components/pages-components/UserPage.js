@@ -114,7 +114,7 @@ export default function UserPage({query, setMessage}) {
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
                 <PlayListFunctions type={id === user.id? 'none':'user'} follow={follow} onFollow={followUser} setMessage={setStatusMessage}/>
                 <div className="page-content" style={{marginTop: '40px'}}>
-                    <CollectionRow ref={lastRef} name='Public Playlists' id={null} playlists={playLists}/>
+                    <CollectionRow ref={lastRef} name='Public Playlists' playlists={playLists}/>
                 </div>
             </div>
         </div>

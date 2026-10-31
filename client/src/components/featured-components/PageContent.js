@@ -3,7 +3,6 @@ import { Switch, Route, Redirect } from "react-router-dom";
 
 import HomePage from "../pages-components/HomePage";
 import SearchPage from "../pages-components/SearchPage";
-import GenrePage from "../pages-components/GenrePage";
 import PlayListPage from "../pages-components/PlayListPage";
 import AlbumPage from "../pages-components/AlbumPage";
 import UserPage from "../pages-components/UserPage";
@@ -30,9 +29,6 @@ export default function PageContent({
         </Route>
         <Route path={`/search`}>
           <SearchPage query={query} />
-        </Route>
-        <Route path="/genre">
-          <GenrePage />
         </Route>
         <Route path="/playlist">
           <PlayListPage

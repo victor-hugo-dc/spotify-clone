@@ -33,34 +33,28 @@ export default function ArtistPage() {
 
     const [, locale] = getLocale()
 
-    const [tracks, setTracks] = useState([])
     const [album, setAlbum] = useState([])
     const [single, setSingle] = useState([])
     const [appear, setAppear] = useState([])
     const [compilation, setCompilation] = useState([])
-    const [related, setRelated] = useState([])
     const [follow, setFollow] = useState(false)
     const [uri, setUri] = useState('')
 
     const source = axios.CancelToken.source()
     useEffect(() => {
-        setTracks([])
         setAlbum([])
         setSingle([])
         setAppear([])
         setCompilation([])
-        setRelated([])
         setFollow(false)
         setUri('')
         setLoading(true)
         
         const [artistSource, requestArtist] = makeAxiosRequest(`https://api.spotify.com/v1/artists/${id}`)
-        const [tracksSource, requestTracks] = makeAxiosRequest(`https://api.spotify.com/v1/artists/${id}/top-tracks?country=${locale}`)
         const [albumSource, requestAlbum] = makeAxiosRequest(`https://api.spotify.com/v1/artists/${id}/albums?include_groups=album&country=${locale}`)
         const [singleSource, requestSingle] = makeAxiosRequest(`https://api.spotify.com/v1/artists/${id}/albums?include_groups=single&country=${locale}`)
         const [appearSource, requestAppear] = makeAxiosRequest(`https://api.spotify.com/v1/artists/${id}/albums?include_groups=appears_on&country=${locale}`)
         const [compilationSource, requestCompilation] = makeAxiosRequest(`https://api.spotify.com/v1/artists/${id}/albums?include_groups=compilation&country=${locale}`)
-        const [relatedSource, requestRelated] = makeAxiosRequest(`https://api.spotify.com/v1/artists/${id}/related-artists`)
 
         if (id){
             requestWithToken(`https://api.spotify.com/v1/me/following/contains?type=artist&ids=${id}`, token, source)
@@ -74,31 +68,25 @@ export default function ArtistPage() {
         const makeRequest = async ()=> {
             try{
                 const [artistData, 
-                        tracksData, 
                         albumData, 
                         singleData, 
                         appearData, 
-                        compilationData,
-                        relatedData] = await Promise.all([requestArtist(), requestTracks(), requestAlbum(), requestSingle(), requestAppear(), requestCompilation(), requestRelated()])
+                        compilationData] = await Promise.all([requestArtist(), requestAlbum(), requestSingle(), requestAppear(), requestCompilation()])
                 
                 
                 const {name, followers, primary_color, images, uri} = artistData
                 setbannerInfo(bannerInfo => ({...bannerInfo, name, followers, primary_color, images}))
                 setUri(uri)
 
-                const tracks = tracksData.tracks.length > 5? tracksData.tracks.slice(0,5) : tracksData.tracks
                 const album = albumData.items
                 const single = singleData.items
                 const appear = appearData.items
                 const compilation = compilationData.items
-                const related = relatedData.artists
                 
-                setTracks((old) => [...old, ...tracks])
                 setAlbum((old) => [...old, ...album])
                 setSingle((old) => [...old, ...single])
                 setAppear((old) => [...old, ...appear])
                 setCompilation((old) => [...old, ...compilation])
-                setRelated(old => [...old, ...related])
                 setLoading(false)
             }catch(error){ 
                 console.log(error)
@@ -111,12 +99,10 @@ export default function ArtistPage() {
         }
         return () => {
             artistSource.cancel()
-            tracksSource.cancel()
             albumSource.cancel()
             singleSource.cancel()
             appearSource.cancel()
             compilationSource.cancel()
-            relatedSource.cancel()
             source.cancel()
         }
     // eslint-disable-next-line
@@ -155,32 +141,17 @@ export default function ArtistPage() {
             .catch(error => setMessage(`ERROR: ${error}`))
     }
 
-    const playContextTrack = (trackUri) => {
-        const body = {
-            uris: [trackUri]
-        }
-        putWithToken(`https://api.spotify.com/v1/me/player/play`, token, source, body)
-            .then(response => {
-                if (response.status === 204){
-                    setTimeout(() => setPlay(), 500)
-                }else{
-                    setMessage(`ERROR: Something went wrong! Server response: ${response.status}`)
-                }
-            })
-            .catch(error => setMessage(`ERROR: ${error}`))
-    }
-
     return (
         loading ? 
             <Loading /> 
             : 
-            <div className='listPage' style={{display: tracks.length===0? 'none':'block'}}>
+            <div className='listPage'>
                 <PageBanner pageTitle='artist' bannerInfo={bannerInfo}/>
                 <div className="playListContent">
                     <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
                     <PlayListFunctions type='artist' follow={follow} onFollow={followArtist} setMessage={setMessage} playContext={playContext}/>
                     <div className="page-content">
-                        <AboutMenu id={id} related = {related} tracks={tracks} album={album} single={single} appear={appear} compilation={compilation} playContextTrack={playContextTrack}/>
+                        <AboutMenu album={album} single={single} appear={appear} compilation={compilation}/>
                     </div>
                 </div>
             </div>

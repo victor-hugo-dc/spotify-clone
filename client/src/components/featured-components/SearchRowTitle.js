@@ -8,7 +8,6 @@ export default function SearchRowTitle({title}) {
                         letterSpacing: '-0.04em',
                         fontWeight: '700',
                         color:'white'}}>{title}</h1>
-            {/* {id? <a href={`/genre/${id}`} className='seeAll'>see all</a>:null} */}
         </div>
     )
 }

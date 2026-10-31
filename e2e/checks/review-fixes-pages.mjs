@@ -12,6 +12,10 @@ export const fixtures = {
   "/v1/playlists/plong": { ...playlist, id: "plong", name: "Road Trip Mix", uri: "spotify:playlist:plong", description: long, items: { items: [], next: null } },
 };
 
+// Whether the locator's element has (or soon gets) keyboard focus.
+const focused = async (locator) =>
+  locator.page().waitForFunction((el) => el === document.activeElement, await locator.elementHandle({ timeout: 2000 }), { timeout: 2000 }).then(() => true, () => false);
+
 export const checks = [
   // Until /me answers (after an error it never does) the app can't tell your playlist from one you follow: no heart, which
   // would delete your own, and no owner or library items until it can.
@@ -85,5 +89,29 @@ export const checks = [
       return false;
     });
     if (cut) throw new Error("the playlist's name is cut off");
+  }],
+  // From the keyboard: the arrow keys, Home and End move through a "• • •" menu, the focused item shows the focus ring, and
+  // Escape or choosing an item puts focus back on the button.
+  ["more-menu-keyboard", "/playlist/p1", async (p, t) => {
+    const more = p.getByRole("button", { name: "More options for Mix" });
+    const item = (name) => p.getByRole("menuitem", { name, exact: true });
+    await more.focus();
+    await p.keyboard.press("Enter");
+    for (const [key, name] of [[null, "Edit details"], ["ArrowDown", "Make public"], ["ArrowUp", "Edit details"], ["ArrowUp", "Open in Spotify app"],
+      ["ArrowDown", "Edit details"], ["End", "Open in Spotify app"], ["Home", "Edit details"]]) {
+      if (key) await p.keyboard.press(key);
+      if (!(await focused(item(name)))) throw new Error(`${key ?? "opening the menu"} didn't focus ${name}`);
+    }
+    if ((await item("Edit details").evaluate((el) => getComputedStyle(el).outlineStyle)) === "none") throw new Error("focused item has no focus ring");
+    await t.snap(p, "open-more-menu-keyboard");
+    await p.keyboard.press("Escape");
+    if (await p.getByRole("menu").count()) throw new Error("menu did not close on Escape");
+    if (!(await focused(more))) throw new Error("Escape didn't put focus back on the button");
+    await p.keyboard.press("Enter");
+    if (!(await focused(item("Edit details")))) throw new Error("reopening the menu didn't focus its first item");
+    await p.keyboard.press("ArrowDown");
+    await p.keyboard.press("Enter");
+    await p.getByText("Playlist is now public").waitFor({ timeout: 3000 });
+    if (!(await focused(more))) throw new Error("choosing an item didn't put focus back on the button");
   }],
 ];

@@ -14,10 +14,17 @@ export default function SearchBar() {
     const [text, setText] = useState(q)
     const input = useRef<HTMLInputElement>(null)
 
-    // Follow the URL when it changes while you're not typing (Back, Browse, or leaving the search page).
+    // Follow the URL when it changes while you're not typing (Browse, leaving the search page)...
     useEffect(() => {
         if (document.activeElement !== input.current) setText(q)
     }, [q])
+    // ...and on every move through history (Back, Forward), whatever has focus: the browser's own Back leaves it in the
+    // box, and can come before the search page has rendered, when the router has no change to show.
+    useEffect(() => {
+        const follow = () => setText(window.location.pathname === '/search' ? new URLSearchParams(window.location.search).get('q') ?? '' : '')
+        window.addEventListener('popstate', follow)
+        return () => window.removeEventListener('popstate', follow)
+    }, [])
 
     return (
         <div className='SearchBar' role='search'>

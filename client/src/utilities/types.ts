@@ -37,6 +37,7 @@ export type Playlist = {
   owner: User;
   primary_color?: string | null;
   followers?: { total: number };
+  public?: boolean | null;
 };
 
 export type Paging<T> = { items: T[]; next: string | null; total?: number };

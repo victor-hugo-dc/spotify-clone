@@ -8,6 +8,7 @@ import type { Album, Artist, Paging } from '../../utilities/types'
 
 import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
 import PlayListFunctions from '../featured-components/PlayListFunctions'
+import { shareItems } from '../featured-components/MoreMenu'
 import AboutMenu from '../featured-components/AboutMenu'
 import Loading from '../featured-components/Loading'
 
@@ -82,7 +83,10 @@ export default function ArtistPage() {
                 <PageBanner pageTitle='artist' bannerInfo={bannerInfo}/>
                 <div className="playListContent">
                     <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                    <PlayListFunctions type='artist' follow={follow} onFollow={followArtist} uri={uri}/>
+                    <PlayListFunctions type='artist' follow={follow} onFollow={followArtist} uri={uri} label={bannerInfo.name} menu={[
+                        {label: follow ? 'Unfollow' : 'Follow', onSelect: followArtist},
+                        ...shareItems(uri, 'artist', setMessage),
+                    ]}/>
                     <div className="page-content">
                         <AboutMenu album={album} single={single} appear={appear} compilation={compilation}/>
                     </div>

@@ -4,6 +4,7 @@ import {useParams} from 'react-router'
 import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
 import PageTitle from '../featured-components/PageTitle'
 import PlayListFunctions from '../featured-components/PlayListFunctions'
+import { shareItems } from '../featured-components/MoreMenu'
 import CollectionRow from '../featured-components/CollectionRow'
 import Loading from '../featured-components/Loading'
 
@@ -65,7 +66,7 @@ export default function UserPage() {
             <PageBanner pageTitle='profile' bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                <PlayListFunctions type='none'/>
+                <PlayListFunctions type='none' label={bannerInfo.name} menu={shareItems(`spotify:user:${id}`, 'profile', setStatusMessage)}/>
                 <div className="page-content" style={{marginTop: '40px'}}>
                     <CollectionRow ref={lastRef} name='Playlists' playlists={playLists}/>
                 </div>

@@ -1,9 +1,10 @@
 import React, {useEffect, useState, useContext} from 'react'
-import {useParams, useSearchParams} from 'react-router'
+import {useNavigate, useParams, useSearchParams} from 'react-router'
 
 
 import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
 import PlayListFunctions from '../featured-components/PlayListFunctions'
+import { shareItems } from '../featured-components/MoreMenu'
 import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
 
@@ -20,6 +21,7 @@ export default function AlbumPage() {
     const highlight = searchParams.get('highlight')
     const token = useContext(TokenContext)
     const setMessage = useContext(MessageContext)
+    const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
 
     const [albumType, setAlbumType] = useState('')
@@ -62,7 +64,10 @@ export default function AlbumPage() {
             <PageBanner pageTitle={albumType} bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                <PlayListFunctions onFollow={() => setMessage('Oops looks like the Spotify API does not support following albums')} uri={uri}/>
+                <PlayListFunctions onFollow={() => setMessage('Oops looks like the Spotify API does not support following albums')} uri={uri} label={bannerInfo.name} menu={[
+                    ...bannerInfo.user.slice(0, 1).map((artist) => ({label: 'Go to artist', onSelect: () => navigate(`/artist/${artist.id}`)})),
+                    ...shareItems(uri, 'album', setMessage),
+                ]}/>
                 <div className="page-content">
                     <TrackList ref={lastRef} tracks={tracks} highlight={highlight} contextUri={uri}/>
                 </div>

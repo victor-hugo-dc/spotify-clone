@@ -1,20 +1,22 @@
-import React, {useContext} from 'react'
+import React from 'react'
 import Icon from '../icons'
-import {MessageContext} from '../../utilities/context'
+import MoreMenu, { type MenuItem } from './MoreMenu'
 import usePlayback from '../../utilities/hooks/usePlayback'
 
 type Props = {
-    type?: 'playOnly' | 'none' | 'user' | 'artist',
+    type?: 'playOnly' | 'none' | 'artist',
     follow?: boolean,
     onFollow?: () => void,
     uri?: string,
     // What to play when `uri` isn't loaded yet; defaults to `uri` as the context.
     start?: object,
+    // The "• • •" menu, labelled with the page's name.
+    menu?: MenuItem[],
+    label?: string,
 }
 
-export default function PlayListFunctions({type, follow = false, onFollow, uri = '', start = {context_uri: uri}}: Props) {
-    const setMessage = useContext(MessageContext)
-    const notImplemented = () => setMessage('Oops, it look like I chose not to implement this feature :)')
+export default function PlayListFunctions({type, follow = false, onFollow, uri = '', start = {context_uri: uri}, menu = [], label = ''}: Props) {
+    const more = menu.length > 0 && <MoreMenu items={menu} label={label}/>
 
     switch (type) {
         case 'playOnly':
@@ -26,23 +28,15 @@ export default function PlayListFunctions({type, follow = false, onFollow, uri =
         case 'none':
             return (
                 <div className="playListFunctions">
-                    <MoreButton onClick={notImplemented}/>
+                    {more}
                 </div>
-            )
-        case 'user':
-            return (
-                <div className="playListFunctions">
-                    <FollowButton follow={follow} onFollow={onFollow}/>
-                    <MoreButton onClick={notImplemented}/>
-                </div>
-                    
             )
         case 'artist':
             return (
                 <div className="playListFunctions">
                     <PlayButtonLarge uri={uri} start={start}/>
                     <FollowButton follow={follow} onFollow={onFollow}/>
-                    <MoreButton onClick={notImplemented}/>
+                    {more}
                 </div>
             )
         default:
@@ -50,7 +44,7 @@ export default function PlayListFunctions({type, follow = false, onFollow, uri =
                 <div className="playListFunctions">
                     <PlayButtonLarge uri={uri} start={start}/>
                     <LikeButton follow={follow} onFollow={onFollow}/>
-                    <MoreButton onClick={notImplemented}/>
+                    {more}
                 </div>
             )
     }
@@ -69,7 +63,7 @@ function PlayButtonLarge({uri, start}: {uri: string, start: object}){
 
 function LikeButton({follow, onFollow}: {follow: boolean, onFollow?: () => void}){
     return (
-        <button className={`likeButton ${follow? 'noHover':''} no-outline`} style={{color: follow? 'var(--spotify-green)':undefined}} title={follow? 'Remove from Library':"Save to Your Library"} onClick={onFollow}>
+        <button className={`likeButton ${follow? 'noHover':''} no-outline`} style={{color: follow? 'var(--spotify-green)':undefined}} title={follow? 'Remove from Your Library':"Save to Your Library"} aria-label={follow? 'Remove from Your Library':"Save to Your Library"} aria-pressed={follow} onClick={onFollow}>
             <Icon name='Heart' fill={follow}/>
         </button>
     )
@@ -77,12 +71,6 @@ function LikeButton({follow, onFollow}: {follow: boolean, onFollow?: () => void}
 
 function FollowButton({follow, onFollow}: {follow: boolean, onFollow?: () => void}){
     return (
-        <button className="followButton no-outline" onClick={onFollow}>{follow? 'following':'follow'}</button>
-    )
-}
-
-function MoreButton({onClick}: {onClick: () => void}){
-    return (
-        <button className="moreButton no-outline" title="More" onClick={onClick}>• • •</button>
+        <button className="followButton no-outline" aria-pressed={follow} onClick={onFollow}>{follow? 'following':'follow'}</button>
     )
 }

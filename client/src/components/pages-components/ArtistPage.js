@@ -7,7 +7,7 @@ import getLocale from '../../utilities/locale'
 import useId from '../../utilities/hooks/useId'
 import requestWithToken from '../../utilities/requestWithToken'
 import putWithToken from '../../utilities/putWithToken'
-import {TokenContext, LoginContext, MessageContext, PlayContext} from '../../utilities/context'
+import {TokenContext, MessageContext, PlayContext} from '../../utilities/context'
 
 import PageBanner from '../featured-components/PageBanner'
 import PlayListFunctions from '../featured-components/PlayListFunctions'
@@ -17,7 +17,6 @@ import Loading from '../featured-components/Loading'
 export default function ArtistPage() {
     const id = useId('artist')
     const token = useContext(TokenContext)
-    const loggedIn = useContext(LoginContext)
     const setMessage = useContext(MessageContext)
     const [loading, setLoading] = useState(true)
     const setPlay = useContext(PlayContext)
@@ -63,7 +62,7 @@ export default function ArtistPage() {
         const [compilationSource, requestCompilation] = makeAxiosRequest(`https://api.spotify.com/v1/artists/${id}/albums?include_groups=compilation&country=${locale}`)
         const [relatedSource, requestRelated] = makeAxiosRequest(`https://api.spotify.com/v1/artists/${id}/related-artists`)
 
-        if (loggedIn && id){
+        if (id){
             requestWithToken(`https://api.spotify.com/v1/me/following/contains?type=artist&ids=${id}`, token, source)
                 .then(response => {
                     setFollow(response.data[0])
@@ -124,22 +123,20 @@ export default function ArtistPage() {
     }, [id])
 
     const followArtist = () => {
-        if (loggedIn) {
-            putWithToken(`https://api.spotify.com/v1/me/following?type=artist&ids=${id}`, token, source, {}, follow? 'DELETE':'PUT')
-                .then(response => {
-                    if (response.status === 204){
-                        if (follow){
-                            setMessage(`Unsaved from your collection`)
-                        }else{
-                            setMessage(`Saved to your collection`)
-                        }
-                        setFollow(!follow)
+        putWithToken(`https://api.spotify.com/v1/me/following?type=artist&ids=${id}`, token, source, {}, follow? 'DELETE':'PUT')
+            .then(response => {
+                if (response.status === 204){
+                    if (follow){
+                        setMessage(`Unsaved from your collection`)
                     }else{
-                        setMessage(`ERROR: Something went wrong! Server response: ${response.status}`)
+                        setMessage(`Saved to your collection`)
                     }
-                })
-                .catch(error => setMessage(`ERROR: ${error}`))
-        }
+                    setFollow(!follow)
+                }else{
+                    setMessage(`ERROR: Something went wrong! Server response: ${response.status}`)
+                }
+            })
+            .catch(error => setMessage(`ERROR: ${error}`))
     }
 
     const playContext = () => {

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 
 import HomePage from "../pages-components/HomePage";
@@ -12,9 +12,6 @@ import CollectionPage from "../pages-components/CollectionPage";
 import LikePage from "../pages-components/LikePage";
 import SocialPage from "../pages-components/SocialPage";
 
-import ReactToolTip from "react-tooltip";
-import generateContent from "../../utilities/TipContent";
-import { LoginContext } from "../../utilities/context";
 import AnnotationsPage from '../pages-components/AnnotationsPage'
 import CommentPage from "../pages-components/CommentPage";
 
@@ -25,8 +22,6 @@ export default function PageContent({
   message,
   status,
 }) {
-  const loggedIn = useContext(LoginContext);
-
   return (
     <>
       <Switch>
@@ -60,18 +55,14 @@ export default function PageContent({
           </div>
         </Route>
         <Route path="/collection">
-          {loggedIn ? (
-            <Redirect to="/collection/playlist" />
-          ) : (
-            <Redirect to="/" />
-          )}
+          <Redirect to="/collection/playlist" />
           <CollectionPage playlists={playlists} />
         </Route>
         <Route path="/tracks">
-          {loggedIn ? <LikePage /> : <Redirect to="/" />}
+          <LikePage />
         </Route>
         <Route path='/annotations'>
-                {loggedIn ? <AnnotationsPage />:<Redirect to='/'/>}
+                <AnnotationsPage />
             </Route>
             <Route path='/comments'>
               <CommentPage/>
@@ -80,17 +71,6 @@ export default function PageContent({
       <div className={`status-bar-wrapper ${status ? "active" : ""}`}>
         <div className={`status-bar ${status ? "active" : ""}`}>{message}</div>
       </div>
-      <ReactToolTip
-        className="toolTip ttMain"
-        id="tooltipMain"
-        disable={loggedIn}
-        place="bottom"
-        effect="solid"
-        backgroundColor="#2e77d0"
-        globalEventOff="click"
-        getContent={(dataTip) => generateContent(dataTip)}
-        clickable={true}
-      />
     </>
   );
 }

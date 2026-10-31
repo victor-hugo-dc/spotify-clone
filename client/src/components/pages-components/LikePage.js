@@ -6,14 +6,13 @@ import PageBanner from '../featured-components/PageBanner'
 import PlayListFunctions from '../featured-components/PlayListFunctions'
 import TrackList from '../featured-components/TrackList'
 
-import {LoginContext, TokenContext, UserContext} from '../../utilities/context'
+import {TokenContext, UserContext} from '../../utilities/context'
 import useTokenScroll from '../../utilities/hooks/useTokenScroll'
 import requestWithToken from '../../utilities/requestWithToken';
 import putWithToken from '../../utilities/putWithToken'
 
 
 const LikePage = () => {
-    const loggedIn = useContext(LoginContext);
     const token = useContext(TokenContext);
     const user = useContext(UserContext);
 
@@ -74,24 +73,18 @@ const LikePage = () => {
         
     }
 
-    if (loggedIn) {
-        return (
-            <div className='listPage' style={{display: `${tracks.length===0? 'none':'block'}`}}>
-                <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
-                <div className="playListContent">
-                    <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                    <PlayListFunctions type='playOnly' playContext={playTracks}/>
-                    <div className="page-content">
-                        <TrackList ref={lastRef} tracks={tracks} playContextTrack={playTrack}/>
-                    </div>
+    return (
+        <div className='listPage' style={{display: `${tracks.length===0? 'none':'block'}`}}>
+            <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
+            <div className="playListContent">
+                <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
+                <PlayListFunctions type='playOnly' playContext={playTracks}/>
+                <div className="page-content">
+                    <TrackList ref={lastRef} tracks={tracks} playContextTrack={playTrack}/>
                 </div>
             </div>
-        );
-    } else {
-        return <></>;
-    }
-
-    
+        </div>
+    );
 }
 
 export default LikePage;

@@ -5,7 +5,6 @@ import Headerbar from './Headerbar'
 import PageContent from './PageContent'
 
 import HistoryNav from './HistoryNav'
-import UserPrompt from './UserPrompt'
 import SearchBar from './SearchBar'
 import UserInfo from './UserInfo'
 import CollectionNav from './CollectionNav'
@@ -13,7 +12,6 @@ import CollectionNav from './CollectionNav'
 
 // top bar that features additional information for a sidebar page
 function Featured (props){
-    const loggedIn = props.loggedIn
     const [query, setQuery] = useState('')
 
     const resetQuery = ()=>{
@@ -33,7 +31,7 @@ function Featured (props){
                     <CollectionNav/>
                 </Route>
 
-                {loggedIn? <UserInfo />:<UserPrompt />}
+                <UserInfo />
 
             </Headerbar>
 

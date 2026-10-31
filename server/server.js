@@ -6,7 +6,6 @@ const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
 const db_uri = process.env.MY_MONGO_URI;
 
-const { client_auth, authed_header } = require("./utils/client-auth");
 const random_string = require("./utils/random");
 
 const axios = require("axios");
@@ -77,24 +76,6 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static('client/build'));
   app.get('*', (req,res) => res.sendFile(path.resolve(__dirname, 'client', 'build','index.html')));
 }
-
-//endpoint to send a full spotify endpoint to request data
-app.post("/", (req, res) => {
-	const endpoint = req.body.endpoint;
-	client_auth(client_id, client_secret)
-		.then((token) => {
-			axios
-				.get(endpoint, authed_header(token))
-				.then((response) => {
-					res.status(200).send(response.data);
-				})
-				.catch((error) => {
-					console.log(error);
-					res.send(error);
-				});
-		})
-		.catch((error) => res.send(error));
-});
 
 //aux endpoint to make and store a cookie value as the state and redirect to the spotify authorization page
 app.get("/login", function (req, res) {

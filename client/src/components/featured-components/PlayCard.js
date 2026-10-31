@@ -7,7 +7,7 @@ import CardDisplay from './CardDisplay'
 import Icon from '../icons'
 
 import putWithToken from '../../utilities/putWithToken'
-import {TokenContext, LoginContext, PlayContext, MessageContext} from '../../utilities/context'
+import {TokenContext, PlayContext, MessageContext} from '../../utilities/context'
 
 const PlayCard = React.forwardRef(({info, type}, ref) => {
     const history = useHistory()
@@ -16,7 +16,6 @@ const PlayCard = React.forwardRef(({info, type}, ref) => {
     const setMessage = useContext(MessageContext)
 
     const token = useContext(TokenContext)
-    const loggedIn = useContext(LoginContext)
     const updatePlayer = useContext(PlayContext)
     const source = axios.CancelToken.source()
 
@@ -68,18 +67,12 @@ const PlayCard = React.forwardRef(({info, type}, ref) => {
                     <CardInfo title={name} description={description}/>
                 </div>
             </Link>
-            {loggedIn? 
             <button className="smallButton no-outline" title="Play" onClick={() => {
                 playContext()
                 updatePlayer()
             }}>
                 <Icon name="Play" height='17' width='17'/>
             </button>
-            :
-            <button className="smallButton no-outline" title="Play" data-tip='play' data-for='tooltipMain' data-event='click'>
-                <Icon name="Play" height='17' width='17'/>
-            </button>
-            }
             
         </div>
     )

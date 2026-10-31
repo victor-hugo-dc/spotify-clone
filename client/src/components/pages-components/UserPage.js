@@ -8,7 +8,7 @@ import Loading from '../featured-components/Loading'
 
 import useId from '../../utilities/hooks/useId'
 import useInfiScroll from '../../utilities/hooks/useInfiScroll'
-import {UserContext, TokenContext, LoginContext, MessageContext} from '../../utilities/context'
+import {UserContext, TokenContext, MessageContext} from '../../utilities/context'
 import requestWithToken from '../../utilities/requestWithToken'
 import putWithToken from '../../utilities/putWithToken'
 import makeAxiosRequest from '../../utilities/makeAxiosRequest'
@@ -17,7 +17,6 @@ export default function UserPage({query, setMessage}) {
     const id = useId()
     const user = useContext(UserContext)
     const token = useContext(TokenContext)
-    const loggedIn = useContext(LoginContext)
     const setStatusMessage = useContext(MessageContext)
     const [loading, setLoading] = useState(true)
 
@@ -72,7 +71,7 @@ export default function UserPage({query, setMessage}) {
             makeRequest()
         }
         
-        if (loggedIn && id){
+        if (id){
             requestWithToken(`https://api.spotify.com/v1/me/following/contains?type=user&ids=${id}`, token, source)
                 .then(response => {
                     setFollow(response.data[0])
@@ -89,22 +88,20 @@ export default function UserPage({query, setMessage}) {
     }, [id])
 
     const followUser = () => {
-        if (loggedIn) {
-            putWithToken(`https://api.spotify.com/v1/me/following?type=user&ids=${id}`, token, source, {}, follow? 'DELETE':'PUT')
-                .then(response => {
-                    if (response.status === 204){
-                        if (follow){
-                            setStatusMessage(`Unsaved from your collection`)
-                        }else{
-                            setStatusMessage(`Saved to your collection`)
-                        }
-                        setFollow(!follow)
+        putWithToken(`https://api.spotify.com/v1/me/following?type=user&ids=${id}`, token, source, {}, follow? 'DELETE':'PUT')
+            .then(response => {
+                if (response.status === 204){
+                    if (follow){
+                        setStatusMessage(`Unsaved from your collection`)
                     }else{
-                        setStatusMessage(`ERROR: Something went wrong! Server response: ${response.status}`)
+                        setStatusMessage(`Saved to your collection`)
                     }
-                })
-                .catch(error => setStatusMessage(`ERROR: ${error}`))
-        }
+                    setFollow(!follow)
+                }else{
+                    setStatusMessage(`ERROR: Something went wrong! Server response: ${response.status}`)
+                }
+            })
+            .catch(error => setStatusMessage(`ERROR: ${error}`))
     }
 
     return (

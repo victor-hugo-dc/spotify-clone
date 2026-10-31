@@ -1,12 +1,10 @@
-import React, { useState, useContext, useEffect} from "react";
+import React, { useState, useEffect} from "react";
 import axios from "axios";
 import PageTitle from "../featured-components/PageTitle";
-import { LoginContext } from "../../utilities/context";
 import Comment from "../featured-components/Comment";
 
 export default function SocialPage() {
     const [feed,setFeed] = useState([]);
-    const loggedIn = useContext(LoginContext);
 
     useEffect(() => {
       axios.get(process.env.REACT_APP_BACK_URI + "/comments/all")
@@ -42,7 +40,6 @@ export default function SocialPage() {
     // use useEffect to pull from the database and then setFeed with the list of comments.
   
     return (
-      loggedIn ? 
       <div className="socialPage">
         <PageTitle name="Your Feed" />
         <div className="socialGrid">
@@ -61,7 +58,5 @@ export default function SocialPage() {
           {/* <Comment user="viducco" timeOfPost="20m" timestamp="0:10" track="Love Sosa" artist="Chief Keef" comment="Lorem Ipsum" replies="10" likes="15" reshares="100"/> */}
         </div>
       </div>
-      :
-      <PageTitle name="Log in to see Your Feed" />
     );
 }

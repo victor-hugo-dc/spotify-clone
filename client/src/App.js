@@ -10,11 +10,11 @@ import FeaturedItem from './components/sidebar-components/FeaturedItem.js'
 import OtherPlaylist from './components/sidebar-components/OtherPlaylist.js'
 import InstallCTA from './components/sidebar-components/InstallCTA.js'
 import Footer from './components/footer-components/Footer.js'
-import CTAbanner from './components/footer-components/CTAbanner'
+import PromptButton from './components/featured-components/PromptButton'
 import Player from './components/footer-components/Player'
 import Featured from './components/featured-components/Featured.js'
 import Loading from './components/featured-components/Loading.js'
-import {UserContext, LoginContext, TokenContext, MessageContext, PlayContext, SongContext} from './utilities/context'
+import {UserContext, TokenContext, MessageContext, PlayContext, SongContext} from './utilities/context'
 import getHashParams from './utilities/getHashParams.js';
 
 function App() {
@@ -43,10 +43,7 @@ function App() {
       access_token = hash.access_token;
     }
 
-    if (!access_token) {
-      setStatusMessage(`ERROR: Not logged in.`);
-
-    } else {
+    if (access_token) {
       setToken(access_token)
       localStorage.setItem('token', access_token);
       setloggedIn(true)
@@ -126,8 +123,9 @@ function App() {
     <div className="App">
       {loading? 
         <Loading type='app'/> :
+        !loggedIn ?
+        <Login /> :
         <MessageContext.Provider value={setStatusMessage}>
-          <LoginContext.Provider value={loggedIn}>
             <SongContext.Provider value={{song, setSong}}>
               <Sidebar>
                 <Logo />
@@ -135,40 +133,50 @@ function App() {
                   <TokenContext.Provider value={token}>
                     <NavItem to='/' exact={true} name='Home' label='Home' />
                     <NavItem to='/search' exact={true} name='Search' label='Search' />
-                    <NavItem to='/social' exact={true} name='Social' label='Social' data_tip='social' data_for='tooltip' data_event='click' style={{ pointerEvents: loggedIn? 'auto':'none'}}/> 
-                    <NavItem to='/collection' exact={false} name='Library' label='Your Library' data_tip='library' data_for='tooltip' data_event='click' style={{ pointerEvents: loggedIn? 'auto':'none'}}/>
+                    <NavItem to='/social' exact={true} name='Social' label='Social'/> 
+                    <NavItem to='/collection' exact={false} name='Library' label='Your Library'/>
                   </TokenContext.Provider>
                   
                 </NavList>
                 <PlayLists 
                   top={<FeaturedPlaylist>
-                          {/* <FeaturedItem label='Liked Songs' loggedIn={loggedIn} /> */}
-                          <FeaturedItem to='/tracks' exact={true} name='Liked Songs' label='Liked Songs' data_event='click' style={{ pointerEvents: loggedIn? 'auto':'none'}}/>
+                          <FeaturedItem to='/tracks' exact={true} name='Liked Songs' label='Liked Songs'/>
                         </FeaturedPlaylist>}
                   bottom={<OtherPlaylist playlists={playlists}/>}
                 />
-                {loggedIn? <InstallCTA /> : null}
+                <InstallCTA />
               </Sidebar>
               
               <PlayContext.Provider value={updatePlayer}>
                 <TokenContext.Provider value={token}>
                     <UserContext.Provider value={userInfo}>
-                      <Featured loggedIn={loggedIn} playlists={playlists} refreshPlaylist={() => refreshPlaylist()} message={message} status={status} />
+                      <Featured playlists={playlists} refreshPlaylist={() => refreshPlaylist()} message={message} status={status} />
                     </UserContext.Provider>
                 </TokenContext.Provider>
                 
               </PlayContext.Provider>
 
               <Footer>
-                {loggedIn? <Player token={token} ref={playerRef}/>: <CTAbanner/>}
+                <Player token={token} ref={playerRef}/>
               </Footer>
             </SongContext.Provider>     
-          </LoginContext.Provider>
 
         </MessageContext.Provider>
       }
     </div>
   );
+}
+
+// Shoutify is friends-only: every account has to be on the Spotify app's
+// allowlist, so there is nothing to show before logging in.
+function Login() {
+  return (
+    <div className='loading' style={{flexDirection: 'column', gap: '24px', color: '#fff', textAlign: 'center'}}>
+      <h1>Shoutify</h1>
+      <p>Friends only: ask whoever runs this Shoutify to add your Spotify account before you log in.</p>
+      <PromptButton to={`${process.env.REACT_APP_BACK_URI}/login`} name='Log in with Spotify' styleName='light'/>
+    </div>
+  )
 }
 
 export default App;

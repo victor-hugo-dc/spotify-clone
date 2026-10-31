@@ -6,10 +6,9 @@ const makeAxiosRequest = (endpoint) => {
   const makeRequest = async () => {
     const { token } = source;
     const config = {
-      method: 'POST',
-      url: process.env.REACT_APP_BACK_URI,
-      data: { endpoint },
-      withCredentials: true,
+      method: 'GET',
+      url: endpoint,
+      headers: { Authorization: 'Bearer ' + localStorage.getItem('token') },
       cancelToken: token,
     };
     

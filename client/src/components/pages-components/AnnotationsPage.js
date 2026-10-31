@@ -19,7 +19,6 @@ export default function AnnotationsPage() {
   const [annotationTip, setAnnotationTip] = useState(false);
   const [id, setId] = useState("");
   const [feed, setFeed] = useState([]);
-  // const loggedIn = useContext(LoginContext);
 
   const cancelSource = axios.CancelToken.source();
   useEffect(() => {

@@ -7,7 +7,7 @@ import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
 
 import makeAxiosRequest from '../../utilities/makeAxiosRequest'
-import {TokenContext, LoginContext, MessageContext, PlayContext} from '../../utilities/context'
+import {TokenContext, MessageContext, PlayContext} from '../../utilities/context'
 import useId from '../../utilities/hooks/useId'
 import useInfiScroll from '../../utilities/hooks/useInfiScroll'
 import putWithToken from '../../utilities/putWithToken'
@@ -15,7 +15,6 @@ import requestWithToken from '../../utilities/requestWithToken'
 
 export default function PlayListPage({playlists, refreshPlaylist}) {
     const id = useId('playlist')
-    const loggedIn = useContext(LoginContext)
     const token = useContext(TokenContext)
     const setMessage = useContext(MessageContext)
     const updatePlayer = useContext(PlayContext)
@@ -88,7 +87,7 @@ export default function PlayListPage({playlists, refreshPlaylist}) {
         }
         
         
-        if (loggedIn && id){
+        if (id){
             const playlistIds = playlists.map((playlist) => {
                 return playlist.id
             })
@@ -102,7 +101,7 @@ export default function PlayListPage({playlists, refreshPlaylist}) {
             source.cancel()
         }
     // eslint-disable-next-line
-    }, [id, loggedIn])
+    }, [id])
 
     const followPlaylist = () => {
         putWithToken(`https://api.spotify.com/v1/playlists/${id}/followers`, token, source, {}, like?'DELETE':'PUT')

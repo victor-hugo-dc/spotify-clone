@@ -8,6 +8,10 @@ const { app } = await import("./index.ts");
 // Spotify's token endpoint, faked: "good" codes and refresh tokens work, anything else is rejected.
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (input, init) => {
+  if (String(input) === "https://api.spotify.com/v1/me") {
+    const ok = new Headers(init?.headers).get("authorization") === "Bearer access";
+    return ok ? Response.json({ id: "ana", display_name: "Ana", images: [] }) : new Response(null, { status: 401 });
+  }
   if (!String(input).startsWith("https://accounts.spotify.com/")) return realFetch(input, init);
   const body = new URLSearchParams(String(init?.body));
   return body.get("code") === "good" || body.get("refresh_token") === "good-refresh"
@@ -42,4 +46,17 @@ test("token trades the refresh cookie for an access token, and 401s without a va
   assert.deepEqual(await (await get("/api/token", "refresh_key=good-refresh")).json(), { access_token: "access", expires_in: 3600 });
   assert.equal((await get("/api/token")).status, 401);
   assert.equal((await get("/api/token", "refresh_key=revoked")).status, 401);
+});
+
+test("comments need a Spotify token, and the author comes from it", async () => {
+  const add = (token: string) =>
+    fetch(`${base}/api/comments/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ authorID: "mallory", songID: "s1", commentBody: "hi", timestamp: 0 }),
+    });
+  assert.equal((await get("/api/comments/all")).status, 401);
+  assert.equal((await add("stolen")).status, 401);
+  const { comment } = (await (await add("access")).json()) as { comment: { authorID: string } };
+  assert.equal(comment.authorID, "ana");
 });

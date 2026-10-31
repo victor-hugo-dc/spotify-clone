@@ -4,6 +4,7 @@ import PageBanner, { type BannerInfo } from '../featured-components/PageBanner';
 import Comment from '../featured-components/Comment';
 import { TokenContext } from '../../utilities/context';
 import { spotify } from '../../utilities/spotify';
+import { api } from '../../utilities/api';
 import type { SongComment, Track } from '../../utilities/types';
 
 export default function CommentPage() {
@@ -39,11 +40,10 @@ export default function CommentPage() {
 
     // In song order.
     useEffect(() => {
-        fetch(`/api/comments/song/${id}`)
-            .then(response => response.json())
-            .then((data: { comments: SongComment[] }) => setFeed(data.comments.sort((a, b) => a.timestamp - b.timestamp)))
+        api<{ comments: SongComment[] }>(`/comments/song/${id}`, token)
+            .then((data) => setFeed(data.comments.sort((a, b) => a.timestamp - b.timestamp)))
             .catch((error) => console.log(error))
-      },[id])
+      },[id, token])
     
 
     return (
@@ -51,14 +51,7 @@ export default function CommentPage() {
             <PageBanner pageTitle={albumType} bannerInfo={bannerInfo}/>
             <div className="playListContent" style={{marginLeft: '2em', marginRight: '2em'}}>
                 {feed.map(comm => 
-                    <Comment
-                        key = {comm._id}
-                        user = {comm.authorID}
-                        commentBody = {comm.commentBody}
-                        timestamp = {comm.timestamp}
-                        songID = {comm.songID}
-                        showSong = {false}
-                    ></Comment>)}
+                    <Comment key={comm.id} comment={comm} showSong={false}/>)}
             </div>
         </div>
     );

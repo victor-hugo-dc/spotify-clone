@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import type { CookieOptions } from "express";
 import commentRoute from "./routes/comments.ts";
 import noteRoute from "./routes/annotations.ts";
+import { requireUser } from "./user.ts";
 
 const {
   CLIENT_ID = "",
@@ -19,8 +20,9 @@ export const app = express();
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use("/api/comments", commentRoute);
-app.use("/api/annotations", noteRoute);
+// Only logged-in friends can read or write comments and annotations.
+app.use("/api/comments", requireUser, commentRoute);
+app.use("/api/annotations", requireUser, noteRoute);
 
 const stateKey = "spotify_auth_state";
 const refreshKey = "refresh_key";

@@ -1,9 +1,10 @@
 import React from 'react';
 import formatTime from '../../utilities/time';
+import type { SongAnnotation } from '../../utilities/types';
 
-type Props = {user: string, timestamp: number, annotatedText: string, noteBody: string}
+export default function Annotation({annotation}: {annotation: SongAnnotation}) {
+    const {authorName, timestamp, annotatedText, noteBody} = annotation;
 
-export default function Annotation({user, timestamp, annotatedText, noteBody}: Props) {
     return (
           <div className="spotify-tweet-box">
             <div className="avatar">
@@ -11,7 +12,7 @@ export default function Annotation({user, timestamp, annotatedText, noteBody}: P
             </div>
             <div className="content">
                 <div className="header">
-                    <span className="username">{user}</span>
+                    <span className="username">{authorName}</span>
                 </div>
                 <div className="message">
                     

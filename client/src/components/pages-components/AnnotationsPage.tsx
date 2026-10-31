@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { MessageContext, TokenContext } from "../../utilities/context";
 import { spotify } from "../../utilities/spotify";
+import { api } from "../../utilities/api";
 import LyricsContainer from "../featured-components/LyricsContainer";
 import AddAnnotation from "../featured-components/AddAnnotation";
 import Annotation from "../featured-components/Annotation";
@@ -27,12 +28,11 @@ export default function AnnotationsPage() {
   // Newest annotations first.
   useEffect(() => {
     if (id.length > 0) {
-      fetch(`/api/annotations/song/${id}`)
-        .then((response) => response.json())
-        .then((data: { f_annotation: SongAnnotation[] }) => setFeed(data.f_annotation.reverse()))
+      api<{ annotations: SongAnnotation[] }>(`/annotations/song/${id}`, token)
+        .then((data) => setFeed(data.annotations.reverse()))
         .catch((error) => console.log(error));
     }
-  }, [id]);
+  }, [id, token]);
 
   return (
     <div className="annotation-page-content">
@@ -56,13 +56,7 @@ export default function AnnotationsPage() {
           <PageTitle name="Comments" />
           <div className="socialGrid">
             {feed.map((comm) => (
-              <Annotation
-                key={comm._id}
-                user={comm.authorID}
-                noteBody={comm.noteBody}
-                timestamp={comm.timestamp}
-                annotatedText={comm.annotatedText}
-              ></Annotation>
+              <Annotation key={comm.id} annotation={comm} />
             ))}
           </div>
         </div>

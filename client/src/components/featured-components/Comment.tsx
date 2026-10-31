@@ -1,33 +1,19 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React from 'react';
 import CommentSongInfo from './CommentSongInfo';
 import formatTime from '../../utilities/time';
-import { TokenContext } from '../../utilities/context';
-import { spotify } from '../../utilities/spotify';
-import type { User } from '../../utilities/types';
+import type { SongComment } from '../../utilities/types';
 
-type Props = {user: string, timestamp: number, songID: string, commentBody: string, showSong: boolean}
-
-export default function Comment({user, timestamp, songID, commentBody, showSong}: Props) {
-    const [pfp, setPfp] = useState<string | undefined>(undefined);
-    const token = useContext(TokenContext);
-
-    useEffect(() => {
-      const controller = new AbortController();
-      spotify<User>(`/users/${user}`, token, { signal: controller.signal })
-        .then((profile) => setPfp(profile.images?.[0]?.url))
-        .catch((error) => console.log(error))
-      return () => controller.abort()
-    }, [user, token])
-    
+export default function Comment({comment, showSong}: {comment: SongComment, showSong: boolean}) {
+    const {authorName, authorImage, timestamp, songID, commentBody} = comment;
 
     return (
           <div className="spotify-tweet-box">
             <div className="avatar">
-              <img src={pfp} className="timestamp" alt='pfp'></img>
+              <img src={authorImage ?? undefined} className="timestamp" alt=''></img>
             </div>
             <div className="content">
               <div className="header">
-                <span className="username">{user}</span>
+                <span className="username">{authorName}</span>
                 <span className="time">@{formatTime(timestamp)}</span>
               </div>
               <div className="message">

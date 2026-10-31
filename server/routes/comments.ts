@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { db, isPosition, isText } from "../db.ts";
+import type { Author } from "../user.ts";
 
 const router = Router();
-const columns = "id AS _id, authorID, songID, commentBody, timestamp";
+const columns = "id, authorID, authorName, authorImage, songID, commentBody, timestamp";
 
 router.get("/all", (_req, res) => {
   res.send({ comments: db.prepare(`SELECT ${columns} FROM comments ORDER BY id`).all() });
@@ -13,15 +14,18 @@ router.get("/song/:song", (req, res) => {
 });
 
 router.post("/add", (req, res) => {
-  const { authorID, songID, commentBody, timestamp } = req.body ?? {};
-  if (!isText(authorID, 100) || !isText(songID, 100) || !isText(commentBody, 2000) || !isPosition(timestamp)) {
+  const { songID, commentBody, timestamp } = req.body ?? {};
+  if (!isText(songID, 100) || !isText(commentBody, 2000) || !isPosition(timestamp)) {
     res.sendStatus(400);
     return;
   }
+  const author: Author = res.locals.author;
   const { lastInsertRowid } = db
-    .prepare("INSERT INTO comments (authorID, songID, commentBody, timestamp) VALUES (?, ?, ?, ?)")
-    .run(authorID, songID, commentBody, timestamp);
-  res.status(201).send({ comment: { _id: lastInsertRowid, authorID, songID, commentBody, timestamp } });
+    .prepare("INSERT INTO comments (authorID, authorName, authorImage, songID, commentBody, timestamp) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(author.id, author.name, author.image, songID, commentBody, timestamp);
+  res.status(201).send({
+    comment: { id: Number(lastInsertRowid), authorID: author.id, authorName: author.name, authorImage: author.image, songID, commentBody, timestamp },
+  });
 });
 
 export default router;

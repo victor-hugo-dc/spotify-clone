@@ -2,26 +2,25 @@ import React, { useState, useContext, useEffect, type Ref } from 'react';
 import { Link, useNavigate } from "react-router";
 import Icon from '../icons';
 import formatTime from '../../utilities/time';
-import { PlayContext } from '../../utilities/context';
+import { PlayContext, TokenContext } from '../../utilities/context';
+import { api } from '../../utilities/api';
 import ControlButton from '../footer-components/ControlButton';
-import type { Track } from '../../utilities/types';
+import type { SongComment, Track } from '../../utilities/types';
 
 type Props = { track: Track; highlight: boolean; playContextTrack: (uri: string) => void; ref?: Ref<HTMLLIElement> };
 
 export default function TrackListItem({ track, highlight, playContextTrack, ref }: Props) {
   const { album, artists, name, explicit, duration_ms, uri, id } = track;
   const updatePlayer = useContext(PlayContext);
+  const token = useContext(TokenContext);
   const [commentCount, setCommentCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetch(`/api/comments/song/${id}`, { signal: controller.signal })
-      .then((response) => response.json())
+    api<{ comments: SongComment[] }>(`/comments/song/${id}`, token)
       .then((data) => setCommentCount(data.comments.length))
-      .catch(() => {});
-    return () => controller.abort();
-  }, [id])
+      .catch((error) => console.log(error));
+  }, [id, token])
 
   return (
     <li ref={ref} className={`trackListItem ${highlight ? 'highlight' : ''}`}>

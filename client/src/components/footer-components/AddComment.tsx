@@ -2,7 +2,8 @@ import React, { useEffect, useContext, useState } from "react";
 
 import { MessageContext } from "../../utilities/context";
 import { spotify } from "../../utilities/spotify";
-import type { Track, User } from "../../utilities/types";
+import { api } from "../../utilities/api";
+import type { Track } from "../../utilities/types";
 
 type Props = { closeTip: () => void; token: string | null; annotation?: boolean; text?: string };
 
@@ -11,12 +12,11 @@ const AddComment = ({ closeTip, token, annotation = false, text = ''}: Props) =>
 		songId: "",
 		timestamp: 0
 	});
-	const [userInfo, setUserInfo] = useState("");
 	const setMessage = useContext(MessageContext);
 	const [commenttext, setCommentText] = useState("");
 	
 	/*
-	 * Get the song that's currently playing and the id of the user making the comment.
+	 * Get the song that's currently playing. The server works out who is commenting from the token.
 	 */
 	useEffect(() => {
 		const controller = new AbortController();
@@ -25,23 +25,18 @@ const AddComment = ({ closeTip, token, annotation = false, text = ''}: Props) =>
 			.then((playing) => playing?.item && setSongInfo({ songId: playing.item.id, timestamp: playing.progress_ms }))
 			.catch((error) => console.log(error));
 
-		spotify<User>("/me", token, { signal: controller.signal })
-			.then(({ id }) => setUserInfo(id))
-			.catch((error) => console.log(error));
-
 		return () => controller.abort();
 	}, [token]);
 
 	const save = (path: string, data: object, done: string) => {
-		fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
-			.then((response) => setMessage(response.ok ? done : `ERROR: could not save it (${response.status})`))
-			.catch((error) => setMessage(`ERROR: ${error}`));
+		api(path, token, data)
+			.then(() => setMessage(done))
+			.catch((error) => setMessage(`ERROR: could not save it (${error.message})`));
 		closeTip();
 	}
 
 	const handleCommentSubmit = () => {
-		save("/api/comments/add", {
-			authorID: userInfo,
+		save("/comments/add", {
 			songID: songInfo.songId,
 			commentBody: commenttext,
 			timestamp: songInfo.timestamp,
@@ -50,8 +45,7 @@ const AddComment = ({ closeTip, token, annotation = false, text = ''}: Props) =>
 
 	// Special callback to handle annotation submission
 	const handleAnnotationSubmit = () => {
-		save("/api/annotations/add", {
-			authorID: userInfo,
+		save("/annotations/add", {
 			songID: songInfo.songId,
 			annotatedText: text,
 			noteBody: commenttext,

@@ -47,6 +47,8 @@ export type LinkCard = { type: "link"; id: string; name: string; description: st
 export type CardItem = Playlist | Album | Artist | Track | LinkCard;
 
 // Shoutify's own records, as the server returns them.
-export type SongComment = { _id: number; authorID: string; songID: string; commentBody: string; timestamp: number };
+type Authored = { id: number; authorID: string; authorName: string; authorImage: string | null; songID: string; timestamp: number };
 
-export type SongAnnotation = { _id: number; authorID: string; songID: string; annotatedText: string; noteBody: string; timestamp: number };
+export type SongComment = Authored & { commentBody: string };
+
+export type SongAnnotation = Authored & { annotatedText: string; noteBody: string };

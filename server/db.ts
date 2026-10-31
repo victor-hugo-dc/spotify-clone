@@ -12,6 +12,8 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY,
     authorID TEXT NOT NULL,
+    authorName TEXT NOT NULL,
+    authorImage TEXT,
     songID TEXT NOT NULL,
     commentBody TEXT NOT NULL,
     timestamp INTEGER NOT NULL
@@ -20,6 +22,8 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS annotations (
     id INTEGER PRIMARY KEY,
     authorID TEXT NOT NULL,
+    authorName TEXT NOT NULL,
+    authorImage TEXT,
     songID TEXT NOT NULL,
     annotatedText TEXT NOT NULL,
     noteBody TEXT NOT NULL,

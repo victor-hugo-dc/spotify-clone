@@ -4,7 +4,6 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import type { CookieOptions } from "express";
 import cors from "cors";
-import mongoose from "mongoose";
 import commentRoute from "./routes/comments.ts";
 import noteRoute from "./routes/annotations.ts";
 
@@ -13,14 +12,8 @@ const {
   CLIENT_SECRET = "",
   FRONT_URI = "",
   RE_URI = "",
-  MY_MONGO_URI = "",
   PORT = "4000",
 } = process.env;
-
-mongoose
-  .connect(MY_MONGO_URI)
-  .then((x) => console.log(`Connected to Mongo! Database name: "${x.connections[0]?.name}"`))
-  .catch((err) => console.error("Error connecting to mongo", err));
 
 const app = express();
 

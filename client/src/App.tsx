@@ -31,12 +31,13 @@ function storedPanel(): RightPanel {
 }
 
 // Your Library's lists, each loaded on its own: every page (not just Spotify's first 20); recently played has no more
-// than 50 to page through. `name` is for the toast when one can't be loaded.
+// than 50 to page through, and Liked Songs only needs its count. `name` is for the toast when one can't be loaded.
 const libraryLists: Record<LibraryKind, {name: string, load: () => Promise<Partial<Library>>}> = {
   playlists: {name: 'playlists', load: () => allPages<Playlist>('/me/playlists?limit=50').then((playlists) => ({playlists}))},
   albums: {name: 'albums', load: () => allPages<SavedAlbum>('/me/albums?limit=50').then((albums) => ({albums}))},
   artists: {name: 'artists', load: () => allPages<Artist>('/me/following?type=artist&limit=50', (data) => data.artists).then((artists) => ({artists}))},
   recent: {name: 'recently played songs', load: () => spotify<Paging<PlayHistory>>('/me/player/recently-played?limit=50').then((page) => ({recentlyPlayed: page.items}))},
+  liked: {name: 'Liked Songs', load: () => spotify<Paging<unknown>>('/me/tracks?limit=1').then((page) => ({likedTotal: page.total ?? null}))},
 }
 
 function App() {
@@ -44,7 +45,7 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false)
   const [loginError] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('error'))
   const [userInfo, setuserInfo] = useState<User | null>(null)
-  const [libraryData, setLibraryData] = useState<Omit<Library, 'refresh'>>({playlists: [], albums: [], artists: [], recentlyPlayed: []})
+  const [libraryData, setLibraryData] = useState<Omit<Library, 'refresh'>>({playlists: [], albums: [], artists: [], recentlyPlayed: [], likedTotal: null})
   const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false, deviceId: null, track: null, device: null})
   const [rightPanel, setRightPanelState] = useState(storedPanel)
 
@@ -97,8 +98,8 @@ function App() {
   // A list that fails is asked for again (Spotify may be busy), and named in a toast if it still fails. Loads are
   // numbered, so a slower older one can't overwrite a newer one that has landed.
   const loads = useRef({started: 0, landed: {} as Partial<Record<LibraryKind, number>>})
-  const refreshLibrary = useCallback(() => {
-    for (const list of Object.keys(libraryLists) as LibraryKind[]) {
+  const refreshLibrary = useCallback((kind?: LibraryKind) => {
+    for (const list of kind ? [kind] : Object.keys(libraryLists) as LibraryKind[]) {
       const load = ++loads.current.started
       const newest = () => load > (loads.current.landed[list] ?? 0)
       retried(libraryLists[list].load).then((loaded) => {

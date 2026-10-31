@@ -35,8 +35,15 @@ export const LayoutContext = createContext<{ rightPanel: RightPanel; setRightPan
   setRightPanel: () => {},
 });
 
-// Your Library, loaded once by App: every playlist, saved album and followed artist, and the last 50 plays.
-// refresh() loads it all again after a change.
-export type LibraryKind = "playlists" | "albums" | "artists" | "recent";
-export type Library = { playlists: Playlist[]; albums: SavedAlbum[]; artists: Artist[]; recentlyPlayed: PlayHistory[]; refresh: () => void };
-export const LibraryContext = createContext<Library>({ playlists: [], albums: [], artists: [], recentlyPlayed: [], refresh: () => {} });
+// Your Library, loaded by App at login: every playlist, saved album and followed artist, the last 50 plays, and how many
+// songs are liked (null until known). refresh(kind) loads one list again after a change; refresh() loads them all.
+export type LibraryKind = "playlists" | "albums" | "artists" | "recent" | "liked";
+export type Library = {
+  playlists: Playlist[];
+  albums: SavedAlbum[];
+  artists: Artist[];
+  recentlyPlayed: PlayHistory[];
+  likedTotal: number | null;
+  refresh: (kind?: LibraryKind) => void;
+};
+export const LibraryContext = createContext<Library>({ playlists: [], albums: [], artists: [], recentlyPlayed: [], likedTotal: null, refresh: () => {} });

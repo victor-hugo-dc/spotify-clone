@@ -1,5 +1,7 @@
 import React from "react";
-import { Routes, Route } from "react-router";
+import { Routes, Route, Link, useLocation } from "react-router";
+import PageErrorBoundary from "./PageErrorBoundary";
+import PageTitle from "./PageTitle";
 
 import HomePage from "../pages-components/HomePage";
 import SearchPage from "../pages-components/SearchPage";
@@ -28,8 +30,10 @@ export default function PageContent({
   message,
   status,
 }: PageContentProps) {
+  const location = useLocation();
   return (
     <>
+      <PageErrorBoundary resetKey={location.pathname}>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />
@@ -42,9 +46,16 @@ export default function PageContent({
         <Route path="/tracks" element={<LikePage />} />
         <Route path="/annotations" element={<AnnotationsPage />} />
         <Route path="/comments/:id" element={<CommentPage />} />
+        <Route path="*" element={
+          <div className="page-content" style={{ paddingTop: "16px" }}>
+            <PageTitle name="Page not found" />
+            <p className="empty-state">There's nothing at this address. <Link to="/">Go home</Link></p>
+          </div>
+        } />
       </Routes>
+      </PageErrorBoundary>
       <div className={`status-bar-wrapper ${status ? "active" : ""}`}>
-        <div className={`status-bar ${status ? "active" : ""}`}>{message}</div>
+        <div className={`status-bar ${status ? "active" : ""}`} role="status">{message}</div>
       </div>
     </>
   );

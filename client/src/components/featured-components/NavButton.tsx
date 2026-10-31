@@ -1,9 +1,11 @@
 import React from 'react'
 import Icon from '../icons'
 
-export default function NavButton({property}: {property: 'Back' | 'Forward'}) {
+type Props = {property: 'Back' | 'Forward', disabled: boolean, onClick: () => void}
+
+export default function NavButton({property, disabled, onClick}: Props) {
     return (
-        <button className={property === 'Back'? 'navButton no-outline':'navButton mediaNone no-outline'} title="Sorry this is just too much work for something not that entirely useful. Just use the browser's buttons :)"> 
+        <button className={property === 'Back'? 'navButton no-outline':'navButton mediaNone no-outline'} title={`Go ${property.toLowerCase()}`} aria-label={`Go ${property.toLowerCase()}`} disabled={disabled} onClick={onClick}> 
             <Icon name={property} />
         </button>
     )

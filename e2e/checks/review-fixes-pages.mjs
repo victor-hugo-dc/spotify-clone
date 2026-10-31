@@ -62,7 +62,7 @@ export const checks = [
     if ((await dialog.getByLabel("Name").inputValue()) !== "Mix") throw new Error("Edit details filled in another playlist's name");
   }],
   // A failed save is told inside the dialog (toasts sit under its backdrop), keeps focus on Save and keeps what was typed;
-  // Save can't send it twice, and a name of only spaces isn't saved.
+  // Save can't send it twice, and a name of only spaces isn't saved, with an error that says a name is needed.
   ["edit-details-save-fails", "/playlist/p1", async (p) => {
     await p.getByRole("button", { name: "More options for Mix" }).click();
     await p.getByRole("menuitem", { name: "Edit details" }).click();
@@ -73,6 +73,8 @@ export const checks = [
     await name.fill("   ");
     await save.click();
     if (await p.evaluate(() => window.submitted)) throw new Error("a name of only spaces was submitted");
+    // Chrome's own error for it is just "Please match the requested format."; it adds the field's title below.
+    if (!(await name.and(dialog.getByTitle("Enter a name")).count())) throw new Error("the browser's error doesn't say a name is needed");
     await name.fill("Kept Name");
     await description.fill("kept description");
     // The connection drops once the check says so, faked as a rejected fetch: an error status would also log a console

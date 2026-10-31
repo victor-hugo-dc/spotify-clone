@@ -29,8 +29,8 @@ export default function EditDetails({details, onSave, onClose}: {details: Detail
                 <h1 id='edit-details-title'>Edit details</h1>
                 <label>
                     <span>Name</span>
-                    {/* A name of only spaces passes `required` but would be saved as no name. */}
-                    <input value={draft.name} required pattern='.*\S.*' maxLength={100} onChange={(e) => setDraft({...draft, name: e.target.value})}/>
+                    {/* A name of only spaces passes `required` but would be saved as no name; browsers add the title to their pattern error. */}
+                    <input value={draft.name} required pattern='.*\S.*' title='Enter a name' maxLength={100} onChange={(e) => setDraft({...draft, name: e.target.value})}/>
                 </label>
                 <label>
                     <span>Description</span>

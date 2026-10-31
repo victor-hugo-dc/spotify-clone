@@ -1,0 +1,39 @@
+# Shoutify on torta, behind the shared Traefik in /home/duckdns.
+#
+#   cp .env.example .env    (fill it in)
+#   docker compose up -d --build
+#
+# Comments and annotations live in the `data` volume (one SQLite file).
+# Nothing publishes a port on the host.
+
+name: shoutify
+
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    environment:
+      CLIENT_ID: ${CLIENT_ID:?CLIENT_ID is required}
+      CLIENT_SECRET: ${CLIENT_SECRET:?CLIENT_SECRET is required}
+      RE_URI: https://${SITE_DOMAIN:?SITE_DOMAIN is required}/api/callback
+    volumes:
+      - data:/app/data
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [traefik-public]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik-public
+      traefik.http.routers.shoutify.rule: Host(`${SITE_DOMAIN}`)
+      traefik.http.routers.shoutify.entrypoints: websecure
+      traefik.http.routers.shoutify.tls.certresolver: letsencrypt
+      traefik.http.services.shoutify.loadbalancer.server.port: "3000"
+
+volumes:
+  data:
+
+networks:
+  # Created by the duckdns stack; Traefik lives here.
+  traefik-public:
+    external: true

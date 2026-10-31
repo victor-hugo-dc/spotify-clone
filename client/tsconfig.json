@@ -15,7 +15,6 @@
     "jsx": "react-jsx",
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "allowJs": true,
     "noEmit": true,
     "skipLibCheck": true
   },

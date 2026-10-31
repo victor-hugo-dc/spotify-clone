@@ -11,97 +11,54 @@ import OtherPlaylist from './components/sidebar-components/OtherPlaylist'
 import InstallCTA from './components/sidebar-components/InstallCTA'
 import Footer from './components/footer-components/Footer'
 import PromptButton from './components/featured-components/PromptButton'
-import Player from './components/footer-components/Player'
+import Player, { type PlayerHandle } from './components/footer-components/Player'
 import Featured from './components/featured-components/Featured'
 import Loading from './components/featured-components/Loading'
-import {UserContext, TokenContext, MessageContext, PlayContext, SongContext} from './utilities/context'
-import getHashParams from './utilities/getHashParams';
+import {UserContext, TokenContext, MessageContext, PlayContext} from './utilities/context'
+import { spotify } from './utilities/spotify'
+import type { Paging, Playlist, User } from './utilities/types'
 
 function App() {
   const [loading, setLoading] = useState(true)
-  const [loggedIn, setloggedIn] = useState(localStorage.getItem('token') !== null)
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const [userInfo, setuserInfo] = useState({})
-  const [playlists, setPlaylists] = useState([])
+  const [userInfo, setuserInfo] = useState<User | null>(null)
+  const [playlists, setPlaylists] = useState<Playlist[]>([])
 
   const [status, setStatus] = useState(false) 
   const [message, setMessage] = useState('')
-  // Boolean value that will be used to detect when I song has changed
-  const [song, setSong] = useState(0)
 
-  const timerRef = useRef(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
-    if (token) {
-      setLoading(false);
-      return;
+    if (!token) {
+      const access_token = new URLSearchParams(window.location.hash.slice(1)).get('access_token')
+      if (access_token) {
+        setToken(access_token)
+        localStorage.setItem('token', access_token);
+        window.location.hash = ''
+      }
     }
-
-    let access_token = null;
-    const hash = getHashParams();
-    if (hash.access_token) {
-      access_token = hash.access_token;
-    }
-
-    if (access_token) {
-      setToken(access_token)
-      localStorage.setItem('token', access_token);
-      setloggedIn(true)
-      window.location.hash = ''
-    }
-
     setLoading(false);
-
   }, [token])
 
   useEffect(() => {
     if (token) {
-      const headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-      fetch('https://api.spotify.com/v1/me', { method: 'GET', headers })
-        .then((response) => {
-          console.log(response.json().then(
-            (data) => { 
-              console.log(data)
-              setuserInfo(data)
-            }
-          ));
-        });
-
-      fetch('https://api.spotify.com/v1/me/playlists', { method: 'GET', headers })
-        .then((response) => {
-          console.log(response.json().then(
-            (data) => { 
-              setPlaylists(data.items)
-            }
-          ));
-        });
+      spotify<User>('/me', token)
+        .then(setuserInfo)
+        .catch(error => console.log(error))
+      refreshPlaylist()
     }
+  // eslint-disable-next-line
   }, [token])
 
 
   const refreshPlaylist = () =>{
-    fetch('https://api.spotify.com/v1/me/playlists', {
-          method: 'GET', headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token
-          }
-      })
-      .then((response) => {
-        console.log(response.json().then(
-          (data) => { 
-            setPlaylists(data.items);
-          }
-        ));
-      })
+    spotify<Paging<Playlist>>('/me/playlists', token)
+      .then((data) => setPlaylists(data.items))
       .catch(error => console.log(error));
   }
 
-  const setStatusMessage = (message) => {
+  const setStatusMessage = (message: string) => {
       clearTimeout(timerRef.current)
       setStatus(true)
       setMessage(message)
@@ -111,36 +68,30 @@ function App() {
   }
 
 
-  const playerRef = useRef(null)
+  const playerRef = useRef<PlayerHandle>(null)
   const updatePlayer = () => {
-    if (playerRef.current) {
-      playerRef.current.updateState();
-    }
-    
+    playerRef.current?.updateState();
   }
 
   return (
     <div className="App">
       {loading? 
         <Loading type='app'/> :
-        !loggedIn ?
+        !token ?
         <Login /> :
         <MessageContext.Provider value={setStatusMessage}>
-            <SongContext.Provider value={{song, setSong}}>
+          <TokenContext.Provider value={token}>
               <Sidebar>
                 <Logo />
                 <NavList>
-                  <TokenContext.Provider value={token}>
                     <NavItem to='/' exact={true} name='Home' label='Home' />
                     <NavItem to='/search' exact={true} name='Search' label='Search' />
                     <NavItem to='/social' exact={true} name='Social' label='Social'/> 
-                    <NavItem to='/collection' exact={false} name='Library' label='Your Library'/>
-                  </TokenContext.Provider>
-                  
+                    <NavItem to='/collection' name='Library' label='Your Library'/>
                 </NavList>
                 <PlayLists 
                   top={<FeaturedPlaylist>
-                          <FeaturedItem to='/tracks' exact={true} name='Liked Songs' label='Liked Songs'/>
+                          <FeaturedItem to='/tracks' exact={true} label='Liked Songs'/>
                         </FeaturedPlaylist>}
                   bottom={<OtherPlaylist playlists={playlists}/>}
                 />
@@ -148,19 +99,15 @@ function App() {
               </Sidebar>
               
               <PlayContext.Provider value={updatePlayer}>
-                <TokenContext.Provider value={token}>
                     <UserContext.Provider value={userInfo}>
                       <Featured playlists={playlists} refreshPlaylist={() => refreshPlaylist()} message={message} status={status} />
                     </UserContext.Provider>
-                </TokenContext.Provider>
-                
               </PlayContext.Provider>
 
               <Footer>
                 <Player token={token} ref={playerRef}/>
               </Footer>
-            </SongContext.Provider>     
-
+          </TokenContext.Provider>
         </MessageContext.Provider>
       }
     </div>

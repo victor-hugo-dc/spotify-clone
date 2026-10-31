@@ -1,7 +1,7 @@
 import React from 'react'
 import SearchRow from '../featured-components/SearchRow'
 
-export default function QueryPage({query}) {
+export default function QueryPage({query}: {query: string}) {
     return (
         <div className="page-content">
             <div className='pageContent'>

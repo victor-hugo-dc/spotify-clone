@@ -1,64 +1,36 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
-import {
-  MessageContext,
-  SongContext,
-  TokenContext,
-} from "../../utilities/context";
-import requestWithToken from "../../utilities/requestWithToken";
+import { MessageContext, TokenContext } from "../../utilities/context";
+import { spotify } from "../../utilities/spotify";
 import LyricsContainer from "../featured-components/LyricsContainer";
 import AddAnnotation from "../featured-components/AddAnnotation";
 import Annotation from "../featured-components/Annotation";
 import PageTitle from "../featured-components/PageTitle";
+import type { SongAnnotation, Track } from "../../utilities/types";
 
 export default function AnnotationsPage() {
   const token = useContext(TokenContext);
-  const { song } = useContext(SongContext);
   const setMessage = useContext(MessageContext);
   const [annotatedText, setAnnotatedText] = useState("");
   const [annotationTip, setAnnotationTip] = useState(false);
   const [id, setId] = useState("");
-  const [feed, setFeed] = useState([]);
+  const [feed, setFeed] = useState<SongAnnotation[]>([]);
 
-  const cancelSource = axios.CancelToken.source();
   useEffect(() => {
-    requestWithToken("https://api.spotify.com/v1/me/player/currently-playing", token, cancelSource)
-      .then(({ data }) => setId(data.item.id))
+    const controller = new AbortController();
+    spotify<{ item: Track | null } | undefined>("/me/player/currently-playing", token, { signal: controller.signal })
+      .then((playing) => playing?.item ? setId(playing.item.id) : setMessage("Play a song to see and add its annotations"))
       .catch((error) => setMessage(error.message));
+    return () => controller.abort();
     // eslint-disable-next-line
-  }, [song, token]);
+  }, [token]);
 
-  const openAnnotationTip = () => {
-    if (annotationTip === false) {
-      setAnnotationTip(true);
-    }
-  };
-
-  const setAnnotatedTextCallback = (text) => {
-    setAnnotatedText(text);
-  };
-
+  // Newest annotations first.
   useEffect(() => {
-    console.log(`/annotations/${id}`);
-
     if (id.length > 0) {
-      axios.get(`/api/annotations/song/${id}`).then((response) => {
-        const data = response.data;
-        console.log(data);
-        const jsonData = data.f_annotation.map((item) => {
-          const stringifiedObjectId = item._id.toString();
-          return {
-            authorID: item.authorID,
-            songID: item.songID,
-            noteBody: item.noteBody,
-            annotatedText: item.annotatedText,
-            timestamp: item.timestamp,
-            _id: stringifiedObjectId,
-          };
-        });
-        setFeed(jsonData.reverse());
-        console.log(jsonData);
-      });
+      fetch(`/api/annotations/song/${id}`)
+        .then((response) => response.json())
+        .then((data: { f_annotation: SongAnnotation[] }) => setFeed(data.f_annotation.reverse()))
+        .catch((error) => console.log(error));
     }
   }, [id]);
 
@@ -66,8 +38,8 @@ export default function AnnotationsPage() {
     <div className="annotation-page-content">
       <div className="pageContent lyrics-container">
         <LyricsContainer
-          selectionCallback={setAnnotatedTextCallback}
-          openTip={openAnnotationTip}
+          selectionCallback={setAnnotatedText}
+          openTip={() => setAnnotationTip(true)}
         />
         <span className="annotation-wrapper">
           {annotationTip && (
@@ -89,7 +61,6 @@ export default function AnnotationsPage() {
                 user={comm.authorID}
                 noteBody={comm.noteBody}
                 timestamp={comm.timestamp}
-                songID={comm.songID}
                 annotatedText={comm.annotatedText}
               ></Annotation>
             ))}

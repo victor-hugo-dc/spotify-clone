@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import CommentSongInfo from './CommentSongInfo';
-import millisToTime from '../../utilities/millisToTime';
+import formatTime from '../../utilities/time';
 import { TokenContext } from '../../utilities/context';
 import { spotify } from '../../utilities/spotify';
 import type { User } from '../../utilities/types';
@@ -28,7 +28,7 @@ export default function Comment({user, timestamp, songID, commentBody, showSong}
             <div className="content">
               <div className="header">
                 <span className="username">{user}</span>
-                <span className="time">@{millisToTime(timestamp)}</span>
+                <span className="time">@{formatTime(timestamp)}</span>
               </div>
               <div className="message">
                 {commentBody}

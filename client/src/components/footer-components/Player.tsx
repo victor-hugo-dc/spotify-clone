@@ -16,7 +16,7 @@ import ControlButton from "./ControlButton";
 import AddComment from "./AddComment";
 
 import { spotify } from "../../utilities/spotify";
-import msTimeFormat from "../../utilities/utils";
+import formatTime from "../../utilities/time";
 import { MessageContext } from "../../utilities/context";
 import type { Album, Track } from "../../utilities/types";
 
@@ -312,8 +312,8 @@ const Player = ({ token, ref }: { token: string | null; ref?: Ref<PlayerHandle> 
 					<div className="player-playback" draggable="false">
 						<div className="playback-time" draggable="false">
 							{scrubPb
-								? msTimeFormat(scrubPb)
-								: msTimeFormat(playbackState.progress)}
+								? formatTime(scrubPb)
+								: formatTime(playbackState.progress)}
 						</div>
 						<ProgressBar
 							extraClass="playback"
@@ -323,7 +323,7 @@ const Player = ({ token, ref }: { token: string | null; ref?: Ref<PlayerHandle> 
 							scrubFunction={scrubPlayback}
 						/>
 						<div className="playback-time" draggable="false">
-							{msTimeFormat(playbackState.total_time)}
+							{formatTime(playbackState.total_time)}
 						</div>
 					</div>
 				</div>

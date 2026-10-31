@@ -45,3 +45,8 @@ export type Paging<T> = { items: T[]; next: string | null; total?: number };
 export type LinkCard = { type: "link"; id: string; name: string; description: string; images: Image[]; to: string };
 
 export type CardItem = Playlist | Album | Artist | Track | LinkCard;
+
+// Shoutify's own records, as the server returns them.
+export type SongComment = { _id: number; authorID: string; songID: string; commentBody: string; timestamp: number };
+
+export type SongAnnotation = { _id: number; authorID: string; songID: string; annotatedText: string; noteBody: string; timestamp: number };

@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect, type Ref } from 'react';
 import { Link, useNavigate } from "react-router";
 import Icon from '../icons';
-import msTimeFormat from '../../utilities/utils';
+import formatTime from '../../utilities/time';
 import { PlayContext } from '../../utilities/context';
 import ControlButton from '../footer-components/ControlButton';
 import type { Track } from '../../utilities/types';
@@ -74,7 +74,7 @@ export default function TrackListItem({ track, highlight, playContextTrack, ref 
 
       <div className='trackItemDuration'>
         <div className='duration trackTopAlign'>
-          <span>{msTimeFormat(duration_ms)}</span>
+          <span>{formatTime(duration_ms)}</span>
         </div>
       </div>
     </li>

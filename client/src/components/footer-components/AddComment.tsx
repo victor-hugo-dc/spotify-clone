@@ -8,12 +8,12 @@ import type { CommentSong } from "../../utilities/types";
 
 type Props = { closeTip: () => void; song: CommentSong; annotation?: boolean; text?: string };
 
-const AddComment = ({ closeTip, song, annotation = false, text = ''}: Props) => {
+const AddComment = ({ closeTip, song: songNow, annotation = false, text = ''}: Props) => {
 	const setMessage = useContext(MessageContext);
 	const [commenttext, setCommentText] = useState("");
 	const [saving, setSaving] = useState(false);
-	// The moment in the song the comment is about: where it was when the dialog opened.
-	const [position] = useState(song.position);
+	// The song the comment is about, and the moment in it: as they were when the dialog opened.
+	const [song] = useState(songNow);
 
 	// The dialog, and what was typed into it, stay until the server has it.
 	const save = (path: string, data: object, done: string) => {
@@ -37,7 +37,7 @@ const AddComment = ({ closeTip, song, annotation = false, text = ''}: Props) => 
 			songArtist: song.artist,
 			songImage: song.image,
 			commentBody: commenttext,
-			timestamp: position,
+			timestamp: song.position,
 		}, "Comment Added!");
 	}
 
@@ -47,7 +47,7 @@ const AddComment = ({ closeTip, song, annotation = false, text = ''}: Props) => 
 			songID: song.id,
 			annotatedText: text,
 			noteBody: commenttext,
-			timestamp: position,
+			timestamp: song.position,
 		}, "Annotation Added!");
 	}
 
@@ -58,7 +58,7 @@ const AddComment = ({ closeTip, song, annotation = false, text = ''}: Props) => 
 			<div className="add-comment-content" data-source="inside">
 				<div className="add-comment-title" data-source="inside">
 					<h1 data-source="inside">{title}</h1>
-					<p className="add-comment-song">{song.name} · {formatTime(position)}</p>
+					<p className="add-comment-song">{song.name} · {formatTime(song.position)}</p>
 				</div>
 				<div className="commentdiv" data-source="inside">
 					{/* The server takes up to 2000 characters, and not just whitespace. */}

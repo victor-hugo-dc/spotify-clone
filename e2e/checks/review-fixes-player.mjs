@@ -1,5 +1,6 @@
 // Footer player checks. The default session plays on another device, which the player polls; inBrowser() makes this
 // browser the active device instead, with a stand-in Web Playback SDK whose listeners a check calls as Spotify's would.
+import { track2 } from "../data.mjs";
 
 const sdk = `window.Spotify = { Player: class {
   constructor() { this.listeners = {}; window.sdkPlayer = this; }
@@ -49,5 +50,21 @@ export const checks = [
     read = p.waitForRequest(isRead, { timeout: 7000 });
     await sdkState(p, null);
     await read.catch(() => { throw new Error("no polling after playback left this browser"); });
+  }],
+  // The comment dialog stays on the song it opened on, even when the next one starts.
+  ["player-comment-song", "/", async (p, t) => {
+    await inBrowser(p, t);
+    const first = t.fixtures["/v1/me/player"].item;
+    await p.getByRole("button", { name: "Comment", exact: true }).click();
+    const dialog = p.getByRole("dialog", { name: "Add Comment" });
+    await dialog.getByLabel("Comment", { exact: true }).fill("about the first song");
+    await sdkState(p, track2);
+    await p.waitForFunction((name) => document.title.startsWith(name), track2.name, { timeout: 3000 });
+    if (!(await dialog.getByText(first.name).count())) throw new Error(`dialog moved on: ${await dialog.innerText()}`);
+    let posted;
+    await p.route("**/api/comments/add", (r) => { posted = r.request().postDataJSON(); return r.fulfill({ json: {} }); });
+    await dialog.getByRole("button", { name: "Add", exact: true }).click();
+    await p.getByText("Comment Added!").waitFor({ timeout: 3000 });
+    if (posted?.songID !== first.id) throw new Error(`comment saved on ${posted?.songID}, not ${first.id}`);
   }],
 ];

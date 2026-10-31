@@ -314,7 +314,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		seekVolume(volume > 0 ? 0 : unmuted.current);
 	};
 
-	// The Annotations button opens the annotations page, or leaves it when you're already there.
+	// The Annotations button opens the annotations page, or leaves it when you're already there, whatever is playing.
 	const navigate = useNavigate();
 	const onAnnotations = useMatch("/annotations") !== null;
 	const toggleAnnotations = () => {
@@ -323,6 +323,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		else navigate("/");
 	};
 	const loaded = playInfo.name !== "";
+	// Comment and annotation pages look the song up as a Spotify track, which episodes and local files aren't.
+	const isTrack = playInfo.uri.startsWith("spotify:track:");
 
 	return (
 		<>
@@ -397,20 +399,20 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 									/>
 								)}
 								<ControlButton
-									title={!loaded ? "Play a song to comment on it" : playInfo.id ? "Comment" : "Local files can't be commented on"}
+									title={isTrack ? "Comment" : loaded ? "Podcasts and local files can't be commented on" : "Play a song to comment on it"}
 									icon="Comment"
 									size="x-larger"
-									disabled={!loaded || !playInfo.id}
+									disabled={!isTrack}
 									onClick={() => setCommentTip(!commentTip)}
 								/>
 							</span>
 							<span className="annotation-wrapper">
 								<ControlButton
-									title={loaded ? "Annotations" : "Play a song to annotate it"}
+									title={isTrack || onAnnotations ? "Annotations" : loaded ? "Podcasts and local files can't be annotated" : "Play a song to annotate it"}
 									icon="Annotation"
 									size="x-larger"
 									active={onAnnotations}
-									disabled={!loaded}
+									disabled={!isTrack && !onAnnotations}
 									onClick={toggleAnnotations}
 								/>
 							</span>

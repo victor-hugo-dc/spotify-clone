@@ -137,7 +137,8 @@ export const checks = [
     const at = new URL((await first).url()).searchParams.get("position_ms") / t.fixtures["/v1/me/player"].item.duration_ms;
     if (Math.abs(at - 0.5) > 0.03) throw new Error(`first seek sent at ${at} of the track`);
   }],
-  // Spotify leaves a podcast episode out (item: null) unless asked for episodes.
+  // Spotify leaves a podcast episode out (item: null) unless asked for episodes. Only songs on Spotify can be commented
+  // on or annotated, though the Annotations button still leaves the annotations page.
   ["player-episode", "/", async (p, t) => {
     const episode = { id: "Episode000000000000001", type: "episode", uri: "spotify:episode:Episode000000000000001", name: "Episode One", duration_ms: 1800000, images: img(5) };
     await p.route((url) => url.pathname === "/v1/me/player", (r) => r.fulfill({ json: {
@@ -146,6 +147,13 @@ export const checks = [
     } }));
     await p.reload({ waitUntil: "networkidle" });
     await p.waitForFunction((name) => document.title.startsWith(name), episode.name, { timeout: 3000 });
+    for (const name of ["Podcasts and local files can't be commented on", "Podcasts and local files can't be annotated"])
+      if (!(await p.getByRole("button", { name, exact: true }).isDisabled({ timeout: 3000 }).catch(() => false))) throw new Error(`no disabled "${name}" button`);
+    await p.goto(t.base + "/annotations", { waitUntil: "networkidle" });
+    await p.waitForFunction((name) => document.title.startsWith(name), episode.name, { timeout: 3000 });
+    await p.getByRole("button", { name: "Annotations", exact: true }).click({ timeout: 3000 })
+      .catch(() => { throw new Error("the Annotations button can't leave the annotations page"); });
+    await p.waitForURL((url) => url.pathname === "/", { timeout: 3000 });
   }],
   // Devices opens the device picker: it says whether that's open, not whether music is playing.
   ["player-devices-button", "/", async (p) => {

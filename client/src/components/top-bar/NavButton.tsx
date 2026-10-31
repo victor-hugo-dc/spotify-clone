@@ -5,7 +5,7 @@ type Props = {property: 'Back' | 'Forward', disabled: boolean, onClick: () => vo
 
 export default function NavButton({property, disabled, onClick}: Props) {
     return (
-        <button className={property === 'Back'? 'navButton no-outline':'navButton mediaNone no-outline'} title={`Go ${property.toLowerCase()}`} aria-label={`Go ${property.toLowerCase()}`} disabled={disabled} onClick={onClick}> 
+        <button className='navButton no-outline' title={`Go ${property.toLowerCase()}`} aria-label={`Go ${property.toLowerCase()}`} disabled={disabled} onClick={onClick}> 
             <Icon name={property} />
         </button>
     )

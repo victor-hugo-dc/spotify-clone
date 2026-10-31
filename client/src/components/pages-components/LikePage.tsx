@@ -5,7 +5,7 @@ import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
 import PlayListFunctions from '../featured-components/PlayListFunctions'
 import TrackList from '../featured-components/TrackList'
 
-import {MessageContext, TokenContext, UserContext} from '../../utilities/context'
+import {TokenContext, UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import { spotify } from '../../utilities/spotify'
 import type { Paging, Track } from '../../utilities/types'
@@ -15,7 +15,6 @@ const toTrack = (saved: {track: Track}) => saved.track
 const LikePage = () => {
     const token = useContext(TokenContext);
     const user = useContext(UserContext);
-    const setMessage = useContext(MessageContext);
 
 
     const bannerInfo: BannerInfo = {
@@ -39,21 +38,15 @@ const LikePage = () => {
     // eslint-disable-next-line
     }, [token])
 
-    // Liked Songs has no context URI to play, so send the loaded tracks as the queue.
-    const play = (offset?: string) => {
-        const body = {uris: tracks.map(track => track.uri), offset: offset ? {uri: offset} : undefined}
-        spotify('/me/player/play', token, {method: 'PUT', body})
-            .catch(error => setMessage(`ERROR: ${error.message}`))
-    }
-
     return (
         <div className='listPage' style={{display: `${tracks.length===0? 'none':'block'}`}}>
             <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                <PlayListFunctions type='playOnly' playContext={() => play()}/>
+                {/* Liked Songs has no context URI to play, so the loaded tracks become the queue. */}
+                <PlayListFunctions type='playOnly' start={{uris: tracks.map(track => track.uri)}}/>
                 <div className="page-content">
-                    <TrackList ref={lastRef} tracks={tracks} playContextTrack={play}/>
+                    <TrackList ref={lastRef} tracks={tracks}/>
                 </div>
             </div>
         </div>

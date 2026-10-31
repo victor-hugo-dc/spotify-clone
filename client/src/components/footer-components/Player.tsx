@@ -17,7 +17,7 @@ import AddComment from "./AddComment";
 
 import { spotify } from "../../utilities/spotify";
 import formatTime from "../../utilities/time";
-import { MessageContext } from "../../utilities/context";
+import { MessageContext, type NowPlaying as NowPlayingState } from "../../utilities/context";
 import type { Album, Track } from "../../utilities/types";
 
 export type PlayerHandle = { updateState: () => void };
@@ -27,11 +27,14 @@ type PlaybackResponse = {
 	shuffle_state: boolean;
 	is_playing: boolean;
 	progress_ms: number | null;
+	context: { uri: string } | null;
 	item: (Track & { album: Album }) | null;
 	device: { volume_percent: number | null };
 };
 
-const Player = ({ token, ref }: { token: string | null; ref?: Ref<PlayerHandle> }) => {
+type Props = { token: string | null; onNowPlaying: (nowPlaying: NowPlayingState) => void; ref?: Ref<PlayerHandle> };
+
+const Player = ({ token, onNowPlaying, ref }: Props) => {
 	const setMessage = useContext(MessageContext);
 	const [playbackState, setPlaybackState] = useState({
 		play: false,
@@ -55,7 +58,13 @@ const Player = ({ token, ref }: { token: string | null; ref?: Ref<PlayerHandle> 
 		artists: [],
 		name: "",
 		id: "",
+		uri: "",
 	});
+	const [contextUri, setContextUri] = useState<string | null>(null);
+
+	useEffect(() => {
+		onNowPlaying({ trackUri: playInfo.uri || null, contextUri, playing: playbackState.play });
+	}, [playInfo.uri, contextUri, playbackState.play, onNowPlaying]);
 
 	const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 	const playbackIntervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -109,9 +118,12 @@ const Player = ({ token, ref }: { token: string | null; ref?: Ref<PlayerHandle> 
 		// Playback status updates; the state is null once playback moves to another device.
 		sdkPlayer.addListener("player_state_changed", (state: Spotify.PlaybackState | null) => {
 			if (!state) return;
-			const { duration, position, paused, shuffle, repeat_mode, track_window } = state;
+			const { duration, position, paused, shuffle, repeat_mode, track_window, context } = state;
+			const { current_track } = track_window;
 
-			setPlayInfo(track_window.current_track);
+			// A relinked track plays under another URI; lists show the one it was linked from.
+			setPlayInfo({ ...current_track, uri: current_track.linked_from?.uri ?? current_track.uri });
+			setContextUri(context?.uri ?? null);
 			setPlayback(position / duration);
 			setPlaybackState((state) => ({
 				...state,
@@ -143,10 +155,11 @@ const Player = ({ token, ref }: { token: string | null; ref?: Ref<PlayerHandle> 
 	};
 
 	//Reference for parent component to use updateState
+	// Spotify takes a moment to apply a command, so look again shortly after one.
 	useImperativeHandle(ref, () => ({
 		updateState: () => {
-			setPlaybackState((state) => ({ ...state, play: true }));
-			apiUpdate();
+			clearTimeout(timerRef.current);
+			timerRef.current = setTimeout(() => apiUpdate(), 500);
 		},
 	}));
 
@@ -162,7 +175,7 @@ const Player = ({ token, ref }: { token: string | null; ref?: Ref<PlayerHandle> 
 					setConnectTip(true);
 					return;
 				}
-				const { repeat_state, shuffle_state, is_playing, progress_ms, item, device } = state;
+				const { repeat_state, shuffle_state, is_playing, progress_ms, item, device, context } = state;
 				if (!item) return;
 				const progress = progress_ms ?? 0;
 				setPlayback(progress / item.duration_ms);
@@ -180,6 +193,7 @@ const Player = ({ token, ref }: { token: string | null; ref?: Ref<PlayerHandle> 
 					total_time: item.duration_ms,
 				}));
 				setPlayInfo(item);
+				setContextUri(context?.uri ?? null);
 			})
 			.catch((error) => console.log(error));
 	};

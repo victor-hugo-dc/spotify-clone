@@ -14,7 +14,7 @@ import PromptButton from './components/featured-components/PromptButton'
 import Player, { type PlayerHandle } from './components/footer-components/Player'
 import Featured from './components/featured-components/Featured'
 import Loading from './components/featured-components/Loading'
-import {UserContext, TokenContext, MessageContext, PlayContext} from './utilities/context'
+import {UserContext, TokenContext, MessageContext, PlayContext, NowPlayingContext, type NowPlaying} from './utilities/context'
 import { spotify } from './utilities/spotify'
 import type { Paging, Playlist, User } from './utilities/types'
 
@@ -24,6 +24,7 @@ function App() {
   const [loginError] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('error'))
   const [userInfo, setuserInfo] = useState<User | null>(null)
   const [playlists, setPlaylists] = useState<Playlist[]>([])
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false})
 
   const [status, setStatus] = useState(false) 
   const [message, setMessage] = useState('')
@@ -112,13 +113,15 @@ function App() {
               </Sidebar>
               
               <PlayContext.Provider value={updatePlayer}>
+                <NowPlayingContext.Provider value={nowPlaying}>
                     <UserContext.Provider value={userInfo}>
                       <Featured playlists={playlists} refreshPlaylist={() => refreshPlaylist()} message={message} status={status} />
                     </UserContext.Provider>
+                </NowPlayingContext.Provider>
               </PlayContext.Provider>
 
               <Footer>
-                <Player token={token} ref={playerRef}/>
+                <Player token={token} onNowPlaying={setNowPlaying} ref={playerRef}/>
               </Footer>
           </TokenContext.Provider>
         </MessageContext.Provider>

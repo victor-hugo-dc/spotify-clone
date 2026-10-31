@@ -7,6 +7,7 @@ import { MessageContext } from '../../utilities/context';
 // Fits both a Web API track and the Web Playback SDK's current_track, which has URIs but no album or artist ids.
 export type PlayInfo = {
     id: string | null,
+    uri: string,
     name: string,
     album: {uri: string, images: {url: string}[]},
     artists: {uri: string, name: string}[],

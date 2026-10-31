@@ -2,16 +2,15 @@ import React, { useState, useContext, useEffect, type Ref } from 'react';
 import { Link, useNavigate } from "react-router";
 import Icon from '../icons';
 import formatTime from '../../utilities/time';
-import { PlayContext, TokenContext } from '../../utilities/context';
+import { TokenContext } from '../../utilities/context';
 import { api } from '../../utilities/api';
 import ControlButton from '../footer-components/ControlButton';
 import type { SongComment, Track } from '../../utilities/types';
 
-type Props = { track: Track; highlight: boolean; playContextTrack: (uri: string) => void; ref?: Ref<HTMLLIElement> };
+type Props = { track: Track; highlight: boolean; current: boolean; playing: boolean; onPlay: () => void; ref?: Ref<HTMLLIElement> };
 
-export default function TrackListItem({ track, highlight, playContextTrack, ref }: Props) {
-  const { album, artists, name, explicit, duration_ms, uri, id } = track;
-  const updatePlayer = useContext(PlayContext);
+export default function TrackListItem({ track, highlight, current, playing, onPlay, ref }: Props) {
+  const { album, artists, name, explicit, duration_ms, id } = track;
   const token = useContext(TokenContext);
   const [commentCount, setCommentCount] = useState(0);
   const navigate = useNavigate();
@@ -23,13 +22,13 @@ export default function TrackListItem({ track, highlight, playContextTrack, ref 
   }, [id, token])
 
   return (
-    <li ref={ref} className={`trackListItem ${highlight ? 'highlight' : ''}`}>
+    <li ref={ref} className={`trackListItem ${highlight ? 'highlight' : ''} ${current ? 'current' : ''}`}>
       <div className='trackItemPlay'>
-        <button className='hoverIcon trackTopAlign no-outline' onClick={() => { playContextTrack(uri); updatePlayer(); }}>
-          <Icon name='Play' height='20' width='20' />
+        <button className='hoverIcon trackTopAlign no-outline' title={playing ? `Pause ${name}` : `Play ${name}`} aria-label={playing ? `Pause ${name}` : `Play ${name}`} onClick={onPlay}>
+          <Icon name={playing ? 'Pause' : 'Play'} height='20' width='20' />
         </button>
         <div className='itemIcon trackTopAlign'>
-          <Icon name='Music' />
+          {playing ? <span className='equalizer' aria-hidden='true'><span></span><span></span><span></span></span> : <Icon name='Music' />}
         </div>
       </div>
 

@@ -1,15 +1,18 @@
 import React, {useContext} from 'react'
 import Icon from '../icons'
-import {MessageContext, PlayContext} from '../../utilities/context'
+import {MessageContext} from '../../utilities/context'
+import usePlayback from '../../utilities/hooks/usePlayback'
 
 type Props = {
     type?: 'playOnly' | 'none' | 'user' | 'artist',
     follow?: boolean,
     onFollow?: () => void,
-    playContext?: () => void,
+    uri?: string,
+    // What to play when `uri` isn't loaded yet; defaults to `uri` as the context.
+    start?: object,
 }
 
-export default function PlayListFunctions({type, follow = false, onFollow, playContext = () => {}}: Props) {
+export default function PlayListFunctions({type, follow = false, onFollow, uri = '', start = {context_uri: uri}}: Props) {
     const setMessage = useContext(MessageContext)
     const notImplemented = () => setMessage('Oops, it look like I chose not to implement this feature :)')
 
@@ -17,7 +20,7 @@ export default function PlayListFunctions({type, follow = false, onFollow, playC
         case 'playOnly':
             return (
                 <div className="playListFunctions">
-                    <PlayButtonLarge playContext={playContext}/>
+                    <PlayButtonLarge uri={uri} start={start}/>
                 </div>
             )
         case 'none':
@@ -37,7 +40,7 @@ export default function PlayListFunctions({type, follow = false, onFollow, playC
         case 'artist':
             return (
                 <div className="playListFunctions">
-                    <PlayButtonLarge playContext={playContext}/>
+                    <PlayButtonLarge uri={uri} start={start}/>
                     <FollowButton follow={follow} onFollow={onFollow}/>
                     <MoreButton onClick={notImplemented}/>
                 </div>
@@ -45,7 +48,7 @@ export default function PlayListFunctions({type, follow = false, onFollow, playC
         default:
             return (
                 <div className="playListFunctions">
-                    <PlayButtonLarge playContext={playContext}/>
+                    <PlayButtonLarge uri={uri} start={start}/>
                     <LikeButton follow={follow} onFollow={onFollow}/>
                     <MoreButton onClick={notImplemented}/>
                 </div>
@@ -54,14 +57,12 @@ export default function PlayListFunctions({type, follow = false, onFollow, playC
 }
 
 
-function PlayButtonLarge({playContext}: {playContext: () => void}){
-    const updatePlayer = useContext(PlayContext)
+function PlayButtonLarge({uri, start}: {uri: string, start: object}){
+    const {isPlaying, toggle} = usePlayback()
+    const playing = isPlaying(uri)
     return (
-        <button className="playButton no-outline" title="Play" onClick={() => {
-            playContext()
-            setTimeout(() => updatePlayer(), 500)
-        }}>
-            <Icon name="Play" height='28' width='28'/>
+        <button className="playButton no-outline" title={playing ? 'Pause' : 'Play'} aria-label={playing ? 'Pause' : 'Play'} onClick={() => toggle(uri, start)}>
+            <Icon name={playing ? 'Pause' : 'Play'} height='28' width='28'/>
         </button>
     )
 }

@@ -6,7 +6,7 @@ import PlayListFunctions from '../featured-components/PlayListFunctions'
 import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
 
-import {TokenContext, MessageContext, PlayContext} from '../../utilities/context'
+import {TokenContext, MessageContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import { spotify } from '../../utilities/spotify'
 import type { Paging, Playlist, Track } from '../../utilities/types'
@@ -20,7 +20,6 @@ export default function PlayListPage({playlists, refreshPlaylist}: {playlists: P
     const { id = '' } = useParams()
     const token = useContext(TokenContext)
     const setMessage = useContext(MessageContext)
-    const updatePlayer = useContext(PlayContext)
 
     const [loading, setLoading] = useState(true)
 
@@ -69,16 +68,6 @@ export default function PlayListPage({playlists, refreshPlaylist}: {playlists: P
             .catch(error => setMessage(`ERROR: ${error.message}`))
     }
 
-    const play = (body: object) => {
-        spotify('/me/player/play', token, {method: 'PUT', body})
-            .then(() => setTimeout(() => updatePlayer(), 500))
-            .catch(error => setMessage(`ERROR: ${error.message}`))
-    }
-
-    const playContext = () => play({context_uri: uri})
-
-    const playContextTrack = (trackUri: string) => play({context_uri: uri, offset: {uri: trackUri}})
-
     return (
         loading? 
         <Loading />
@@ -87,10 +76,10 @@ export default function PlayListPage({playlists, refreshPlaylist}: {playlists: P
             <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                <PlayListFunctions onFollow={followPlaylist} follow={like} playContext={playContext}/>
+                <PlayListFunctions onFollow={followPlaylist} follow={like} uri={uri}/>
                 <div className="page-content">
                     {listed ?
-                        <TrackList ref={lastRef} tracks={tracks} playContextTrack={playContextTrack}/> :
+                        <TrackList ref={lastRef} tracks={tracks} contextUri={uri}/> :
                         <p style={{color: '#fff', padding: '16px 0'}}>Spotify only shows apps the tracks of playlists you own or collaborate on. Press play to listen to this one.</p>
                     }
                 </div>

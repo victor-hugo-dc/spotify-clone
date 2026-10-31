@@ -8,7 +8,7 @@ import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
 
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
-import {TokenContext, MessageContext, PlayContext} from '../../utilities/context'
+import {TokenContext, MessageContext} from '../../utilities/context'
 import { spotify } from '../../utilities/spotify'
 import type { Album, Paging, Track } from '../../utilities/types'
 
@@ -20,7 +20,6 @@ export default function AlbumPage() {
     const highlight = searchParams.get('highlight')
     const token = useContext(TokenContext)
     const setMessage = useContext(MessageContext)
-    const updatePlayer = useContext(PlayContext)
     const [loading, setLoading] = useState(true)
 
     const [albumType, setAlbumType] = useState('')
@@ -55,16 +54,6 @@ export default function AlbumPage() {
     // eslint-disable-next-line
     }, [id])
 
-    const play = (body: object) => {
-        spotify('/me/player/play', token, {method: 'PUT', body})
-            .then(() => setTimeout(() => updatePlayer(), 500))
-            .catch(error => setMessage(`ERROR: ${error.message}`))
-    }
-
-    const playContext = () => play({context_uri: uri})
-
-    const playContextTrack = (trackUri: string) => play({context_uri: uri, offset: {uri: trackUri}})
-
     return (
         loading? 
         <Loading />
@@ -73,9 +62,9 @@ export default function AlbumPage() {
             <PageBanner pageTitle={albumType} bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                <PlayListFunctions onFollow={() => setMessage('Oops looks like the Spotify API does not support following albums')} playContext={playContext}/>
+                <PlayListFunctions onFollow={() => setMessage('Oops looks like the Spotify API does not support following albums')} uri={uri}/>
                 <div className="page-content">
-                    <TrackList ref={lastRef} tracks={tracks} highlight={highlight} playContextTrack={playContextTrack}/>
+                    <TrackList ref={lastRef} tracks={tracks} highlight={highlight} contextUri={uri}/>
                 </div>
             </div>
         </div>

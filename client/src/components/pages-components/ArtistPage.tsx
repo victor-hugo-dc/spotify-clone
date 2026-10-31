@@ -3,7 +3,7 @@ import {useState, useEffect, useContext} from 'react'
 import {useParams} from 'react-router'
 
 import { spotify } from '../../utilities/spotify'
-import {TokenContext, MessageContext, PlayContext} from '../../utilities/context'
+import {TokenContext, MessageContext} from '../../utilities/context'
 import type { Album, Artist, Paging } from '../../utilities/types'
 
 import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
@@ -18,7 +18,6 @@ export default function ArtistPage() {
     const token = useContext(TokenContext)
     const setMessage = useContext(MessageContext)
     const [loading, setLoading] = useState(true)
-    const setPlay = useContext(PlayContext)
 
     const [bannerInfo, setbannerInfo] = useState(emptyBanner)
 
@@ -75,12 +74,6 @@ export default function ArtistPage() {
             .catch(error => setMessage(`ERROR: ${error.message}`))
     }
 
-    const playContext = () => {
-        spotify('/me/player/play', token, {method: 'PUT', body: {context_uri: uri}})
-            .then(() => setTimeout(() => setPlay(), 500))
-            .catch(error => setMessage(`ERROR: ${error.message}`))
-    }
-
     return (
         loading ? 
             <Loading /> 
@@ -89,7 +82,7 @@ export default function ArtistPage() {
                 <PageBanner pageTitle='artist' bannerInfo={bannerInfo}/>
                 <div className="playListContent">
                     <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                    <PlayListFunctions type='artist' follow={follow} onFollow={followArtist} playContext={playContext}/>
+                    <PlayListFunctions type='artist' follow={follow} onFollow={followArtist} uri={uri}/>
                     <div className="page-content">
                         <AboutMenu album={album} single={single} appear={appear} compilation={compilation}/>
                     </div>

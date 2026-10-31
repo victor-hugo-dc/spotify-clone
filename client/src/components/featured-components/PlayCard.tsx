@@ -1,21 +1,18 @@
-import React, {useContext, type Ref} from 'react'
+import React, {type Ref} from 'react'
 import {useNavigate, Link} from 'react-router'
 
 import CardInfo from './CardInfo'
 import CardDisplay from './CardDisplay'
 import Icon from '../icons'
 
-import { spotify } from '../../utilities/spotify'
-import {TokenContext, PlayContext, MessageContext} from '../../utilities/context'
+import usePlayback from '../../utilities/hooks/usePlayback'
 import type { CardItem } from '../../utilities/types'
 
 export default function PlayCard({info, ref}: {info: CardItem, ref?: Ref<HTMLDivElement>}) {
     const navigate = useNavigate()
     const description = returnDescription(info)
-    const setMessage = useContext(MessageContext)
-
-    const token = useContext(TokenContext)
-    const updatePlayer = useContext(PlayContext)
+    const {isPlaying, toggle} = usePlayback()
+    const playing = info.type !== 'link' && isPlaying(info.uri)
 
     const images = info.type === 'track' ? info.album?.images : info.images
     const image_url = images?.[0]?.url
@@ -26,10 +23,7 @@ export default function PlayCard({info, ref}: {info: CardItem, ref?: Ref<HTMLDiv
             navigate(info.to)
             return
         }
-        const body = info.type === 'track' ? {uris: [info.uri]} : {context_uri: info.uri}
-        spotify('/me/player/play', token, {method: 'PUT', body})
-            .then(() => setTimeout(() => updatePlayer(), 1000))
-            .catch(error => setMessage(`ERROR: ${error.message}`))
+        toggle(info.uri, info.type === 'track' ? {uris: [info.uri]} : {context_uri: info.uri})
     }
 
     return (
@@ -40,11 +34,8 @@ export default function PlayCard({info, ref}: {info: CardItem, ref?: Ref<HTMLDiv
                     <CardInfo title={info.name} description={description}/>
                 </div>
             </Link>
-            <button className="smallButton no-outline" title="Play" onClick={() => {
-                playContext()
-                updatePlayer()
-            }}>
-                <Icon name="Play" height='17' width='17'/>
+            <button className={`smallButton no-outline ${playing ? 'playing' : ''}`} title={playing ? 'Pause' : 'Play'} aria-label={playing ? `Pause ${info.name}` : `Play ${info.name}`} onClick={playContext}>
+                <Icon name={playing ? 'Pause' : 'Play'} height='17' width='17'/>
             </button>
         </div>
     )

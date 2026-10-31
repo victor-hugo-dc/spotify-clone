@@ -4,7 +4,7 @@ import React, { type ReactNode } from 'react';
 function PlayLists({top, bottom}: {top: ReactNode, bottom: ReactNode}){
     return (
         <div className='playlists'>
-            <h1 className='play-title'>playlists</h1>
+            <h1 className='play-title'>Playlists</h1>
             {top}
             <hr className="list-separator"/>
             {bottom}

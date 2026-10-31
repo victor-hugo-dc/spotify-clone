@@ -1,11 +1,24 @@
+  /* Figtree (SIL OFL, client/public/fonts) stands in for Spotify's own typeface, which isn't free to use. */
+  @font-face {
+    font-family: "Figtree";
+    font-style: normal;
+    font-weight: 300 900;
+    font-display: swap;
+    src: url("/fonts/figtree-latin.woff2") format("woff2");
+  }
 
-:root {
-    --spotify-green: #1db954;
-    --spotify-green-bright: #1ed760;
+  :root {
+    --spotify-green: #1ed760;
+    --spotify-green-bright: #3be477;
     --main-text: #b3b3b3;
-    --player-height: 90px;
+    --background-base: #121212;
+    --background-highlight: #1f1f1f;
+    --background-elevated: #282828;
+    --player-height: 72px;
+    --panel-gap: 8px;
+    --panel-radius: 8px;
     --side-bar-margin: 24px;
-    --highlight-color: #1DB954;
+    --highlight-color: #1ed760;
   }
 
   * {
@@ -15,8 +28,7 @@
   }
   
   ::-webkit-scrollbar {
-    width: 13px;
-    z-index: 0;
+    width: 12px;
   }
   
   /* Track */
@@ -27,33 +39,45 @@
   
   /* Handle */
   ::-webkit-scrollbar-thumb {
-    background: #5a5a5a;
-    width: 12px;
+    background: hsla(0, 0%, 100%, 0.3);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: 6px;
   }
   
   /* Handle on hover */
   ::-webkit-scrollbar-thumb:hover {
-    background: #b3b3b3;
+    background-color: hsla(0, 0%, 100%, 0.5);
   }
   
   body {
-    font-size: 13px;
+    font-size: 14px;
     line-height: 20px;
-    letter-spacing: 0.015em;
     color: var(--main-text);
+    background: #000;
     text-transform: none;
-    font-family: "Rubik", "Poppins", "Nunito", "Open Sans", "Roboto",
-      "Helvetica Neue", Helvetica, Arial, "Hiragino Kaku Gothic Pro", "Meiryo",
-      "MS Gothic", sans-serif;
+    font-family: "Figtree", "Helvetica Neue", Helvetica, Arial, "Hiragino Kaku Gothic Pro", "Meiryo", "MS Gothic", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Form controls don't inherit the page font by default. */
+  button,
+  input,
+  textarea {
+    font-family: inherit;
   }
   
   .App {
     height: 100vh;
     width: 100vw;
-    display: relative;
+    min-width: 768px;
     display: grid;
-    grid-template-rows: 1fr auto;
-    grid-template-columns: auto 1fr;
+    /* minmax(0, ...) lets the panels shrink, so the player is never pushed below a short window. */
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--panel-gap);
+    padding: var(--panel-gap) var(--panel-gap) 0;
+    background: #000;
     overflow: hidden;
   }
   
@@ -64,15 +88,19 @@
     justify-content: center;
     align-items: center;
     position: absolute;
-    background: #040404;
+    inset: 0;
+    background: #000;
   }
   
   .sidebar {
-    background: #040404;
-    width: 232px;
-    padding-top: 24px;
-    /* display: flex; */
+    background: var(--background-base);
+    border-radius: var(--panel-radius);
+    width: 280px;
+    padding: 24px 0 8px;
+    display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
     user-select: none;
     position: relative;
   }
@@ -84,7 +112,7 @@
   
   .logo {
     padding-left: var(--side-bar-margin);
-    margin-bottom: 18px;
+    margin-bottom: 20px;
   }
   
   .spotify-logo {
@@ -112,13 +140,13 @@
     align-items: center;
     height: 40px;
     padding: 0 16px;
-    font-weight: bold;
-    transition: all 0.3s;
+    font-size: 16px;
+    font-weight: 700;
+    transition: color 0.2s;
     border-radius: 4px;
   }
   
   .activeMainNav {
-    background: #282828;
     color: #fff;
   }
   
@@ -132,17 +160,17 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
     overflow: hidden;
-    min-height: 455px;
   }
   
   .play-title {
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 700;
-    line-height: 16px;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    padding: 0 var(--side-bar-margin) 12px var(--side-bar-margin);
+    line-height: 24px;
+    color: var(--main-text);
+    text-transform: none;
+    padding: 0 var(--side-bar-margin) 12px;
   }
   
   .create-button {
@@ -179,26 +207,22 @@
     line-height: 16px;
   }
   
-  .featured-item {
-    transition: all 0.4s;
-  }
   
   .featured-item-link {
-    opacity: 0.7;
     display: flex;
     align-items: center;
-    padding: 5px var(--side-bar-margin);
-    color: #fff;
+    padding: 6px var(--side-bar-margin);
+    color: var(--main-text);
     text-decoration: none;
-    transition: all 0.4s;
+    transition: color 0.2s;
   }
   
-  .featured-item:hover > .featured-item-link {
-    opacity: 1;
+  .featured-item-link:hover {
+    color: #fff;
   }
   
   .list-separator {
-    margin: 8px var(--side-bar-margin) 8px var(--side-bar-margin);
+    margin: 8px var(--side-bar-margin);
     background-color: #282828;
     border: none;
     height: 1px;
@@ -206,17 +230,14 @@
   
   .other-playlist-container {
     margin: 4px 0;
-    overflow: hidden;
     flex: 1;
-    min-height: 100px;
-    max-height: min-content;
+    min-height: 0;
     overflow-y: auto;
   }
   
   .other-list {
     position: relative;
     list-style: none;
-    height: 0;
     white-space: nowrap;
   }
   
@@ -227,12 +248,11 @@
   .list-link {
     color: var(--main-text);
     text-decoration: none;
+    display: block;
     height: 32px;
     line-height: 32px;
     font-size: 14px;
-    font-weight: 500;
     overflow: hidden;
-    cursor: default;
   }
   
   .list-link:hover {
@@ -248,32 +268,21 @@
   
   .cta-wrapper {
     padding: 0 8px;
-    background: rgb(0, 0, 0);
   }
   
-  .cta-link {
-    padding: 0 16px;
-    display: flex;
-    align-items: center;
-    height: 40px;
-    color: var(--main-text);
-    text-decoration: none;
-  }
   
   .nav-icon.install-icon {
     height: 20px;
   }
   
-  .cta-wrapper:hover {
+  .cta-wrapper .nav-link:hover {
     color: #fff;
   }
   
   .footer {
-    min-width: 768px;
-    background: #282828;
-    border-top: 1px solid #000;
+    background: #000;
     grid-column: 1/-1;
-    position: sticky;
+    position: relative;
     z-index: 4;
   }
   
@@ -679,33 +688,37 @@
   }
   
   .featured {
-    background: #121212;
-    overflow-y: scroll;
+    background: var(--background-base);
+    border-radius: var(--panel-radius);
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 0;
     position: relative;
   }
   
   .status-bar-wrapper {
     position: fixed;
-    top: calc(100vh - var(--player-height) - 55px);
+    left: 0;
+    right: 0;
+    bottom: calc(var(--player-height) + 32px);
     display: flex;
     justify-content: center;
     z-index: 999;
-    width: calc(100vw - 232px);
-    transition: all 0.5s cubic-bezier(0.3, 0, 0.4, 1);
+    transition: opacity 0.5s cubic-bezier(0.3, 0, 0.4, 1);
     opacity: 0;
     visibility: hidden;
+    /* Invisible or not, it must not swallow clicks meant for the page underneath. */
+    pointer-events: none;
   }
   .status-bar {
-    /* left: 50%; */
     background-color: #2e77d0;
     color: #fff;
     border-radius: 8px;
     padding: 12px 36px;
     font-size: 16px;
-    box-shadow: 0 4px 12px 4px rgba(0, 0, 0, 0.5);
     line-height: 20px;
+    box-shadow: 0 4px 12px 4px rgba(0, 0, 0, 0.5);
     text-align: center;
-    margin: 0;
   }
   
   .status-bar-wrapper.active {
@@ -715,12 +728,13 @@
   
   .header-bar {
     width: 100%;
-    height: 60px;
-    background: rgba(0, 0, 0, 0.5);
+    height: 64px;
+    background: rgba(18, 18, 18, 0.88);
+    backdrop-filter: blur(8px);
     position: sticky;
     top: 0;
-    z-index: 4;
-    padding: 16px 32px;
+    z-index: 5;
+    padding: 16px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -761,22 +775,36 @@
   .SearchBar {
     position: relative;
     flex: 0 1 364px;
-    color: #121212;
+    color: var(--main-text);
   }
   
   .SearchInput {
-    color: #000;
-    padding: 6px 48px;
-    height: 40px;
+    color: #fff;
+    background: #242424;
+    padding: 6px 36px 6px 48px;
+    height: 48px;
     width: 100%;
-    border: 0;
+    border: 1px solid transparent;
     border-radius: 500px;
     text-overflow: ellipsis;
-    font-size: 14px;
-    line-height: 20px;
-    letter-spacing: 0.015em;
+    font: inherit;
+    font-size: 16px;
   }
   
+  .SearchInput:hover {
+    background: #2a2a2a;
+    border-color: hsla(0, 0%, 100%, 0.1);
+  }
+
+  .SearchInput:focus {
+    border: 2px solid #fff;
+    outline: none;
+  }
+
+  .SearchInput::placeholder {
+    color: #757575;
+  }
+
   .cNavWrapper {
     white-space: nowrap;
     flex-grow: 1;
@@ -811,29 +839,29 @@
   
   
   .PromptButton {
-    font-size: 12px;
-    line-height: 18px;
+    font: inherit;
+    font-size: 16px;
+    line-height: 24px;
     font-weight: 700;
-    letter-spacing: 1.76px;
-    text-transform: uppercase;
-    border: 2px solid transparent;
+    border: 0;
     border-radius: 500px;
     color: #fff;
-    transition: all 33ms cubic-bezier(0.3, 0, 0, 1);
     white-space: nowrap;
-    padding: 8px 34px;
+    padding: 8px 32px;
     display: inline-block;
     cursor: pointer;
     text-align: center;
+    text-decoration: none;
+    transition: transform 33ms cubic-bezier(0.3, 0, 0, 1);
   }
   
   .PromptButton:hover {
-    transform: scale(1.05);
+    transform: scale(1.04);
   }
   
   .UserInfoButton {
     margin-left: 16px;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.54);
     border-radius: 23px;
     height: 32px;
     min-width: 32px;
@@ -911,10 +939,10 @@
   }
   
   .page-content {
-    padding: 0 32px;
+    padding: 0 24px;
     max-width: 1955px;
-    z-index: 3;
-    border: #ffff00;
+    position: relative;
+    z-index: 1;
   }
 
   .annotation-page-content {

@@ -14,7 +14,7 @@ export default function AnnotationsPage() {
   const [annotatedText, setAnnotatedText] = useState("");
   const [annotationTip, setAnnotationTip] = useState(false);
   const [id, setId] = useState("");
-  const [feed, setFeed] = useState<SongAnnotation[]>([]);
+  const [feed, setFeed] = useState<SongAnnotation[] | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,7 +55,8 @@ export default function AnnotationsPage() {
         <div className="socialPage">
           <PageTitle name="Comments" />
           <div className="socialGrid">
-            {feed.map((comm) => (
+            {feed?.length === 0 && <p className='empty-state'>No one has annotated this song yet.</p>}
+            {feed?.map((comm) => (
               <Annotation key={comm.id} annotation={comm} />
             ))}
           </div>

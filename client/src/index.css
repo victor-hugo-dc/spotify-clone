@@ -1046,6 +1046,12 @@
     margin: 1rem;
   }
   
+  .empty-state {
+    color: var(--main-text);
+    font-size: 16px;
+    padding: 24px 0;
+  }
+
   .socialGrid {
     margin: 16px 0;
     display: grid;

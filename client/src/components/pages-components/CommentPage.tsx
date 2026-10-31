@@ -10,7 +10,7 @@ import type { SongComment, Track } from '../../utilities/types';
 export default function CommentPage() {
     const { id = '' } = useParams();
     const token = useContext(TokenContext);
-    const [feed,setFeed] = useState<SongComment[]>([]);
+    const [feed,setFeed] = useState<SongComment[] | null>(null);
     const [albumType, setAlbumType] = useState('');
 
     const [bannerInfo, setbannerInfo] = useState<BannerInfo>({
@@ -50,7 +50,8 @@ export default function CommentPage() {
         <div className='listPage' style={{display: 'block'}}>
             <PageBanner pageTitle={albumType} bannerInfo={bannerInfo}/>
             <div className="playListContent" style={{marginLeft: '2em', marginRight: '2em'}}>
-                {feed.map(comm => 
+                {feed?.length === 0 && <p className='empty-state'>No one's commented thus far. Play the song and hit the comment button to be the first.</p>}
+                {feed?.map(comm => 
                     <Comment key={comm.id} comment={comm} showSong={false}/>)}
             </div>
         </div>

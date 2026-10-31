@@ -25,6 +25,14 @@ test("returns undefined for 204 player commands and sends JSON bodies", async ()
   assert.equal(calls[0]?.init.body, '{"uris":["x"]}');
 });
 
+test("doesn't choke on non-JSON bodies", async () => {
+  answer(200, "OK");
+  assert.equal(await spotify("/me/player/play", "tok", { method: "PUT" }), undefined);
+  answer(502, "upstream connect error or disconnect/reset before headers");
+  await assert.rejects(spotify("/me/player/play", "tok", { method: "PUT" }), (error: Error & { status?: number }) =>
+    error.status === 502 && error.message === "Spotify is having trouble (502), try again");
+});
+
 test("throws Spotify's error message", async () => {
   answer(403, '{"error":{"status":403,"message":"Player command failed: Premium required"}}');
   await assert.rejects(spotify("/me/player/play", "tok", { method: "PUT" }), /Premium required/);

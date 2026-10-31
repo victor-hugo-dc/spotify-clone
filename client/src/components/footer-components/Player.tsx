@@ -102,7 +102,7 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 			// The SDK asks again whenever its token runs out, so hand it a fresh one each time.
 			getOAuthToken: (cb) => {
 				fetch("/api/token")
-					.then((response) => response.json())
+					.then((response) => (response.ok ? response.json() : Promise.reject(new Error(`token refresh failed (${response.status})`))))
 					.then(({ access_token }) => cb(access_token))
 					.catch((error) => console.log(error));
 			},

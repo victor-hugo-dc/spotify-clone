@@ -1,28 +1,29 @@
 {
-    "name": "shoutify",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "server": "npm start --prefix server",
-        "client": "npm start --prefix client",
-        "dev": "concurrently \"npm run server\" \"npm run client\""
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/UwemWilson4/shoutify.git"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/UwemWilson4/shoutify/issues"
-    },
-    "homepage": "https://github.com/UwemWilson4/shoutify#readme",
-    "dependencies": {
-        "concurrently": "^8.0.1",
-        "mongodb": "^5.3.0",
-        "react-scripts": "^2.1.3"
-    }
+  "name": "shoutify",
+  "version": "2.0.0",
+  "private": true,
+  "description": "A Spotify web player with song comments and annotations, for you and your friends.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev:server": "node --watch --env-file-if-exists=.env server/index.ts",
+    "start": "node server/index.ts",
+    "typecheck": "tsc -p tsconfig.server.json"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "mongoose": "^9.11.4"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2"
+  }
 }

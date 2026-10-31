@@ -51,7 +51,7 @@ export default function AnnotationsPage() {
       </div>
       <div className="lyrics-container">
         <div className="socialPage">
-          <PageTitle name="Comments" />
+          <PageTitle name="Annotations" />
           <div className="socialGrid">
             {feed?.length === 0 && <p className='empty-state'>No one has annotated this song yet.</p>}
             {feed?.map((comm) => (

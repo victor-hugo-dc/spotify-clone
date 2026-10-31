@@ -38,8 +38,8 @@ type PlaybackState = { play: boolean; shuffle: boolean; repeat: Repeat; progress
 
 // Spotify's repeat button cycles off -> whole playlist/album -> this track -> off.
 const nextRepeat: Record<Repeat, Repeat> = { off: "context", context: "track", track: "off" };
-// The SDK numbers them: 0 off, 1 repeat this track, 2 repeat the context.
-const sdkRepeat: Repeat[] = ["off", "track", "context"];
+// The SDK numbers them: 0 off, 1 repeat the context, 2 repeat this track (the @types comment has 1 and 2 swapped).
+const sdkRepeat: Repeat[] = ["off", "context", "track"];
 
 // Where playback is at `now`: the position measured at `at`, plus the time since while playing, never past the end.
 // Counting time rather than timer ticks keeps it right in background tabs, whose timers browsers slow down.

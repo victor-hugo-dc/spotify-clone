@@ -262,7 +262,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	// Player commands fail with Spotify's reason, e.g. no active device or no Premium. `show` sets the state the command
 	// asked for (never a toggle of whatever is there now, so quick double clicks can't invert it); the re-read confirms it.
 	const command = (path: string, method: "PUT" | "POST", show: (state: PlaybackState) => PlaybackState = (state) => state) => {
-		playerCommand(path, deviceId, { method })
+		return playerCommand(path, deviceId, { method })
 			.then(() => {
 				setPlaybackState(show);
 				refreshSoon();
@@ -291,9 +291,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	const seekPlayback = (ratio: number) => {
 		const time = Math.round(ratio * playbackState.total_time);
-		command(`/me/player/seek?position_ms=${time}`, "PUT", (state) => ({ ...state, progress: time, at: Date.now() }));
-
 		setScrubPb(null);
+		return command(`/me/player/seek?position_ms=${time}`, "PUT", (state) => ({ ...state, progress: time, at: Date.now() }));
 	};
 
 	const position = positionAt(playbackState, now);
@@ -301,7 +300,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const scrubPlayback = (ratio: number | null) => setScrubPb(ratio === null ? null : ratio * playbackState.total_time);
 
 	const seekVolume = (ratio: number) => {
-		playerCommand(`/me/player/volume?volume_percent=${Math.round(ratio * 100)}`, deviceId, { method: "PUT" })
+		return playerCommand(`/me/player/volume?volume_percent=${Math.round(ratio * 100)}`, deviceId, { method: "PUT" })
 			.then(() => {
 				reads.current++;
 				setVolume(ratio);

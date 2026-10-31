@@ -100,32 +100,42 @@ export const checks = [
     if (posted?.songID !== first.id) throw new Error(`comment saved on ${posted?.songID}, not ${first.id}`);
   }],
   // An arrow key moves the volume 1%, and a change from a screen reader (no key or pointer events) is sent at once.
+  // Spotify answers none of them until the end: presses in the meantime still add up, and the slider reads each out.
   ["player-slider-steps", "/", async (p, t) => {
-    t.sent.length = 0;
+    let answer;
+    const answered = new Promise((resolve) => (answer = resolve));
+    const isVolume = (r) => new URL(r.url()).pathname === "/v1/me/player/volume";
+    await p.route((url) => url.pathname === "/v1/me/player/volume", async (r) => { await answered; await r.fallback(); });
     const volume = p.getByRole("slider", { name: "Volume" });
+    const slider = await volume.elementHandle();
+    const sent = [];
+    const change = async (make) => {
+      const request = p.waitForRequest(isVolume, { timeout: 3000 });
+      await make();
+      const percent = new URL((await request).url()).searchParams.get("volume_percent");
+      sent.push(percent);
+      await p.waitForFunction(([el, text]) => el.getAttribute("aria-valuetext") === text, [slider, `${percent}%`], { timeout: 3000 })
+        .catch(async () => { throw new Error(`sent ${sent.join()}, but the slider reads ${await slider.getAttribute("aria-valuetext")}`); });
+    };
     await volume.focus();
-    await p.keyboard.press("ArrowRight");
-    await p.waitForTimeout(300);
-    if (!t.sent.some((c) => c.endsWith("volume_percent=51"))) throw new Error(`arrow key sent ${JSON.stringify(t.sent)}`);
-    if ((await volume.getAttribute("aria-valuetext")) !== "51%") throw new Error(`volume reads ${await volume.getAttribute("aria-valuetext")}`);
-    t.sent.length = 0;
-    await volume.evaluate((el) => {
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(el, "40");
+    for (let i = 0; i < 3; i++) await change(() => p.keyboard.press("ArrowRight"));
+    const increment = () => slider.evaluate((el) => {
+      el.stepUp();
       el.dispatchEvent(new Event("input", { bubbles: true }));
       el.dispatchEvent(new Event("change", { bubbles: true }));
     });
-    await p.waitForTimeout(300);
-    if (!t.sent.some((c) => c.endsWith("volume_percent=40"))) throw new Error(`screen reader change sent ${JSON.stringify(t.sent)}`);
-    // A drag sends one seek, when it ends.
-    t.sent.length = 0;
+    for (let i = 0; i < 2; i++) await change(increment);
+    answer();
+    if (sent.join() !== "51,52,53,54,55") throw new Error(`volume went ${sent.join()}`);
+    // A drag sends one seek, when it ends: the first seek sent is where the drag stopped, half way along.
     const seek = await p.getByRole("slider", { name: "Seek" }).boundingBox();
+    const first = p.waitForRequest((r) => new URL(r.url()).pathname === "/v1/me/player/seek", { timeout: 3000 });
     await p.mouse.move(seek.x + seek.width / 4, seek.y + seek.height / 2);
     await p.mouse.down();
     await p.mouse.move(seek.x + seek.width / 2, seek.y + seek.height / 2, { steps: 5 });
     await p.mouse.up();
-    await p.waitForTimeout(300);
-    const seeks = t.sent.filter((c) => c.includes("/seek?"));
-    if (seeks.length !== 1) throw new Error(`drag sent ${JSON.stringify(seeks)}`);
+    const at = new URL((await first).url()).searchParams.get("position_ms") / t.fixtures["/v1/me/player"].item.duration_ms;
+    if (Math.abs(at - 0.5) > 0.03) throw new Error(`first seek sent at ${at} of the track`);
   }],
   // Spotify leaves a podcast episode out (item: null) unless asked for episodes.
   ["player-episode", "/", async (p, t) => {

@@ -7,6 +7,7 @@ import { shareItems, type MenuItem } from '../featured-components/MoreMenu'
 import EditDetails from '../featured-components/EditDetails'
 import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
+import LoadError from '../featured-components/LoadError'
 
 import {MessageContext, UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
@@ -16,8 +17,8 @@ import { plainText } from '../../utilities/html'
 import type { Paging, Playlist, Track } from '../../utilities/types'
 
 type PlaylistEntry = {item: Track | {type: 'episode'} | null}
-// Playlists can hold podcast episodes too; only tracks are listed.
-const toTrack = (entry: PlaylistEntry) => entry.item?.type === 'track' ? entry.item : null
+// Playlists can hold podcast episodes and local files too; only Spotify tracks are listed (local files have no id).
+const toTrack = (entry: PlaylistEntry) => entry.item?.type === 'track' && entry.item.id ? entry.item : null
 const emptyBanner: BannerInfo = {name: '', user: [], primary_color: '#262626'}
 
 export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => void}) {
@@ -27,6 +28,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
     const navigate = useNavigate()
 
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
 
     const [bannerInfo, setbannerInfo] = useState(emptyBanner)
     const [tracks, setTracks] = useState<Track[]>([])
@@ -42,7 +44,9 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
         setUri('')
         setbannerInfo(emptyBanner)
         setTracks([])
+        setNext(null)
         setLoading(true)
+        setError('')
 
         const controller = new AbortController()
         // `items` only comes back for playlists the user owns or collaborates on.
@@ -59,7 +63,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
             })
             .catch((error) => {
                 setLoading(false)
-                setMessage(`ERROR: ${error.message}`)
+                setError(error.message)
             })
 
 
@@ -108,11 +112,15 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
         loading? 
         <Loading />
         : 
+        error ?
+        <LoadError what='playlist' error={error}/>
+        :
         <div className='listPage'>
             <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                <PlayListFunctions onFollow={followPlaylist} follow={like} uri={uri} menu={menu} label={bannerInfo.name}/>
+                {/* No heart on your own playlist: un-saving it deletes it, so that's the menu's Delete, which asks first. */}
+                <PlayListFunctions onFollow={owned ? undefined : followPlaylist} follow={like} uri={uri} menu={menu} label={bannerInfo.name}/>
                 <div className="page-content">
                     {listed ?
                         <TrackList ref={lastRef} tracks={tracks} contextUri={uri}/> :

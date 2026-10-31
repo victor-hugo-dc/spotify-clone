@@ -43,7 +43,7 @@ export default function PlayListFunctions({type, follow = false, onFollow, uri =
             return (
                 <div className="playListFunctions">
                     <PlayButtonLarge uri={uri} start={start}/>
-                    <LikeButton follow={follow} onFollow={onFollow}/>
+                    {onFollow && <LikeButton follow={follow} onFollow={onFollow}/>}
                     {more}
                 </div>
             )

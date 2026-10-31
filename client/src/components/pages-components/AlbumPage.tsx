@@ -7,6 +7,7 @@ import PlayListFunctions from '../featured-components/PlayListFunctions'
 import { shareItems } from '../featured-components/MoreMenu'
 import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
+import LoadError from '../featured-components/LoadError'
 
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import useLibrary from '../../utilities/hooks/useLibrary'
@@ -23,6 +24,7 @@ export default function AlbumPage() {
     const setMessage = useContext(MessageContext)
     const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
 
     const [albumType, setAlbumType] = useState('')
     const [bannerInfo, setbannerInfo] = useState(emptyBanner)
@@ -38,6 +40,7 @@ export default function AlbumPage() {
         setbannerInfo(emptyBanner)
         setUri('')
         setLoading(true)
+        setError('')
         const controller = new AbortController()
         spotify<Album & {tracks: Paging<Track>}>(`/albums/${id}`, {signal: controller.signal})
             .then(({album_type, name, artists, tracks, images, release_date, uri}) => {
@@ -50,7 +53,7 @@ export default function AlbumPage() {
             })
             .catch((error) => {
                 setLoading(false)
-                setMessage(`ERROR: ${error.message}`)
+                setError(error.message)
             })
         
         return () => controller.abort()
@@ -61,7 +64,10 @@ export default function AlbumPage() {
         loading? 
         <Loading />
         :
-        <div className='listPage' style={{display: `${tracks.length===0? 'none':'block'}`}}>
+        error ?
+        <LoadError what='album' error={error}/>
+        :
+        <div className='listPage'>
             <PageBanner pageTitle={albumType} bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>

@@ -35,7 +35,7 @@ export default function PageContent({
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchPage query={query} />} />
-        <Route path="/playlist/:id" element={<PlayListPage playlists={playlists} refreshPlaylist={refreshPlaylist} />} />
+        <Route path="/playlist/:id" element={<PlayListPage refreshPlaylist={refreshPlaylist} />} />
         <Route path="/album/:id" element={<AlbumPage />} />
         <Route path="/user/:id" element={<UserPage />} />
         <Route path="/artist/:id" element={<ArtistPage />} />

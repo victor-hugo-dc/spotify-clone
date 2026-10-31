@@ -17,7 +17,7 @@ type PlaylistEntry = {item: Track | {type: 'episode'} | null}
 const toTrack = (entry: PlaylistEntry) => entry.item?.type === 'track' ? entry.item : null
 const emptyBanner: BannerInfo = {name: '', user: [], primary_color: '#262626'}
 
-export default function PlayListPage({playlists, refreshPlaylist}: {playlists: Playlist[], refreshPlaylist: () => void}) {
+export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => void}) {
     const { id = '' } = useParams()
     const token = useContext(TokenContext)
     const setMessage = useContext(MessageContext)
@@ -53,7 +53,10 @@ export default function PlayListPage({playlists, refreshPlaylist}: {playlists: P
                 setMessage(`ERROR: ${error.message}`)
             })
 
-        setLike(playlists.some((playlist) => playlist.id === id))
+        setLike(false)
+        spotify<boolean[]>(`/me/library/contains?uris=${encodeURIComponent(`spotify:playlist:${id}`)}`, token, {signal: controller.signal})
+            .then(([saved]) => setLike(saved === true))
+            .catch((error) => console.log(error))
 
         return () => controller.abort()
     // eslint-disable-next-line

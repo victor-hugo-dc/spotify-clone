@@ -106,9 +106,10 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	// The SDK only reports playback on this browser's own device. While another device (or none) is active, ask Spotify
 	// every few seconds, and only while the tab is visible: the request quota is shared by the whole developer account.
+	// A poll goes through refreshSoon, so one that lands just after a command can't cancel its re-read and read the old state.
 	useEffect(() => {
 		if (deviceId !== null && activeDevice === deviceId) return;
-		const poll = () => document.visibilityState === "visible" && apiUpdate();
+		const poll = () => document.visibilityState === "visible" && refreshSoon();
 		const timer = setInterval(poll, 5000);
 		document.addEventListener("visibilitychange", poll);
 		return () => {

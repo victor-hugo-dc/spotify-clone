@@ -75,6 +75,12 @@ test("token keeps a rotated refresh token when /v1/me fails, but still signs out
   assert.match(outsider.headers.getSetCookie().findLast((c) => c.startsWith("__Host-refresh_key=")) ?? "", /^__Host-refresh_key=;/);
 });
 
+test("login and logout expire the refresh cookie that used to live at Path=/api", async () => {
+  const login = await get("/api/callback?code=good&state=s", "__Host-spotify_auth_state=s");
+  const logout = await fetch(`${base}/api/logout`, { method: "POST" });
+  for (const response of [login, logout]) assert.match(response.headers.getSetCookie().join("\n"), /^refresh_key=;.*Path=\/api;.*Expires=Thu, 01 Jan 1970/m);
+});
+
 test("comments need the signed author cookie, and the author comes from it", async () => {
   const signedIn = cookies(await get("/api/token", "__Host-refresh_key=good-refresh"));
   const add = (cookie: string) =>

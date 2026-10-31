@@ -111,6 +111,7 @@ app.get("/api/callback", async (req, res) => {
     }
     res.cookie(refreshKey, refresh_token, { ...cookieOption, maxAge: year });
     res.cookie(authorKey, authorCookie(author), { ...cookieOption, maxAge: authorMaxAge });
+    clearOldRefreshCookie(res);
     res.redirect("/");
   } catch (error) {
     console.log(error);
@@ -153,6 +154,12 @@ app.get("/api/token", async (req, res) => {
 function logout(res: express.Response) {
   res.clearCookie(refreshKey, cookieOption);
   res.clearCookie(authorKey, cookieOption);
+  clearOldRefreshCookie(res);
+}
+
+// The refresh token used to live in refresh_key at Path=/api: over http that cookie shadows ours, over https it lingers.
+function clearOldRefreshCookie(res: express.Response) {
+  res.clearCookie("refresh_key", { ...cookieOption, path: "/api" });
 }
 
 app.post("/api/logout", (_req, res) => {

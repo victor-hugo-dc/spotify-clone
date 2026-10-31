@@ -290,9 +290,8 @@
     height: var(--player-height);
     align-items: center;
     display: flex;
-    flex-direction: row;
     justify-content: space-between;
-    padding: 0 16px;
+    padding: 0 8px;
   }
   
   .player-left,
@@ -320,8 +319,7 @@
   .volume-control {
     display: flex;
     align-items: center;
-    flex-direction: row;
-    width: 136px;
+    gap: 4px;
   }
   
   .now-playing {
@@ -337,13 +335,10 @@
     width: 56px;
     height: 56px;
     min-width: 56px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    margin: 0;
-    display: block;
-    border: 0;
+    border-radius: 4px;
+    overflow: hidden;
     position: relative;
-    z-index: 0;
-    background-color: #282828;
+    background-color: var(--background-elevated);
   }
   
   .player-cover > div {
@@ -378,23 +373,19 @@
     flex-direction: column;
     justify-content: center;
     margin: 0 14px;
-    min-width: 105px;
+    min-width: 0;
+    color: #fff;
+    font-size: 14px;
   }
   
   .player-info-track > a {
     font-size: 14px;
-    line-height: 20px;
-    letter-spacing: 0.015em;
     color: #fff;
-    text-align: left;
     text-decoration: none;
   }
   
   .player-info-artist > a {
     font-size: 12px;
-    line-height: 16px;
-    letter-spacing: 0.015em;
-    text-align: left;
     color: var(--main-text);
     text-decoration: none;
   }
@@ -431,7 +422,7 @@
   }
 
   .player-like-button.liked {
-    color: var(--spotify-green-bright);
+    color: var(--spotify-green);
   }
   
   .player-center {
@@ -445,10 +436,10 @@
   
   .player-control-buttons {
     display: flex;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     width: 224px;
+    gap: 8px;
     justify-content: space-between;
-    flex-flow: row nowrap;
     align-items: center;
   }
   
@@ -458,11 +449,13 @@
     justify-content: center;
     background-color: transparent;
     border: none;
-    color: #b3b3b3;
+    color: var(--main-text);
     width: 32px;
     min-width: 32px;
     height: 32px;
+    padding: 0;
     position: relative;
+    cursor: pointer;
   }
   
   .control-button:hover {
@@ -470,13 +463,14 @@
   }
   
   .control-button.circle-border {
-    border-radius: 500px;
-    border: 1px solid hsla(0, 0%, 100%, 0.6);
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
   }
   
   .control-button.circle-border:hover {
-    transform: scale(1.07);
-    border-color: #fff;
+    transform: scale(1.06);
+    color: #000;
   }
   
   .control-button.active {
@@ -487,9 +481,48 @@
     color: var(--spotify-green-bright);
   }
   
+  /* Spotify marks a switched-on control with a dot under it. */
+  .control-button.active:not(.circle-border)::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* Repeat one: a small "1" on the repeat icon. */
+  .control-button.repeat-one::before {
+    content: "1";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--spotify-green);
+    color: #000;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 11px;
+    text-align: center;
+  }
+
+  .control-button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .control-button:disabled:hover {
+    color: var(--main-text);
+  }
+
   .control-button > svg {
-    width: 15px;
-    height: 15px;
+    width: 16px;
+    height: 16px;
   }
   
   .control-button.smaller > svg {
@@ -507,15 +540,14 @@
   }
   
   .control-button.x-larger > svg {
-    width: 19px;
-    height: 19px;
+    width: 16px;
+    height: 16px;
   }
   
   .player-playback {
     width: 100%;
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    gap: 8px;
     align-items: center;
     user-select: none;
   }
@@ -577,14 +609,7 @@
     padding: 14px 14px 10px 14px;
   }
   
-  .cd-img {
-    text-align: center;
-    padding: 16px 0;
-  }
   
-  .cd-img > img {
-    width: 180px;
-  }
   
   .connect-devices-list {
     margin: 0 -5px -5px;
@@ -592,21 +617,19 @@
   
   .connect-devices-items {
     display: flex;
-    flex-direction: row;
-    justify-content: center;
     align-items: center;
-    background-color: #282828;
+    background-color: transparent;
     border: 0;
+    border-radius: 4px;
     padding: 10px 15px;
-    position: relative;
     width: 100%;
+    height: 56px;
     color: #fff;
-    width: 280px;
-    height: 57px;
+    cursor: pointer;
   }
   
   .connect-devices-items:not(.disable):hover {
-    background-color: #333;
+    background-color: hsla(0, 0%, 100%, 0.1);
   }
   
   .connect-devices-items.active {
@@ -617,76 +640,103 @@
     font-size: 14px;
     font-weight: 700;
     line-height: 16px;
-    letter-spacing: normal;
-    text-transform: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   
+  .cd-info {
+    min-width: 0;
+  }
+
+  .connect-devices-error {
+    color: #f15e6c;
+    padding: 0 14px 10px;
+  }
+
   .playback-time {
     min-width: 40px;
-    text-align: center;
-    font-size: 11px;
-    font-weight: 400;
+    font-size: 12px;
     line-height: 16px;
-    letter-spacing: normal;
-    text-transform: none;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
     user-select: none;
   }
   
-  .progress-wrapper {
+  
+  
+  
+  
+  
+  
+  
+  
+  /* Seek and volume: native range inputs drawn like Spotify's bars. --progress (set inline) is the filled part:
+     white, green on hover, with the knob showing on hover and keyboard focus. */
+  .progress-range {
+    --fill: #fff;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
     height: 12px;
-    position: relative;
-    width: 100%;
-    display: flex;
-    align-items: center;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
   }
-  
-  .progress-bar {
-    background-color: #535353;
-    border-radius: 2px;
-    display: flex;
+
+  .progress-range:hover,
+  .progress-range:focus-visible {
+    --fill: var(--spotify-green);
+  }
+
+  .progress-range::-webkit-slider-runnable-track {
     height: 4px;
-    width: 100%;
-    overflow: hidden;
-  }
-  
-  .progress {
-    background-color: #b3b3b3;
     border-radius: 2px;
+    background: linear-gradient(to right, var(--fill) var(--progress), #4d4d4d var(--progress));
+  }
+
+  .progress-range::-moz-range-track {
     height: 4px;
-    width: 100%;
-    transform: translateX(-100%);
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--fill) var(--progress), #4d4d4d var(--progress));
   }
-  
-  .progress.engage {
-    background-color: var(--spotify-green);
-  }
-  
-  .progress-slider {
-    background-color: #fff;
-    border: 0;
-    border-radius: 50%;
+
+  .progress-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
     width: 12px;
     height: 12px;
-    margin-left: -6px;
-    z-index: 100;
-    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    margin-top: -4px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     opacity: 0;
-    position: absolute;
-    left: 0;
   }
-  
-  .progress-slider.engage {
+
+  .progress-range::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+  }
+
+  .progress-range:hover::-webkit-slider-thumb,
+  .progress-range:focus-visible::-webkit-slider-thumb {
     opacity: 1;
   }
-  
-  .control-button.volume:hover + div .progress.volume {
-    background-color: var(--spotify-green);
-  }
-  
-  .control-button.volume:hover + div .progress-slider.volume {
+
+  .progress-range:hover::-moz-range-thumb,
+  .progress-range:focus-visible::-moz-range-thumb {
     opacity: 1;
   }
-  
+
+  .volume-control .progress-range {
+    width: 93px;
+  }
+
   .featured {
     background: var(--background-base);
     border-radius: var(--panel-radius);

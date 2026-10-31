@@ -40,10 +40,10 @@ export default function CommentPage() {
 
     // In song order.
     useEffect(() => {
-        api<{ comments: SongComment[] }>(`/comments/song/${id}`, token)
+        api<{ comments: SongComment[] }>(`/comments/song/${id}`)
             .then((data) => setFeed(data.comments.sort((a, b) => a.timestamp - b.timestamp)))
             .catch((error) => console.log(error))
-      },[id, token])
+      },[id])
     
 
     return (

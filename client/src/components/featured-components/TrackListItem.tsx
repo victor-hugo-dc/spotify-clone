@@ -1,8 +1,7 @@
-import React, { useState, useContext, useEffect, type Ref } from 'react';
+import React, { useState, useEffect, type Ref } from 'react';
 import { Link, useNavigate } from "react-router";
 import Icon from '../icons';
 import formatTime from '../../utilities/time';
-import { TokenContext } from '../../utilities/context';
 import { api } from '../../utilities/api';
 import ControlButton from '../footer-components/ControlButton';
 import type { SongComment, Track } from '../../utilities/types';
@@ -11,15 +10,14 @@ type Props = { track: Track; highlight: boolean; current: boolean; playing: bool
 
 export default function TrackListItem({ track, highlight, current, playing, onPlay, ref }: Props) {
   const { album, artists, name, explicit, duration_ms, id } = track;
-  const token = useContext(TokenContext);
   const [commentCount, setCommentCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
-    api<{ comments: SongComment[] }>(`/comments/song/${id}`, token)
+    api<{ comments: SongComment[] }>(`/comments/song/${id}`)
       .then((data) => setCommentCount(data.comments.length))
       .catch((error) => console.log(error));
-  }, [id, token])
+  }, [id])
 
   return (
     <li ref={ref} className={`trackListItem ${highlight ? 'highlight' : ''} ${current ? 'current' : ''}`}>

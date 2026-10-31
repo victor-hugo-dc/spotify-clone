@@ -28,11 +28,11 @@ export default function AnnotationsPage() {
   // Newest annotations first.
   useEffect(() => {
     if (id.length > 0) {
-      api<{ annotations: SongAnnotation[] }>(`/annotations/song/${id}`, token)
+      api<{ annotations: SongAnnotation[] }>(`/annotations/song/${id}`)
         .then((data) => setFeed(data.annotations.reverse()))
         .catch((error) => console.log(error));
     }
-  }, [id, token]);
+  }, [id]);
 
   return (
     <div className="annotation-page-content">

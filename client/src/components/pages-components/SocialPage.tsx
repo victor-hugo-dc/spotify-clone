@@ -1,20 +1,18 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import PageTitle from "../featured-components/PageTitle";
 import Comment from "../featured-components/Comment";
 import type { SongComment } from "../../utilities/types";
-import { TokenContext } from "../../utilities/context";
 import { api } from "../../utilities/api";
 
 export default function SocialPage() {
     const [feed,setFeed] = useState<SongComment[] | null>(null);
-    const token = useContext(TokenContext);
 
     // Newest comments first.
     useEffect(() => {
-      api<{ comments: SongComment[] }>("/comments/all", token)
+      api<{ comments: SongComment[] }>("/comments/all")
         .then((data) => setFeed(data.comments.reverse()))
         .catch((error) => console.log(error))
-    },[token])
+    },[])
 
     return (
       <div className="socialPage">

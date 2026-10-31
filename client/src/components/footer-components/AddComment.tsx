@@ -16,7 +16,7 @@ const AddComment = ({ closeTip, token, annotation = false, text = ''}: Props) =>
 	const [commenttext, setCommentText] = useState("");
 	
 	/*
-	 * Get the song that's currently playing. The server works out who is commenting from the token.
+	 * Get the song that's currently playing. The server knows who is commenting from the login cookie.
 	 */
 	useEffect(() => {
 		const controller = new AbortController();
@@ -29,7 +29,7 @@ const AddComment = ({ closeTip, token, annotation = false, text = ''}: Props) =>
 	}, [token]);
 
 	const save = (path: string, data: object, done: string) => {
-		api(path, token, data)
+		api(path, data)
 			.then(() => setMessage(done))
 			.catch((error) => setMessage(`ERROR: could not save it (${error.message})`));
 		closeTip();

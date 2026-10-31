@@ -145,12 +145,17 @@ function App() {
 
 // Shoutify is friends-only: every account has to be on the Spotify app's
 // allowlist, so there is nothing to show before logging in.
+const loginErrors: Record<string, string> = {
+  access_denied: 'You cancelled the Spotify login.',
+  not_allowlisted: "Your Spotify account isn't on this Shoutify's list yet. Ask whoever runs it to add you, then try again.",
+}
+
 function Login({error}: {error: string | null}) {
   return (
     <div className='loading' style={{flexDirection: 'column', gap: '24px', color: '#fff', textAlign: 'center'}}>
       <h1>Shoutify</h1>
       <p>Friends only: ask whoever runs this Shoutify to add your Spotify account before you log in.</p>
-      {error && <p role='alert'>That login didn't work ({error}). Please try again.</p>}
+      {error && <p role='alert'>{loginErrors[error] ?? `That login didn't work (${error}). Please try again.`}</p>}
       <PromptButton to='/api/login' name='Log in with Spotify' styleName='light'/>
     </div>
   )

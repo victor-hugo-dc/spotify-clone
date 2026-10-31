@@ -16,7 +16,6 @@ import CommentPage from "../pages-components/CommentPage";
 import type { Playlist } from "../../utilities/types";
 
 export type PageContentProps = {
-  query: string;
   playlists: Playlist[];
   refreshPlaylist: () => void;
   message: string;
@@ -24,7 +23,6 @@ export type PageContentProps = {
 };
 
 export default function PageContent({
-  query,
   playlists,
   refreshPlaylist,
   message,
@@ -34,7 +32,7 @@ export default function PageContent({
     <>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/search" element={<SearchPage query={query} />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/playlist/:id" element={<PlayListPage refreshPlaylist={refreshPlaylist} />} />
         <Route path="/album/:id" element={<AlbumPage />} />
         <Route path="/user/:id" element={<UserPage />} />

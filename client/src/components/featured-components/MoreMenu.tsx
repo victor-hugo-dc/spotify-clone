@@ -13,7 +13,7 @@ export function shareItems(uri: string, noun: string, setMessage: (message: stri
     ]
 }
 
-// The "• • •" button and its menu. Escape or a click elsewhere closes it; Up, Down, Home and End move between its items.
+// The "• • •" button and its menu. Escape, Tab or a click elsewhere closes it; Up, Down, Home and End move between its items.
 export default function MoreMenu({items, label}: {items: MenuItem[], label: string}) {
     const [open, setOpen] = useState(false)
     const ref = useRef<HTMLDivElement>(null)
@@ -23,8 +23,9 @@ export default function MoreMenu({items, label}: {items: MenuItem[], label: stri
     useEffect(() => {
         if (!open) return
         const close = (e: MouseEvent | KeyboardEvent) => {
-            if (e instanceof KeyboardEvent ? e.key !== 'Escape' : ref.current?.contains(e.target as Node)) return
-            if (e instanceof KeyboardEvent && ref.current?.contains(document.activeElement)) button.current?.focus()
+            if (e instanceof KeyboardEvent ? e.key !== 'Escape' && e.key !== 'Tab' : ref.current?.contains(e.target as Node)) return
+            // Tab moves focus on by itself, from where the menu was.
+            if (e instanceof KeyboardEvent && e.key === 'Escape' && ref.current?.contains(document.activeElement)) button.current?.focus()
             setOpen(false)
         }
         ref.current?.querySelector<HTMLButtonElement>('[role=menuitem]')?.focus()

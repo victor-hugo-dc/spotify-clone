@@ -116,8 +116,8 @@ export const checks = [
     });
     if (cut) throw new Error("the playlist's name is cut off");
   }],
-  // From the keyboard: the arrow keys, Home and End move through a "• • •" menu, the focused item shows the focus ring, and
-  // Escape or choosing an item puts focus back on the button.
+  // From the keyboard: the arrow keys, Home and End move through a "• • •" menu, the focused item shows the focus ring,
+  // Escape or choosing an item puts focus back on the button, and Tab closes the menu, moving on from the button.
   ["more-menu-keyboard", "/playlist/p1", async (p, t) => {
     const more = p.getByRole("button", { name: "More options for Mix" });
     const item = (name) => p.getByRole("menuitem", { name, exact: true });
@@ -139,6 +139,14 @@ export const checks = [
     await p.keyboard.press("Enter");
     await p.getByText("Playlist is now public").waitFor({ timeout: 3000 });
     if (!(await focused(more))) throw new Error("choosing an item didn't put focus back on the button");
+    for (const [key, next] of [["Shift+Tab", more], ["Tab", p.getByRole("link", { name: "Artist One" }).first()]]) {
+      await more.focus();
+      await p.keyboard.press("Enter");
+      if (!(await focused(item("Edit details")))) throw new Error("reopening the menu didn't focus its first item");
+      await p.keyboard.press(key);
+      if (await p.getByRole("menu").count()) throw new Error(`menu stayed open on ${key}`);
+      if (!(await focused(next))) throw new Error(`${key} didn't move on from the button`);
+    }
   }],
   // Liked Songs plays as a list of its tracks with no context. Its big button pauses it while the list Shoutify started
   // from there plays, or Spotify's apps play your collection; a song card playing one of its songs is not Liked Songs.

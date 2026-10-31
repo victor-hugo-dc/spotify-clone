@@ -3,6 +3,7 @@ import {useState, useEffect, useContext} from 'react'
 import {useParams} from 'react-router'
 
 import { spotify } from '../../utilities/spotify'
+import useLibrary from '../../utilities/hooks/useLibrary'
 import {TokenContext, MessageContext} from '../../utilities/context'
 import type { Album, Artist, Paging } from '../../utilities/types'
 
@@ -26,7 +27,7 @@ export default function ArtistPage() {
     const [single, setSingle] = useState<Album[]>([])
     const [appear, setAppear] = useState<Album[]>([])
     const [compilation, setCompilation] = useState<Album[]>([])
-    const [follow, setFollow] = useState(false)
+    const [follow, followArtist] = useLibrary(`spotify:artist:${id}`)
     const [uri, setUri] = useState('')
 
     useEffect(() => {
@@ -34,16 +35,11 @@ export default function ArtistPage() {
         setSingle([])
         setAppear([])
         setCompilation([])
-        setFollow(false)
         setUri('')
         setLoading(true)
 
         const controller = new AbortController()
         const { signal } = controller
-
-        spotify<boolean[]>(`/me/library/contains?uris=${encodeURIComponent(`spotify:artist:${id}`)}`, token, {signal})
-            .then(([following]) => setFollow(following === true))
-            .catch(error => console.log(error))
 
         const albums = (group: string) => spotify<Paging<Album>>(`/artists/${id}/albums?include_groups=${group}`, token, {signal})
         Promise.all([spotify<Artist>(`/artists/${id}`, token, {signal}), albums('album'), albums('single'), albums('appears_on'), albums('compilation')])
@@ -65,15 +61,6 @@ export default function ArtistPage() {
         return () => controller.abort()
     // eslint-disable-next-line
     }, [id])
-
-    const followArtist = () => {
-        spotify(`/me/library?uris=${encodeURIComponent(`spotify:artist:${id}`)}`, token, {method: follow? 'DELETE':'PUT'})
-            .then(() => {
-                setMessage(follow ? `Unsaved from your collection` : `Saved to your collection`)
-                setFollow(!follow)
-            })
-            .catch(error => setMessage(`ERROR: ${error.message}`))
-    }
 
     return (
         loading ? 

@@ -1,8 +1,8 @@
-import React, {useContext} from 'react'
+import React from 'react'
 import {Link} from 'react-router'
 import Icon from '../icons'
 
-import { MessageContext } from '../../utilities/context';
+import useLibrary from '../../utilities/hooks/useLibrary';
 
 // Fits both a Web API track and the Web Playback SDK's current_track, which has URIs but no album or artist ids.
 export type PlayInfo = {
@@ -16,7 +16,7 @@ export type PlayInfo = {
 const idOf = (uri: string) => uri.split(':').pop()
 
 export default function NowPlaying({playInfo}: {playInfo: PlayInfo | null}) {
-    const setMessage = useContext(MessageContext)
+    const [liked, toggleLiked] = useLibrary(playInfo?.uri ?? '', 'Liked Songs')
 
     if (!playInfo) {
         return (<></>);
@@ -53,8 +53,8 @@ export default function NowPlaying({playInfo}: {playInfo: PlayInfo | null}) {
             </div>
 
             <div className="player-like" style={{display: name === ''? 'none':undefined}}>
-                <button title='Save to your Liked Songs' className="player-like-button no-outline" onClick={() => setMessage('Oops, it look like I chose not to implement this feature :)')}>
-                    <Icon name='Heart' />
+                <button title={liked ? 'Remove from Liked Songs' : 'Save to Liked Songs'} aria-label={liked ? 'Remove from Liked Songs' : 'Save to Liked Songs'} aria-pressed={liked} className={`player-like-button no-outline ${liked ? 'liked' : ''}`} onClick={toggleLiked}>
+                    <Icon name='Heart' fill={liked} />
                 </button>
             </div>
         

@@ -10,6 +10,7 @@ import Loading from '../featured-components/Loading'
 
 import {TokenContext, MessageContext, UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
+import useLibrary from '../../utilities/hooks/useLibrary'
 import { spotify } from '../../utilities/spotify'
 import { plainText } from '../../utilities/html'
 import type { Paging, Playlist, Track } from '../../utilities/types'
@@ -30,7 +31,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
 
     const [bannerInfo, setbannerInfo] = useState(emptyBanner)
     const [tracks, setTracks] = useState<Track[]>([])
-    const [like, setLike] = useState(false)
+    const [like, followPlaylist] = useLibrary(`spotify:playlist:${id}`, 'Your Library', () => setTimeout(() => refreshPlaylist(), 1000))
     const [setNext, lastRef] = useInfiniteScroll(setTracks, toTrack)
     const [uri, setUri] = useState('')
     const [listed, setListed] = useState(true)
@@ -62,24 +63,10 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
                 setMessage(`ERROR: ${error.message}`)
             })
 
-        setLike(false)
-        spotify<boolean[]>(`/me/library/contains?uris=${encodeURIComponent(`spotify:playlist:${id}`)}`, token, {signal: controller.signal})
-            .then(([saved]) => setLike(saved === true))
-            .catch((error) => console.log(error))
 
         return () => controller.abort()
     // eslint-disable-next-line
     }, [id])
-
-    const followPlaylist = () => {
-        spotify(`/me/library?uris=${encodeURIComponent(uri)}`, token, {method: like? 'DELETE':'PUT'})
-            .then(() => {
-                setMessage(like ? 'Removed from your Library' : 'Added to your Library')
-                setLike(!like)
-                setTimeout(() => refreshPlaylist(), 1000)
-            })
-            .catch(error => setMessage(`ERROR: ${error.message}`))
-    }
 
     // PUT /playlists/{id} changes the name, description or visibility; only the owner may.
     const changeDetails = (details: {name?: string, description?: string, public?: boolean}, done: string) => {

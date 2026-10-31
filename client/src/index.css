@@ -420,6 +420,10 @@
   .player-like-button:hover {
     color: #fff;
   }
+
+  .player-like-button.liked {
+    color: var(--spotify-green-bright);
+  }
   
   .player-center {
     width: 40%;

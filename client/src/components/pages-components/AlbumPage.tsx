@@ -9,6 +9,7 @@ import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
 
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
+import useLibrary from '../../utilities/hooks/useLibrary'
 import {TokenContext, MessageContext} from '../../utilities/context'
 import { spotify } from '../../utilities/spotify'
 import type { Album, Paging, Track } from '../../utilities/types'
@@ -30,6 +31,7 @@ export default function AlbumPage() {
     const [tracks, setTracks] = useState<Track[]>([])
     const [uri, setUri] = useState('')
     const [setNext, lastRef] = useInfiniteScroll(setTracks)
+    const [saved, toggleSaved] = useLibrary(`spotify:album:${id}`)
 
     useEffect(() => {
         setTracks([])
@@ -64,7 +66,8 @@ export default function AlbumPage() {
             <PageBanner pageTitle={albumType} bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                <PlayListFunctions onFollow={() => setMessage('Oops looks like the Spotify API does not support following albums')} uri={uri} label={bannerInfo.name} menu={[
+                <PlayListFunctions follow={saved} onFollow={toggleSaved} uri={uri} label={bannerInfo.name} menu={[
+                    {label: saved ? 'Remove from Your Library' : 'Save to Your Library', onSelect: toggleSaved},
                     ...bannerInfo.user.slice(0, 1).map((artist) => ({label: 'Go to artist', onSelect: () => navigate(`/artist/${artist.id}`)})),
                     ...shareItems(uri, 'album', setMessage),
                 ]}/>

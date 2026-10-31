@@ -1,17 +1,9 @@
-import React, { useContext } from "react";
+import React from "react";
 import Icon from "../icons";
-import { MessageContext } from "../../utilities/context";
 
-function CreatePlaylist() {
-  const setMessage = useContext(MessageContext);
-
+function CreatePlaylist({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      className="create-button no-outline"
-      onClick={() =>
-        setMessage("Oops, it looks like I chose not to implement this feature :)")
-      }
-    >
+    <button className="create-button no-outline" onClick={onClick}>
       <div className="playlist-icon">
         <Icon name="Create" />
       </div>

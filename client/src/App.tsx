@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
+import { useNavigate } from 'react-router';
 
 import Sidebar from './components/sidebar-components/Sidebar'
 import Logo from './components/sidebar-components/Logo'
@@ -30,6 +31,7 @@ function App() {
   const [message, setMessage] = useState('')
 
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const navigate = useNavigate()
 
   // The server keeps the refresh token in an httpOnly cookie and hands out access tokens, which last an hour.
   useEffect(() => {
@@ -72,6 +74,16 @@ function App() {
       .catch(error => console.log(error));
   }
 
+  // New playlists get Spotify's default name, numbered the way its apps do.
+  const createPlaylist = () => {
+    spotify<Playlist>('/me/playlists', token, {method: 'POST', body: {name: `My Playlist #${playlists.length + 1}`}})
+      .then((playlist) => {
+        refreshPlaylist()
+        navigate(`/playlist/${playlist.id}`)
+      })
+      .catch(error => setStatusMessage(`ERROR: ${error.message}`))
+  }
+
   const setStatusMessage = (message: string) => {
       clearTimeout(timerRef.current)
       setStatus(true)
@@ -104,7 +116,7 @@ function App() {
                     <NavItem to='/collection' name='Library' label='Your Library'/>
                 </NavList>
                 <PlayLists 
-                  top={<FeaturedPlaylist>
+                  top={<FeaturedPlaylist onCreatePlaylist={createPlaylist}>
                           <FeaturedItem to='/tracks' exact={true} label='Liked Songs'/>
                         </FeaturedPlaylist>}
                   bottom={<OtherPlaylist playlists={playlists}/>}

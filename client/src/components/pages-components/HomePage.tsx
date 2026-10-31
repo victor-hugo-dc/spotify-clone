@@ -3,6 +3,7 @@ import React, {useEffect, useState} from 'react'
 import CollectionRow from '../featured-components/CollectionRow'
 import { spotify } from '../../utilities/spotify'
 import type { Artist, LinkCard, Paging, Track } from '../../utilities/types'
+import '../../styles/home.css'
 
 const likedSongs: LinkCard = {type: 'link', id: 'liked-songs', to: '/tracks', description: '', name: 'Liked Songs', images: [{url: 'https://misc.scdn.co/liked-songs/liked-songs-300.png'}]}
 

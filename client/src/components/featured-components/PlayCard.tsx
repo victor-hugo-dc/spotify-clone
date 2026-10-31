@@ -8,6 +8,7 @@ import Icon from '../icons'
 import usePlayback from '../../utilities/hooks/usePlayback'
 import { plainText } from '../../utilities/html'
 import type { CardItem } from '../../utilities/types'
+import '../../styles/cards.css'
 
 export default function PlayCard({info, ref}: {info: CardItem, ref?: Ref<HTMLDivElement>}) {
     const navigate = useNavigate()

@@ -7,6 +7,7 @@ import OtherPlaylist from './OtherPlaylist'
 import { LibraryContext, MessageContext } from '../../utilities/context'
 import { spotify } from '../../utilities/spotify'
 import type { Playlist } from '../../utilities/types'
+import '../../styles/library.css'
 
 // The left panel: Create, Liked Songs and your playlists.
 export default function YourLibrary() {

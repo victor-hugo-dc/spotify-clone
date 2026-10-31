@@ -8,6 +8,7 @@ import { spotify } from '../../utilities/spotify';
 import { api } from '../../utilities/api';
 import useCommentsLoader from '../../utilities/hooks/useCommentsLoader';
 import { commentSong, type CommentSong, type SongComment, type Track } from '../../utilities/types';
+import '../../styles/pages.css';
 
 export default function CommentPage() {
     const { id = '' } = useParams();

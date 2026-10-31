@@ -12,6 +12,7 @@ import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import {UserContext, MessageContext} from '../../utilities/context'
 import { spotify } from '../../utilities/spotify'
 import type { Paging, Playlist } from '../../utilities/types'
+import '../../styles/lists.css'
 
 const emptyBanner: BannerInfo = {name: '', user: [], primary_color: 'rgb(83, 83, 83)'}
 

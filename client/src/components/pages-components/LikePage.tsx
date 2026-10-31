@@ -11,6 +11,7 @@ import {UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import { spotify } from '../../utilities/spotify'
 import type { Paging, Track } from '../../utilities/types'
+import '../../styles/lists.css'
 
 const toTrack = (saved: {track: Track}) => saved.track
 

@@ -13,6 +13,7 @@ import { shareItems } from '../featured-components/MoreMenu'
 import AboutMenu from '../featured-components/AboutMenu'
 import Loading from '../featured-components/Loading'
 import LoadError from '../featured-components/LoadError'
+import '../../styles/lists.css'
 
 const emptyBanner: BannerInfo = {name: '', user: [], primary_color: 'rgb(83, 83, 83)'}
 

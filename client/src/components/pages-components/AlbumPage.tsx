@@ -14,6 +14,7 @@ import useLibrary from '../../utilities/hooks/useLibrary'
 import {MessageContext} from '../../utilities/context'
 import { spotify } from '../../utilities/spotify'
 import type { Album, Paging, Track } from '../../utilities/types'
+import '../../styles/lists.css'
 
 const emptyBanner: BannerInfo = {name: '', user: [], primary_color: '#262626'}
 

@@ -1,6 +1,7 @@
 import React from 'react'
 import {useSearchParams} from 'react-router'
 import QueryPage from './QueryPage'
+import '../../styles/search.css'
 
 // Search page that displays the search results for the query in the URL (?q=)
 export default function SearchPage() {

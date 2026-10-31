@@ -46,6 +46,8 @@ export type Library = {
   artists: Artist[];
   recentlyPlayed: PlayHistory[];
   likedTotal: number | null;
+  // The lists whose latest load failed, even after retries.
+  failed: LibraryKind[];
   refresh: (kind?: LibraryKind) => void;
 };
-export const LibraryContext = createContext<Library>({ playlists: [], albums: [], artists: [], recentlyPlayed: [], likedTotal: null, refresh: () => {} });
+export const LibraryContext = createContext<Library>({ playlists: [], albums: [], artists: [], recentlyPlayed: [], likedTotal: null, failed: [], refresh: () => {} });

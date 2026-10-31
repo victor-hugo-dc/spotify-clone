@@ -52,7 +52,7 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false)
   const [loginError] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('error'))
   const [userInfo, setuserInfo] = useState<User | null>(null)
-  const [libraryData, setLibraryData] = useState<Omit<Library, 'refresh'>>({playlists: [], albums: [], artists: [], recentlyPlayed: [], likedTotal: null})
+  const [libraryData, setLibraryData] = useState<Omit<Library, 'refresh'>>({playlists: [], albums: [], artists: [], recentlyPlayed: [], likedTotal: null, failed: []})
   const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false, deviceId: null, track: null, device: null})
   const [rightPanel, setRightPanelState] = useState(storedPanel)
 
@@ -112,9 +112,11 @@ function App() {
       retried(libraryLists[list].load).then((loaded) => {
         if (!newest()) return
         loads.current.landed[list] = load
-        setLibraryData((data) => ({...data, ...loaded}))
+        setLibraryData((data) => ({...data, ...loaded, failed: data.failed.filter((kind) => kind !== list)}))
       }, (error) => {
-        if (newest()) setStatusMessage(`Couldn't load your ${libraryLists[list].name}: ${error.message}`)
+        if (!newest()) return
+        setStatusMessage(`Couldn't load your ${libraryLists[list].name}: ${error.message}`)
+        setLibraryData((data) => ({...data, failed: data.failed.includes(list) ? data.failed : [...data.failed, list]}))
       })
     }
   }, [setStatusMessage])

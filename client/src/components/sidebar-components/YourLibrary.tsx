@@ -6,7 +6,7 @@ import Icon from '../icons'
 import LibraryRow from './LibraryRow'
 import SortMenu from './SortMenu'
 import { libraryItems, matches, sortItems, type Item, type Kind, type Sort } from './library'
-import { LibraryContext, MessageContext, NowPlayingContext, UserContext, type Library, type LibraryKind } from '../../utilities/context'
+import { LibraryContext, MessageContext, NowPlayingContext, UserContext } from '../../utilities/context'
 import { spotify } from '../../utilities/spotify'
 import type { Playlist } from '../../utilities/types'
 import '../../styles/library.css'
@@ -22,9 +22,7 @@ const subtitle = (item: Item) => item.kind === 'artist' ? 'Artist' : `${item.kin
 // The left panel, Spotify's "Your Library": your playlists, albums and artists, Liked Songs pinned first, with filters,
 // a search and a sort.
 export default function YourLibrary() {
-    // shortcut: LibraryContext doesn't say which lists failed to load (only the frame's toast does), so a failed list
-    // shows nothing here; once the context has `failed` (the lists whose last load failed), the note below says so.
-    const library: Library & {failed?: LibraryKind[]} = useContext(LibraryContext)
+    const library = useContext(LibraryContext)
     const {playlists, albums, artists, recentlyPlayed, likedTotal, refresh} = library
     const user = useContext(UserContext)
     const {contextUri, playing} = useContext(NowPlayingContext)
@@ -54,7 +52,7 @@ export default function YourLibrary() {
     const shown = sorted.filter((item) => (!chip || item.kind === chip) && matches(item, search))
     const liked = (!chip || chip === 'playlist') && matches({name: 'Liked Songs', by: ''}, search)
     const lists = chips.filter((c) => !chip || c.kind === chip)
-    const failed = lists.filter((c) => library.failed?.includes(c.list)).map((c) => c.list)
+    const failed = lists.filter((c) => library.failed.includes(c.list)).map((c) => c.list)
     const note = failed.length ? `Couldn't load your ${failed.join(' and ')}.` :
         shown.length || (search && liked) ? null :
         search ? `Nothing in Your Library matches “${search}”.` :

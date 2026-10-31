@@ -1,6 +1,4 @@
 import type { ComponentType } from "react";
-import Create from "./Create";
-import Like from "./Like";
 import Back from "./Back";
 import Forward from "./Forward";
 import NSearch from "./NSearch";
@@ -24,7 +22,7 @@ import * as Lucide from "./Lucide";
 export type IconProps = { fill?: boolean; width?: string; height?: string };
 
 const icons = {
-  Create, Heart, Like, Back, Forward, "N-Search": NSearch, Play, Music, Music2, CD,
+  Heart, Back, Forward, "N-Search": NSearch, Play, Music, Music2, CD,
   TrackBack, TrackNext, Shuffle, Repeat, Speaker, Volume, Pause, Comment, Annotation,
   ...Lucide,
 };

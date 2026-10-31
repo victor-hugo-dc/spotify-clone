@@ -36,7 +36,6 @@ export default function CommentPage() {
                 setbannerInfo({
                     name: track.name,
                     user: track.artists,
-                    primary_color: '#262626',
                     images: track.album?.images,
                     release_date: track.album?.release_date,
                 })

@@ -4,7 +4,6 @@ export const fixtures = {};
 
 // The "• • •" keyboard check Tabs on to the first link named "Artist One", meaning the one in the track list; the first
 // on the page is now the followed artist in Your Library, so the copy below looks for it in the page.
-export const replaces = ["more-menu-keyboard"];
 
 const panel = (p) => p.getByRole("complementary", { name: "Your Library" });
 const row = (p, name) => panel(p).getByRole("link", { name, exact: true });
@@ -182,37 +181,6 @@ export const checks = [
       const list = await panel(p).getByRole("list").evaluate((ul) => ({ shown: ul.clientHeight, needed: ul.scrollHeight }));
       if (list.shown < 2 * 64) throw new Error(`list only ${list.shown}px tall at ${size.width}×${size.height}`);
       if (list.needed <= list.shown) throw new Error(`list doesn't scroll at ${size.width}×${size.height}`);
-    }
-  }],
-  // review-fixes-pages.mjs's check, with the link Tab moves on to looked for in the page.
-  ["more-menu-keyboard-in-page", "/playlist/p1", async (p, t) => {
-    const more = p.getByRole("button", { name: "More options for Mix" });
-    const item = (name) => p.getByRole("menuitem", { name, exact: true });
-    await more.focus();
-    await p.keyboard.press("Enter");
-    for (const [key, name] of [[null, "Edit details"], ["ArrowDown", "Make public"], ["ArrowUp", "Edit details"], ["ArrowUp", "Open in Spotify app"],
-      ["ArrowDown", "Edit details"], ["End", "Open in Spotify app"], ["Home", "Edit details"]]) {
-      if (key) await p.keyboard.press(key);
-      if (!(await focused(item(name)))) throw new Error(`${key ?? "opening the menu"} didn't focus ${name}`);
-    }
-    if ((await item("Edit details").evaluate((el) => getComputedStyle(el).outlineStyle)) === "none") throw new Error("focused item has no focus ring");
-    await t.snap(p, "open-more-menu-keyboard");
-    await p.keyboard.press("Escape");
-    if (await p.getByRole("menu").count()) throw new Error("menu did not close on Escape");
-    if (!(await focused(more))) throw new Error("Escape didn't put focus back on the button");
-    await p.keyboard.press("Enter");
-    if (!(await focused(item("Edit details")))) throw new Error("reopening the menu didn't focus its first item");
-    await p.keyboard.press("ArrowDown");
-    await p.keyboard.press("Enter");
-    await p.getByText("Playlist is now public").waitFor({ timeout: 3000 });
-    if (!(await focused(more))) throw new Error("choosing an item didn't put focus back on the button");
-    for (const [key, next] of [["Shift+Tab", more], ["Tab", p.getByRole("main").getByRole("link", { name: "Artist One" }).first()]]) {
-      await more.focus();
-      await p.keyboard.press("Enter");
-      if (!(await focused(item("Edit details")))) throw new Error("reopening the menu didn't focus its first item");
-      await p.keyboard.press(key);
-      if (await p.getByRole("menu").count()) throw new Error(`menu stayed open on ${key}`);
-      if (!(await focused(next))) throw new Error(`${key} didn't move on from the button`);
     }
   }],
 ];

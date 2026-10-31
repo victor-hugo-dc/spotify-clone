@@ -76,6 +76,12 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		onNowPlaying({ trackUri: playInfo.uri || null, contextUri, playing: playbackState.play, deviceId });
 	}, [playInfo.uri, contextUri, playbackState.play, deviceId, onNowPlaying]);
 
+	// Like Spotify's tab title: what's playing, while it plays.
+	useEffect(() => {
+		const artists = (playInfo.artists ?? []).map((artist) => artist.name).join(", ");
+		document.title = playbackState.play && playInfo.name ? `${playInfo.name}${artists ? ` • ${artists}` : ""}` : "Shoutify";
+	}, [playInfo, playbackState.play]);
+
 	const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 	const player = useRef<Spotify.Player | null>(null);
 

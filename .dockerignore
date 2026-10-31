@@ -3,3 +3,5 @@ dist
 data
 .env
 .git
+e2e/node_modules
+e2e/shots

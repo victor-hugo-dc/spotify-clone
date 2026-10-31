@@ -11,8 +11,9 @@ import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import { spotify } from '../../utilities/spotify'
 import type { Paging, Playlist, Track } from '../../utilities/types'
 
-type PlaylistItem = {track: Track | null}
-const toTrack = (item: PlaylistItem) => item.track
+type PlaylistEntry = {item: Track | {type: 'episode'} | null}
+// Playlists can hold podcast episodes too; only tracks are listed.
+const toTrack = (entry: PlaylistEntry) => entry.item?.type === 'track' ? entry.item : null
 const emptyBanner: BannerInfo = {name: '', user: [], primary_color: '#262626'}
 
 export default function PlayListPage({playlists, refreshPlaylist}: {playlists: Playlist[], refreshPlaylist: () => void}) {
@@ -28,6 +29,7 @@ export default function PlayListPage({playlists, refreshPlaylist}: {playlists: P
     const [like, setLike] = useState(false)
     const [setNext, lastRef] = useInfiniteScroll(setTracks, toTrack)
     const [uri, setUri] = useState('')
+    const [listed, setListed] = useState(true)
 
     useEffect(() => {
         setUri('')
@@ -36,11 +38,13 @@ export default function PlayListPage({playlists, refreshPlaylist}: {playlists: P
         setLoading(true)
 
         const controller = new AbortController()
-        spotify<Playlist & {tracks: Paging<PlaylistItem>}>(`/playlists/${id}`, token, {signal: controller.signal})
-            .then(({name, description, owner, followers, primary_color, tracks, images, uri}) => {
+        // `items` only comes back for playlists the user owns or collaborates on.
+        spotify<Playlist & {items?: Paging<PlaylistEntry>}>(`/playlists/${id}`, token, {signal: controller.signal})
+            .then(({name, description, owner, followers, primary_color, items, images, uri}) => {
                 setbannerInfo({name, description, user: [owner], followers, primary_color: primary_color ?? emptyBanner.primary_color, images})
-                setTracks(tracks.items.map(toTrack).filter((track) => track !== null))
-                setNext(tracks.next)
+                setTracks(items?.items.map(toTrack).filter((track) => track !== null) ?? [])
+                setNext(items?.next ?? null)
+                setListed(items !== undefined)
                 setUri(uri)
                 setLoading(false)
             })
@@ -56,7 +60,7 @@ export default function PlayListPage({playlists, refreshPlaylist}: {playlists: P
     }, [id])
 
     const followPlaylist = () => {
-        spotify(`/playlists/${id}/followers`, token, {method: like? 'DELETE':'PUT'})
+        spotify(`/me/library?uris=${encodeURIComponent(uri)}`, token, {method: like? 'DELETE':'PUT'})
             .then(() => {
                 setMessage(like ? 'Removed from your Library' : 'Added to your Library')
                 setLike(!like)
@@ -79,13 +83,16 @@ export default function PlayListPage({playlists, refreshPlaylist}: {playlists: P
         loading? 
         <Loading />
         : 
-        <div className='listPage' style={{display: `${tracks.length===0? 'none':'block'}`}}>
+        <div className='listPage'>
             <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
                 <PlayListFunctions onFollow={followPlaylist} follow={like} playContext={playContext}/>
                 <div className="page-content">
-                    <TrackList ref={lastRef} tracks={tracks} playContextTrack={playContextTrack}/>
+                    {listed ?
+                        <TrackList ref={lastRef} tracks={tracks} playContextTrack={playContextTrack}/> :
+                        <p style={{color: '#fff', padding: '16px 0'}}>Spotify only shows apps the tracks of playlists you own or collaborate on. Press play to listen to this one.</p>
+                    }
                 </div>
             </div>
         </div>

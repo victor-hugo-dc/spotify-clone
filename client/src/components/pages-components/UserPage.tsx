@@ -2,6 +2,7 @@ import React, {useState, useEffect, useContext} from 'react'
 import {useParams} from 'react-router'
 
 import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
+import PageTitle from '../featured-components/PageTitle'
 import PlayListFunctions from '../featured-components/PlayListFunctions'
 import CollectionRow from '../featured-components/CollectionRow'
 import Loading from '../featured-components/Loading'
@@ -9,10 +10,11 @@ import Loading from '../featured-components/Loading'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import {UserContext, TokenContext, MessageContext} from '../../utilities/context'
 import { spotify } from '../../utilities/spotify'
-import type { Paging, Playlist, User } from '../../utilities/types'
+import type { Paging, Playlist } from '../../utilities/types'
 
 const emptyBanner: BannerInfo = {name: '', user: [], primary_color: 'rgb(83, 83, 83)'}
 
+// Since 2026 Spotify only shares the logged-in user's own profile and playlists with Development Mode apps.
 export default function UserPage() {
     const { id = '' } = useParams()
     const user = useContext(UserContext)
@@ -24,19 +26,15 @@ export default function UserPage() {
 
     const [playLists, setplayLists] = useState<Playlist[]>([])
     const [setNext, lastRef] = useInfiniteScroll(setplayLists)
-    const [follow, setFollow] = useState(false)
     useEffect(() => {
-        setbannerInfo(emptyBanner)
-        setFollow(false)
+        if (!user || id !== user.id) return
         setplayLists([])
         setLoading(true)
 
         const controller = new AbortController()
-        const { signal } = controller
-        Promise.all([spotify<User>(`/users/${id}`, token, {signal}), spotify<Paging<Playlist>>(`/users/${id}/playlists`, token, {signal})])
-            .then(([userData, listData]) => {
-                const {items, total, next} = listData
-                setbannerInfo({...emptyBanner, name: userData.display_name ?? id, images: userData.images, total})
+        spotify<Paging<Playlist>>('/me/playlists', token, {signal: controller.signal})
+            .then(({items, total, next}) => {
+                setbannerInfo({...emptyBanner, name: user.display_name ?? user.id, images: user.images, total})
                 setplayLists(items)
                 setNext(next)
                 setLoading(false)
@@ -46,34 +44,30 @@ export default function UserPage() {
                 setLoading(false)
             })
 
-        spotify<boolean[]>(`/me/following/contains?type=user&ids=${id}`, token, {signal})
-            .then(([following]) => setFollow(following === true))
-            .catch(error => console.log(error))
-
         return () => controller.abort()
     // eslint-disable-next-line
-    }, [id])
+    }, [id, user])
 
-    const followUser = () => {
-        spotify(`/me/following?type=user&ids=${id}`, token, {method: follow? 'DELETE':'PUT'})
-            .then(() => {
-                setStatusMessage(follow ? `Unsaved from your collection` : `Saved to your collection`)
-                setFollow(!follow)
-            })
-            .catch(error => setStatusMessage(`ERROR: ${error.message}`))
+    if (user && id !== user.id) {
+        return (
+            <div className='page-content' style={{paddingTop: '16px'}}>
+                <PageTitle name="Spotify doesn't share other people's profiles with this app."/>
+                <a href={`https://open.spotify.com/user/${id}`} target='_blank' rel='noopener noreferrer' style={{color: '#fff'}}>Open this profile on Spotify</a>
+            </div>
+        )
     }
 
     return (
         loading? 
         <Loading /> 
         :
-        <div className='listPage' style={{display: playLists.length===0? 'none':'block'}}>
+        <div className='listPage'>
             <PageBanner pageTitle='profile' bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                <PlayListFunctions type={id === user?.id? 'none':'user'} follow={follow} onFollow={followUser}/>
+                <PlayListFunctions type='none'/>
                 <div className="page-content" style={{marginTop: '40px'}}>
-                    <CollectionRow ref={lastRef} name='Public Playlists' playlists={playLists}/>
+                    <CollectionRow ref={lastRef} name='Playlists' playlists={playLists}/>
                 </div>
             </div>
         </div>

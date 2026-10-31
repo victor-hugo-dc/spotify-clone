@@ -41,7 +41,7 @@ export default function ArtistPage() {
         const controller = new AbortController()
         const { signal } = controller
 
-        spotify<boolean[]>(`/me/following/contains?type=artist&ids=${id}`, token, {signal})
+        spotify<boolean[]>(`/me/library/contains?uris=${encodeURIComponent(`spotify:artist:${id}`)}`, token, {signal})
             .then(([following]) => setFollow(following === true))
             .catch(error => console.log(error))
 
@@ -67,7 +67,7 @@ export default function ArtistPage() {
     }, [id])
 
     const followArtist = () => {
-        spotify(`/me/following?type=artist&ids=${id}`, token, {method: follow? 'DELETE':'PUT'})
+        spotify(`/me/library?uris=${encodeURIComponent(`spotify:artist:${id}`)}`, token, {method: follow? 'DELETE':'PUT'})
             .then(() => {
                 setMessage(follow ? `Unsaved from your collection` : `Saved to your collection`)
                 setFollow(!follow)

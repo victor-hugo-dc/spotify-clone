@@ -127,6 +127,8 @@ app.get("/api/token", async (req, res) => {
   res.set("Cache-Control", "no-store");
   try {
     const { access_token, expires_in, refresh_token: rotated } = await requestToken({ grant_type: "refresh_token", refresh_token });
+    // Saved before /v1/me can fail: Spotify may have revoked the old one. A sign-out below still wins, as it comes later.
+    if (rotated) res.cookie(refreshKey, rotated, { ...cookieOption, maxAge: year });
     // Re-checked every hour, so someone taken off the allowlist loses access within one.
     const author = await whoIs(access_token);
     if (!author) {
@@ -134,7 +136,6 @@ app.get("/api/token", async (req, res) => {
       res.sendStatus(401);
       return;
     }
-    if (rotated) res.cookie(refreshKey, rotated, { ...cookieOption, maxAge: year });
     res.cookie(authorKey, authorCookie(author), { ...cookieOption, maxAge: authorMaxAge });
     res.send({ access_token, expires_in });
   } catch (error) {

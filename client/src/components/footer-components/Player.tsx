@@ -3,6 +3,7 @@ import React, {
 	useEffect,
 	useContext,
 	useImperativeHandle,
+	useMemo,
 	useRef,
 	type Ref,
 } from "react";
@@ -18,7 +19,7 @@ import AddComment from "./AddComment";
 import { playerCommand, spotify } from "../../utilities/spotify";
 import { accessToken } from "../../utilities/session";
 import formatTime from "../../utilities/time";
-import { MessageContext, type NowPlaying as NowPlayingState } from "../../utilities/context";
+import { MessageContext, type NowPlaying as NowPlayingState, type PlayingTrack } from "../../utilities/context";
 import type { Album, Track } from "../../utilities/types";
 
 export type PlayerHandle = { updateState: () => void };
@@ -80,26 +81,24 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const [deviceId, setDeviceId] = useState<string | null>(null);
 	const [activeDevice, setActiveDevice] = useState<NowPlayingState["device"]>(null);
 
-	// Keyed on the track's URI, not on playInfo: polling hands over an equal copy every few seconds.
-	useEffect(() => {
+	// One object per track, not per playInfo (polling hands over an equal copy every few seconds), so effects keyed on
+	// the track don't run again on play, pause or a device change.
+	const track = useMemo<PlayingTrack | null>(() => {
 		const { id, uri, name, album, artists = [] } = playInfo;
-		onNowPlaying({
-			trackUri: uri || null,
-			contextUri,
-			playing: playbackState.play,
-			deviceId,
-			device: activeDevice,
-			track: name === "" ? null : {
-				id,
-				uri,
-				name,
-				artists: artists.map((artist) => ({ id: idOf(artist.uri, "artist"), name: artist.name })),
-				album: { id: idOf(album?.uri, "album"), name: album?.name ?? "", images: album?.images ?? [] },
-				duration_ms: playbackState.total_time,
-			},
-		});
+		return name === "" ? null : {
+			id,
+			uri,
+			name,
+			artists: artists.map((artist) => ({ id: idOf(artist.uri, "artist"), name: artist.name })),
+			album: { id: idOf(album?.uri, "album"), name: album?.name ?? "", images: album?.images ?? [] },
+			duration_ms: playbackState.total_time,
+		};
 		// eslint-disable-next-line
-	}, [playInfo.uri, contextUri, playbackState.play, playbackState.total_time, deviceId, activeDevice?.id, activeDevice?.name, onNowPlaying]);
+	}, [playInfo.uri, playbackState.total_time]);
+
+	useEffect(() => {
+		onNowPlaying({ trackUri: playInfo.uri || null, contextUri, playing: playbackState.play, deviceId, device: activeDevice, track });
+	}, [playInfo.uri, contextUri, playbackState.play, deviceId, activeDevice, track, onNowPlaying]);
 
 	// Like Spotify's tab title: what's playing, while it plays.
 	useEffect(() => {
@@ -237,7 +236,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 					return;
 				}
 				const { repeat_state, shuffle_state, is_playing, progress_ms, item, device, context } = state;
-				setActiveDevice({ id: device.id, name: device.name });
+				// Keep the object while it's the same device, so NowPlaying.device only changes when the device does.
+				setActiveDevice((active) => (active?.id === device.id && active.name === device.name ? active : { id: device.id, name: device.name }));
 				if (!item) {
 					setPlaybackState((state) => ({ ...state, play: is_playing }));
 					return;

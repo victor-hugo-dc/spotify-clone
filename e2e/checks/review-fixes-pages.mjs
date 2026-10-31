@@ -3,10 +3,13 @@ import { me, playlist, track2 } from "../data.mjs";
 
 // How Spotify lists a local file in a playlist: no id, so the app leaves it out.
 const local = (n) => ({ item: { id: null, uri: `spotify:local:Me:Tape:Song+${n}:180`, name: `Local Song ${n}`, type: "track", is_local: true, duration_ms: 180000, explicit: false, album: { uri: null, name: "Tape", images: [] }, artists: [{ uri: null, name: "Me" }] } });
+// As long as Edit details lets you write (300 characters).
+const long = "Songs for the long drive up the coast, from the first coffee stop to the last ferry. Windows down for the sunny stretches, slow ones for the fog around Big Sur, and a few singalongs for when everyone in the back seat wakes up. Add whatever you cannot stop humming, but keep it under four minutes.";
 
 export const fixtures = {
   "/v1/playlists/plocal": { ...playlist, id: "plocal", name: "Tape Mix", uri: "spotify:playlist:plocal", description: "", items: { items: [local(1), local(2), { item: null }], next: "https://api.spotify.com/v1/playlists/plocal/items?offset=3" } },
   "/v1/playlists/plocal/items": { items: [{ item: track2 }], next: null },
+  "/v1/playlists/plong": { ...playlist, id: "plong", name: "Road Trip Mix", uri: "spotify:playlist:plong", description: long, items: { items: [], next: null } },
 };
 
 export const checks = [
@@ -65,4 +68,22 @@ export const checks = [
   }],
   // A first page with nothing to list (local files) still leads on to the next one.
   ["playlist-local-files", "/playlist/plocal", (p) => p.getByText("Track Two").waitFor({ timeout: 5000 })],
+  // A long description stops after a couple of lines instead of squeezing the playlist's name out of the banner.
+  ["banner-long-description", "/playlist/plong", async (p) => {
+    await p.setViewportSize({ width: 768, height: 700 });
+    const title = p.getByRole("heading", { name: "Road Trip Mix" });
+    await title.waitFor({ timeout: 3000 });
+    const { shown, needed } = await p.getByText(long.slice(0, 40)).evaluate((el) => ({ shown: el.clientHeight, needed: el.scrollHeight }));
+    if (needed <= shown) throw new Error(`long description shown in full (${shown}px)`);
+    const cut = await title.evaluate((h) => {
+      const box = h.getBoundingClientRect();
+      for (let el = h.parentElement; el; el = el.parentElement) {
+        if (getComputedStyle(el).overflowY === "visible") continue;
+        const clip = el.getBoundingClientRect();
+        if (box.top < clip.top - 1 || box.bottom > clip.bottom + 1) return true;
+      }
+      return false;
+    });
+    if (cut) throw new Error("the playlist's name is cut off");
+  }],
 ];

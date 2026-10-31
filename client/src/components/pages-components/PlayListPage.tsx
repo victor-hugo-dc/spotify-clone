@@ -112,7 +112,8 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
             <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                <PlayListFunctions onFollow={followPlaylist} follow={like} uri={uri} menu={menu} label={bannerInfo.name}/>
+                {/* No heart on your own playlist: un-saving it deletes it, so that's the menu's Delete, which asks first. */}
+                <PlayListFunctions onFollow={owned ? undefined : followPlaylist} follow={like} uri={uri} menu={menu} label={bannerInfo.name}/>
                 <div className="page-content">
                     {listed ?
                         <TrackList ref={lastRef} tracks={tracks} contextUri={uri}/> :

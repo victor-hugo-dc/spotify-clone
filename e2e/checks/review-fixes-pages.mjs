@@ -33,16 +33,33 @@ export const checks = [
     release();
     await p.getByRole("menuitem", { name: "Edit details" }).waitFor({ timeout: 3000 });
   }],
-  // Going back to another playlist with Edit details open doesn't open it again there.
+  // Going back to another playlist with Edit details open, mid-save, doesn't open it again there, nor does the save,
+  // once done, rename that playlist.
   ["edit-details-back", "/playlist/p1", async (p) => {
+    let release;
+    const held = new Promise((resolve) => (release = resolve));
+    await p.route((url) => url.pathname === "/v1/playlists/p3", async (r) => {
+      if (r.request().method() === "PUT") await held;
+      await r.fallback().catch(() => {});
+    });
     await p.getByRole("button", { name: "Create Playlist" }).click();
     await p.getByRole("button", { name: "More options for My Playlist #2" }).click();
     await p.getByRole("menuitem", { name: "Edit details" }).click();
-    await p.getByRole("dialog", { name: "Edit details" }).waitFor({ timeout: 3000 });
+    const dialog = p.getByRole("dialog", { name: "Edit details" });
+    await dialog.getByLabel("Name").fill("Renamed Number Two");
+    const saving = p.waitForRequest((r) => r.method() === "PUT" && new URL(r.url()).pathname === "/v1/playlists/p3");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await saving;
     await p.goBack();
     await p.getByRole("heading", { name: "Mix", exact: true }).waitFor({ timeout: 5000 });
-    await p.waitForTimeout(300);
-    if (await p.getByRole("dialog").count()) throw new Error("Edit details opened again on the other playlist");
+    // It would be back in the same render as the playlist, though only open (shown) a moment later.
+    if (await p.getByRole("dialog", { includeHidden: true }).count()) throw new Error("Edit details opened again on the other playlist");
+    release();
+    await p.getByRole("status").filter({ hasText: "Details saved" }).waitFor({ timeout: 3000 });
+    if (!(await p.getByRole("heading", { name: "Mix", exact: true }).count())) throw new Error("the save renamed the playlist on show");
+    await p.getByRole("button", { name: "More options for Mix" }).click();
+    await p.getByRole("menuitem", { name: "Edit details" }).click();
+    if ((await dialog.getByLabel("Name").inputValue()) !== "Mix") throw new Error("Edit details filled in another playlist's name");
   }],
   // A failed save is told inside the dialog (toasts sit under its backdrop), keeps focus on Save and keeps what was typed;
   // Save can't send it twice, and a name of only spaces isn't saved.

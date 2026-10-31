@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useContext} from 'react'
+import React, {useEffect, useRef, useState, useContext} from 'react'
 import {useNavigate, useParams} from 'react-router'
 
 import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
@@ -39,8 +39,11 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
     const [ownerId, setOwnerId] = useState('')
     const [isPublic, setIsPublic] = useState(false)
     const [editing, setEditing] = useState(false)
+    // The playlist on show, for saves that finish after the page has moved on to another.
+    const shown = useRef(id)
 
     useEffect(() => {
+        shown.current = id
         setUri('')
         setbannerInfo(emptyBanner)
         setTracks([])
@@ -76,9 +79,11 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
     const changeDetails = (details: {name?: string, description?: string, public?: boolean}, done: string) =>
         spotify(`/playlists/${id}`, {method: 'PUT', body: details})
             .then(() => {
-                const {public: shared, ...text} = details
-                setbannerInfo((banner) => ({...banner, ...text}))
-                if (shared !== undefined) setIsPublic(shared)
+                if (shown.current === id) {
+                    const {public: shared, ...text} = details
+                    setbannerInfo((banner) => ({...banner, ...text}))
+                    if (shared !== undefined) setIsPublic(shared)
+                }
                 setMessage(done)
                 refreshPlaylist()
                 return null

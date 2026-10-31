@@ -13,7 +13,7 @@ import requestWithToken from '../../utilities/requestWithToken'
 import putWithToken from '../../utilities/putWithToken'
 import makeAxiosRequest from '../../utilities/makeAxiosRequest'
 
-export default function UserPage({query, setMessage}) {
+export default function UserPage() {
     const id = useId()
     const user = useContext(UserContext)
     const token = useContext(TokenContext)

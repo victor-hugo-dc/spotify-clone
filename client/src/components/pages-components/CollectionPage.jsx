@@ -44,7 +44,7 @@ const CollectionPage = ({playlists}) => {
                 console.log(response.json().then(
                 (data) => { 
                     console.log(data.items)
-                    setAlbums(data.items)
+                    setAlbums(data.items.map(item => item.album))
                     }
                 ));
             });

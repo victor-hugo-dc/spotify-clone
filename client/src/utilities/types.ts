@@ -40,3 +40,8 @@ export type Playlist = {
 };
 
 export type Paging<T> = { items: T[]; next: string | null; total?: number };
+
+// A card that only links somewhere in the app, like Liked Songs on the home page.
+export type LinkCard = { type: "link"; id: string; name: string; description: string; images: Image[]; to: string };
+
+export type CardItem = Playlist | Album | Artist | Track | LinkCard;

@@ -1,111 +1,333 @@
-  /* Your Library, the left panel's content; layout.css places and sizes the panel itself. */
+  /* Your Library, the left panel's content; layout.css places and sizes the panel itself. The header, the chips and the
+     search and sort row keep their size however short the window: only the list under them shrinks, and scrolls. */
 
-  .activeMainNav {
-    color: #fff;
+  .library-header,
+  .library-chips,
+  .library-tools {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
   }
 
-  .play-title {
+  .library-header {
+    height: 68px;
+    padding-top: 2px;
+  }
+
+  .library-title {
+    flex: 1;
+    min-width: 0;
+    padding-left: 4px;
+    overflow: hidden;
+    color: #fff;
     font-size: 16px;
     font-weight: 700;
     line-height: 24px;
-    color: #fff;
-    text-transform: none;
-    padding: 16px var(--side-bar-margin) 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
-  .play-title > a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .create-button {
-    border: none;
-    background: transparent;
-    padding: 5px var(--side-bar-margin);
+  .library-create {
+    flex: none;
+    height: 36px;
     display: flex;
     align-items: center;
-    width: 100%;
+    gap: 4px;
+    padding: 0 16px 0 12px;
+    border: 0;
+    border-radius: 500px;
+    background: var(--background-highlight);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .library-create:hover {
+    background: #2a2a2a;
+  }
+
+  /* Round icon buttons: Expand, and the magnifier that opens the search box. */
+  .library-icon-button {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
     color: var(--main-text);
     cursor: pointer;
-    transition: all 0.4s;
   }
 
-  .create-button:hover {
-    color: white;
+  .library-icon-button:hover {
+    background: var(--background-highlight);
+    color: #fff;
   }
 
-  .create-button > div > svg {
-    background: var(--main-text);
-    transition: all 0.4s;
+  .library-icon-button svg,
+  .library-search svg {
+    flex: none;
+    width: 18px;
+    height: 18px;
   }
 
-  .create-button:hover > div > svg {
-    background: white;
+  /* Filter chips: one at a time; the selected one is white, with an "×" in front that clears it. */
+  .library-chip {
+    flex: none;
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 32px;
+    background: hsla(0, 0%, 100%, 0.07);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
   }
 
-  .playlist-icon {
-    margin-right: 16px;
+  .library-chip:hover {
+    background: hsla(0, 0%, 100%, 0.1);
   }
 
-  .featured-label {
-    font-weight: 700;
-    line-height: 16px;
+  .library-chip[aria-pressed="true"] {
+    background: #fff;
+    color: #000;
   }
 
-  .featured-item-link {
+  .library-chip-clear {
+    width: 32px;
     display: flex;
     align-items: center;
-    padding: 6px var(--side-bar-margin);
-    color: var(--main-text);
-    text-decoration: none;
-    transition: color 0.2s;
+    justify-content: center;
+    padding: 0;
   }
 
-  .featured-item-link:hover {
+  /* The search box (or the magnifier that opens it) at the left, the sort at the right. */
+  .library-tools {
+    height: 32px;
+    margin-top: 10px;
+    justify-content: space-between;
+  }
+
+  .library-search {
+    flex: 0 1 188px;
+    min-width: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    border-radius: 4px;
+    background: #2a2a2a;
+    color: var(--main-text);
+  }
+
+  .library-search > span {
+    display: flex;
+  }
+
+  .library-search:focus-within {
+    box-shadow: inset 0 0 0 1px hsla(0, 0%, 100%, 0.7);
+  }
+
+  .library-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    color: #fff;
+    font-size: 14px;
+  }
+
+  .library-search input::placeholder {
+    color: var(--main-text);
+  }
+
+  .library-sort {
+    position: relative;
+    margin-left: auto;
+  }
+
+  .library-sort-button {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    border: 0;
+    background: none;
+    color: var(--main-text);
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .library-sort-button:hover {
     color: #fff;
   }
 
-  .list-separator {
-    margin: 8px var(--side-bar-margin);
-    background-color: #282828;
-    border: none;
-    height: 1px;
+  .library-sort-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 10;
+    min-width: 180px;
+    margin-top: 4px;
+    padding: 4px;
+    list-style: none;
+    background: var(--background-elevated);
+    border-radius: 4px;
+    box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
   }
 
-  .other-playlist-container {
-    margin: 4px 0;
-    flex: 1;
+  .library-sort-heading {
+    padding: 8px 12px 4px;
+    color: var(--main-text);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .library-sort-menu button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 8px 12px 12px;
+    border: 0;
+    border-radius: 2px;
+    background: none;
+    color: hsla(0, 0%, 100%, 0.9);
+    font-size: 14px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .library-sort-menu button:hover,
+  .library-sort-menu button:focus-visible {
+    background: hsla(0, 0%, 100%, 0.1);
+    color: #fff;
+    /* Keyboard users keep the global focus ring, inside the item. */
+    outline-offset: -2px;
+  }
+
+  .library-sort-menu button[aria-checked="true"] {
+    color: var(--spotify-green);
+  }
+
+  /* The list (.other-list, the name checks find it by): 64px rows in what's left of the panel, scrolling. */
+  .other-list {
+    flex: 0 1 auto;
     min-height: 0;
     overflow-y: auto;
-  }
-
-  .other-list {
-    position: relative;
+    padding: 8px;
     list-style: none;
-    white-space: nowrap;
   }
 
-  .side-list {
-    margin: 0 var(--side-bar-margin);
-  }
-
-  .list-link {
-    color: var(--main-text);
-    text-decoration: none;
-    display: block;
-    height: 32px;
-    line-height: 32px;
-    font-size: 14px;
-    overflow: hidden;
-  }
-
-  .list-link:hover {
+  .library-row {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 6px;
     color: #fff;
+    text-decoration: none;
   }
 
-  .list-wrapper {
+  .library-row:hover {
+    background: #1a1a1a;
+  }
+
+  .library-row.active {
+    background: #2a2a2a;
+  }
+
+  /* Covers: 48px, square with rounded corners, round for artists. Without a picture, a note on grey. */
+  .library-cover {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: var(--background-elevated);
+    color: var(--main-text);
+    object-fit: cover;
+  }
+
+  .library-cover.round {
+    border-radius: 50%;
+  }
+
+  .library-cover svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .library-row-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .library-row-name,
+  .library-row-subtitle {
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
-    display: block;
+    text-overflow: ellipsis;
+  }
+
+  .library-row-name {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .library-row.loaded .library-row-name {
+    color: var(--spotify-green);
+  }
+
+  .library-row-subtitle {
+    color: var(--main-text);
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  /* Liked Songs' pin: Spotify's leans, and is filled. */
+  .library-pin {
+    display: inline-flex;
+    margin-right: 4px;
+    vertical-align: -1px;
+    color: var(--spotify-green);
+    transform: rotate(45deg);
+  }
+
+  .library-pin svg {
+    fill: currentColor;
+  }
+
+  .library-playing {
+    flex: none;
+    display: flex;
+    margin: 0 8px;
+    color: var(--spotify-green);
+  }
+
+  .library-playing path:first-child {
+    fill: currentColor;
+  }
+
+  .library-note {
+    flex: none;
+    padding: 8px 24px 16px;
+    color: var(--main-text);
   }

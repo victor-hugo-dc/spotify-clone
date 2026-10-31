@@ -15,7 +15,7 @@ import Loading from '../featured-components/Loading'
 import LoadError from '../featured-components/LoadError'
 import '../../styles/lists.css'
 
-const emptyBanner: BannerInfo = {name: '', user: [], primary_color: 'rgb(83, 83, 83)'}
+const emptyBanner: BannerInfo = {name: '', user: []}
 
 export default function ArtistPage() {
     const { id = '' } = useParams()
@@ -73,10 +73,9 @@ export default function ArtistPage() {
             error ?
             <LoadError what='artist' error={error}/>
             : 
-            <div className='listPage'>
+            <div className='listPage lists'>
                 <PageBanner pageTitle='artist' bannerInfo={bannerInfo}/>
                 <div className="playListContent">
-                    <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
                     <PlayListFunctions type='artist' follow={follow} onFollow={followArtist} uri={uri} label={bannerInfo.name} menu={[
                         {label: follow ? 'Unfollow' : 'Follow', onSelect: followArtist},
                         ...shareItems(uri, 'artist', setMessage),

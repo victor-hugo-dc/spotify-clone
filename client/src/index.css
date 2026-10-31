@@ -1166,8 +1166,7 @@
   
   .social-page-content {
     padding: 0 16px;
-    width: 960px;
-    z-index: 3;
+    max-width: 960px;
     margin: 1rem;
   }
   
@@ -1179,45 +1178,12 @@
 
   .socialGrid {
     margin: 16px 0;
-    display: grid;
-    width: 80%;
-    display: inline-block;
-    vertical-align: middle;
-    /* grid-gap: 16px;
-    grid-template-columns: repeat(auto-fill, minmax(164px, 1fr));
-    grid-auto-rows: auto; */
-  
-    /* width will later be changed to max-width */
   }
   
-  .socialCardContainer {
-    background-color: #1db954;
-  }
   
-  .social-card-user-info {
-    background-color: #1db954;
-  }
   
-  .social-sidebar {
-    background: #ff0000;
-    width: 232px;
-    height: 100%;
-    padding-top: 24px;
-    text-align: center;
-    margin-right: 24px;
-    position: absolute;
-    top: 76px;
-    left: 960px;
-    overflow-y: auto;
-  }
   
-  .comment-info {
-    background-color: #1db954;
-  }
   
-  .comment-like {
-    background-color: #1db954;
-  }
   
   .listPage {
     margin-top: -64px;
@@ -1875,46 +1841,41 @@
   /* SOCIAL PAGE */
   .spotify-tweet-box {
     display: flex;
-    margin-bottom: 20px;
-    background-color: #0D0D0D;
-    color: #FFFFFF;
+    gap: 16px;
+    margin-bottom: 16px;
+    background-color: #181818;
+    color: #fff;
     border-radius: 8px;
     padding: 16px;
   }
   
   .avatar {
-    margin-right: 16px;
-    margin-left: 16px;
-    /* width: 75px;
-    height: 75px; */
-    overflow: hidden;
-    /* border-radius: 50%; */
-    margin-top: 1em;
+    flex: none;
     position: relative;
   }
   
   .avatar img {
     display: block;
-    width: 5em;
-    height: 5em;
-    /* position: absolute;
-    top: 0;
-    left: 0; */
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
   }
   
   .content {
     flex: 1;
+    min-width: 0;
   }
   
   .header {
     display: flex;
-    margin-bottom: 12px;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
   }
   
   .username {
-    font-weight: bold;
-    margin-right: 8px;
-    color: var(--spotify-green);
+    font-weight: 700;
+    color: #fff;
   }
   
   .handle {
@@ -1923,83 +1884,63 @@
   }
   
   .time {
-    color: #697787;
+    color: var(--main-text);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
   }
   
   .message {
     margin-bottom: 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   
-  .actions {
-    display: flex;
-    align-items: center;
-  }
   
-  button {
-    display: flex;
-    align-items: center;
-    background-color: transparent;
-    border: none;
-    color: #697787;
-    font-size: 14px;
-    margin-right: 16px;
-    cursor: pointer;
-  }
   
-  button svg {
-    margin-right: 4px;
-    fill: currentColor;
-  }
   
-  .reply-button svg {
-    transform: rotate(-90deg);
-    margin-right: 0;
-    margin-left: 2px;
-  }
   
-  .like-button svg {
-    margin-right: 4px;
-  }
   
-  .retweet-button svg {
-    margin-right: 4px;
-  }
   
-  .share-button svg {
-    margin-right: 4px;
-  }
   
-  body {
-    font-family: "Rubik", "Poppins", "Nunito", "Open Sans", "Roboto", "Helvetica Neue", Helvetica, Arial, "Hiragino Kaku Gothic Pro", "Meiryo", "MS Gothic", sans-serif;
-  }
   
-  i {
-    margin: 0.5em;
-  }
   
   .spotify-track {
     display: flex;
-    /* align-items: center; */
-    gap: 16px;
-    background-color: #121212;
-    padding: 16px;
-    border-radius: 8px;
+    align-items: center;
+    gap: 12px;
+    background-color: hsla(0, 0%, 100%, 0.07);
+    padding: 8px;
+    border-radius: 6px;
+    color: inherit;
+    text-decoration: none;
   }
   
+  .spotify-track:hover {
+    background-color: hsla(0, 0%, 100%, 0.1);
+  }
+
+  .spotify-track .player-cover {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+  }
+
   .track-details {
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
   
   .track-name {
-    margin: 0;
-    font-size: 24px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
   }
   
   .artist-name {
-    margin: 0;
-    font-size: 18px;
-    color: #888;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--main-text);
   }
   
   /* img {
@@ -2008,17 +1949,29 @@
   } */
   
   .timestamp {
-    font-family: 'Courier New', Courier, monospace;
-    /* background-color: #f7f7f7; */
-    /* color: #333; */
-    /* padding: 0 4px; */
     border-radius: 50%;
-    /* font-size: 14px; */
-    /* margin-right: 5px; */
+    font-variant-numeric: tabular-nums;
   }
   
   
   
+  /* People without a profile picture get their initial. */
+  .avatar-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: #535353;
+    color: #fff;
+    font-weight: 700;
+    font-size: 20px;
+  }
+
+  .figureStyle .avatar-initial {
+    font-size: 14px;
+  }
+
   .userInfo {
     position: relative;
     white-space: nowrap;
@@ -2049,21 +2002,31 @@
 
 /* COMMENT INFORMATION */
 
-
-.add-comment{
-    position: fixed;
-    width: 400px;
-    height: 200px;
-    bottom: 50%;
-    right: 30%;
-    display: none;
-    background: #282828;
-    border-radius: 5px;
-    z-index: 999;
-    box-shadow: 0 4px 12px 4px rgba(0,0,0,.5);
-    display: block;
-    animation: fadeIn 333ms cubic-bezier(.3,0,0,1);
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
+
+.add-comment-song {
+  color: var(--main-text);
+  font-size: 14px;
+  padding-top: 4px;
+}
+
+
+  .add-comment {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(400px, calc(100vw - 32px));
+    padding-bottom: 56px;
+    background: var(--background-elevated);
+    border-radius: 8px;
+    z-index: 999;
+    box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 333ms cubic-bezier(0.3, 0, 0, 1);
+  }
 
 /*
 .add-comment::before{
@@ -2201,37 +2164,7 @@
 }
 /* Comment Viewbox Info */
 
-.song-comment-list{
-    position: fixed;
-    width: 400px;
-    height: 200px;
-    bottom: 50%;
-    right: 30%;
-    display: none;
-    background: #282828;
-    border-radius: 5px;
-    z-index: 999;
-    box-shadow: 0 4px 12px 4px rgba(0,0,0,.5);
-    display: block;
-    animation: fadeIn 333ms cubic-bezier(.3,0,0,1);
-}
 
-.pill-button-grey2 {
-    background-color: white;
-    border: none;
-    color: black;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 16px;
-    font-weight: bold;
-    right: 5%;
-    bottom: 5%;
-    position: absolute;
-  }
 
 .social-features {
   display: flex;

@@ -1,11 +1,11 @@
-// Search: Browse all, the results and their chips. Results are found by role and name, not
+// Search (Browse all, the results and their chips) and Your Library's page. Results are found by role and name, not
 // by the cards' classes, which are another area's.
 import { album, album2, album2Songs, album3, artist, artist2, listed, playlist, playlists, single, track } from "../data.mjs";
 
 export const fixtures = {};
 // smoke.mjs's versions clicked the first card by its class: on the search page that's an artist now (Top result and
-// Songs come first).
-export const replaces = ["search", "search-back"];
+// Songs come first), and on /collection/playlist it's Liked Songs, whose button opens its page instead of playing.
+export const replaces = ["search", "search-back", "autoconnect"];
 
 // What the fake Spotify finds for any query: more than fits, and the null Spotify pads results with.
 const found = {
@@ -112,7 +112,28 @@ export const checks = [
     const body = (await play).postDataJSON();
     if (JSON.stringify(body?.uris) !== JSON.stringify([song.uri])) throw new Error(`played ${JSON.stringify(body)}`);
   }],
-];
+  // Your Library's page: chips for its three lists (the one on show marked current), and a card per item.
+  ["library-page", "/collection/artist", async (p, t) => {
+    await heading(p, "Your Library").waitFor({ timeout: 3000 });
+    const chip = (name) => main(p).getByRole("navigation").getByRole("link", { name, exact: true });
+    if ((await chip("Artists").getAttribute("aria-current")) !== "page") throw new Error("Artists chip not current");
+    for (const { name } of t.fixtures["/v1/me/following"].artists.items) await main(p).getByRole("link", { name: new RegExp(name) }).waitFor({ timeout: 3000 });
+    await chip("Playlists").click();
+    await p.waitForURL("**/collection/playlist");
+    // Liked Songs first, with its count, then every playlist.
+    await main(p).getByRole("link", { name: /^Mix/ }).waitFor({ timeout: 3000 });
+    if ((await chip("Playlists").getAttribute("aria-current")) !== "page" || (await chip("Artists").getAttribute("aria-current")) !== null)
+      throw new Error("the Playlists chip isn't the current one");
+    const cards = (await main(p).getByRole("link").allInnerTexts()).slice(3).map((text) => text.replace(/\s+/g, " "));
+    if (!cards[0]?.startsWith("Liked Songs") || !cards[0].includes("4 songs")) throw new Error(`first card: ${cards[0]}`);
+    for (const { name } of t.fixtures["/v1/me/playlists"].items)
+      if (!cards.some((text) => text.startsWith(name))) throw new Error(`no card for ${name}: ${JSON.stringify(cards)}`);
+  }],
+  // smoke.mjs's autoconnect, on a page of its own (its 404 is on purpose): with nothing playing anywhere, the in-browser
+  // player takes over, and a card's play falls back to it when Spotify says no device is active.
+  ["library-autoconnect", "/collection/playlist", async (p, t) => {
+    const page = await p.context().newPage();
+    const commands = [], errors = [];
     let transferred = false;
     page.on("console", (m) => m.type() === "error" && !/404/.test(m.text()) && errors.push(m.text()));
     page.on("pageerror", (e) => errors.push(e.message));

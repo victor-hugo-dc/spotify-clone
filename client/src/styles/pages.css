@@ -1,29 +1,57 @@
   /* The library page's tabs and Shoutify's own pages: the comment feed, a song's comments, annotations, lyrics. */
 
-  .cNavWrapper {
-    white-space: nowrap;
+  /* Your Library's page: the title and chips stay at the top while the cards scroll under them. */
+  .collection-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 0 -24px 8px;
+    padding: 16px 24px 12px;
+    background: var(--background-base);
+  }
+
+  .collection-title {
     margin-bottom: 16px;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
   }
 
   .cNavList {
-    text-align: left;
-    list-style: none;
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
   }
 
-  .cNavList > li > a {
-    margin: 0 8px 0 0;
+  .cNavList a {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 500px;
+    background: hsla(0, 0%, 100%, 0.07);
     color: #fff;
-    position: relative;
-    display: inline-block;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 4px;
     font-size: 14px;
-    font-weight: 700;
-    line-height: 16px;
-    letter-spacing: normal;
-    text-transform: none;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .cNavList a:hover {
+    background: hsla(0, 0%, 100%, 0.1);
+  }
+
+  .cNavList a[aria-current="page"] {
+    background: #fff;
+    color: #000;
+  }
+
+  /* Keeps the cards' play buttons under the sticky header. */
+  .collection-grid {
+    isolation: isolate;
+    padding-bottom: 32px;
   }
 
   .annotation-page-content {

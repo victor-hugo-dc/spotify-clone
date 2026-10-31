@@ -1,28 +1,21 @@
 import React from 'react';
 import {NavLink} from 'react-router'
 
+const lists: [string, string][] = [['playlist', 'Playlists'], ['artist', 'Artists'], ['album', 'Albums']]
+
+// Chips for Your Library's lists; NavLink marks the one on show with aria-current="page".
 const CollectionNav = () => {
     return (
-        <div className='cNavWrapper'>
-            <nav className='cNav'>
-                <ul className='cNavList'>
-                    <li>
-                        <NavLink to='/collection/playlist' style={({isActive}) => isActive ? activeStyle : undefined}>Playlists</NavLink>
+        <nav className='cNav' aria-label='Your Library lists'>
+            <ul className='cNavList'>
+                {lists.map(([path, name]) => (
+                    <li key={path}>
+                        <NavLink to={`/collection/${path}`} className='no-outline'>{name}</NavLink>
                     </li>
-                    <li>
-                        <NavLink to='/collection/artist' style={({isActive}) => isActive ? activeStyle : undefined}>Artists</NavLink>
-                    </li>
-                    <li>
-                        <NavLink to='/collection/album' style={({isActive}) => isActive ? activeStyle : undefined}>Albums</NavLink>
-                    </li>
-                </ul>
-            </nav>
-        </div>
+                ))}
+            </ul>
+        </nav>
     );
-}
-
-const activeStyle = {
-    backgroundColor: '#333'
 }
 
 export default CollectionNav;

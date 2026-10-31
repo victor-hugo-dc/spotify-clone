@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { spotify } from "./spotify.ts";
+import { playerCommand, spotify } from "./spotify.ts";
 
 function answer(status: number, body = "") {
   const calls: { url: string; init: RequestInit }[] = [];
@@ -39,4 +39,15 @@ test("a cancelled request never settles", async () => {
     new Promise((resolve) => setTimeout(() => resolve("pending"), 50)),
   ]);
   assert.equal(result, "pending");
+});
+
+test("player commands retry on this browser's device when none is active", async () => {
+  const calls: string[] = [];
+  globalThis.fetch = (async (url: string) => {
+    calls.push(url);
+    return url.includes("device_id=") ? new Response(null, { status: 204 }) : Response.json({ error: { status: 404, message: "No active device found" } }, { status: 404 });
+  }) as typeof fetch;
+  await playerCommand("/me/player/play", "tok", "dev-1", { method: "PUT" });
+  assert.deepEqual(calls, ["https://api.spotify.com/v1/me/player/play", "https://api.spotify.com/v1/me/player/play?device_id=dev-1"]);
+  await assert.rejects(playerCommand("/me/player/play", "tok", null, { method: "PUT" }), (error: Error & { status?: number }) => error.status === 404);
 });

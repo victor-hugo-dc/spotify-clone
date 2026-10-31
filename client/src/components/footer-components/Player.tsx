@@ -15,7 +15,7 @@ import ControlButton from "./ControlButton";
 
 import AddComment from "./AddComment";
 
-import { spotify } from "../../utilities/spotify";
+import { playerCommand, spotify } from "../../utilities/spotify";
 import formatTime from "../../utilities/time";
 import { MessageContext, type NowPlaying as NowPlayingState } from "../../utilities/context";
 import type { Album, Track } from "../../utilities/types";
@@ -61,10 +61,11 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 		uri: "",
 	});
 	const [contextUri, setContextUri] = useState<string | null>(null);
+	const [deviceId, setDeviceId] = useState<string | null>(null);
 
 	useEffect(() => {
-		onNowPlaying({ trackUri: playInfo.uri || null, contextUri, playing: playbackState.play });
-	}, [playInfo.uri, contextUri, playbackState.play, onNowPlaying]);
+		onNowPlaying({ trackUri: playInfo.uri || null, contextUri, playing: playbackState.play, deviceId });
+	}, [playInfo.uri, contextUri, playbackState.play, deviceId, onNowPlaying]);
 
 	const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 	const playbackIntervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -114,6 +115,10 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 		sdkPlayer.addListener("authentication_error", showError);
 		sdkPlayer.addListener("account_error", showError);
 		sdkPlayer.addListener("playback_error", showError);
+		sdkPlayer.addListener("autoplay_failed", () => setMessage("Your browser blocked autoplay. Press play to start listening."));
+
+		// Browsers only let audio start after the page has been clicked; this unlocks the player on the first click.
+		document.addEventListener("click", () => sdkPlayer.activateElement(), { once: true });
 
 		// Playback status updates; the state is null once playback moves to another device.
 		sdkPlayer.addListener("player_state_changed", (state: Spotify.PlaybackState | null) => {
@@ -136,18 +141,19 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 		});
 
 		// Ready
+		// Ready: unless something else is already playing, make this browser the active device so play buttons just work.
 		sdkPlayer.addListener("ready", ({ device_id }) => {
-			console.log("Ready with Device ID", device_id);
-			const tipAccess = localStorage.getItem("tipAccess");
-			if (!tipAccess) {
-				localStorage.setItem("tipAccess", "true");
-				setConnectTip(true);
-			}
+			setDeviceId(device_id);
+			spotify<PlaybackResponse | undefined>("/me/player", token)
+				.then((state) => state ?? spotify("/me/player", token, { method: "PUT", body: { device_ids: [device_id], play: false } }))
+				.then(() => apiUpdate())
+				.catch((error) => setMessage(`ERROR: ${error.message}`));
 		});
 
 		// Not Ready
 		sdkPlayer.addListener("not_ready", ({ device_id }) => {
 			console.log("Device ID has gone offline", device_id);
+			setDeviceId(null);
 		});
 
 		// Connect to the player!
@@ -169,12 +175,8 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 
 		spotify<PlaybackResponse | undefined>("/me/player", token)
 			.then((state) => {
-				// 204: nothing is playing on any device.
-				if (!state) {
-					setMessage("Select a device to start listening");
-					setConnectTip(true);
-					return;
-				}
+				// 204: no device is active; the in-browser player takes over once it's ready.
+				if (!state) return;
 				const { repeat_state, shuffle_state, is_playing, progress_ms, item, device, context } = state;
 				if (!item) return;
 				const progress = progress_ms ?? 0;
@@ -217,7 +219,7 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 
 	// Player commands fail with Spotify's reason, e.g. no active device or no Premium.
 	const command = (path: string, method: "PUT" | "POST", onDone: () => void) => {
-		spotify(path, token, { method })
+		playerCommand(path, token, deviceId, { method })
 			.then(onDone)
 			.catch((error) => setMessage(`ERROR: ${error.message}`));
 	};

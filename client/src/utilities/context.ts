@@ -8,5 +8,6 @@ export const PlayContext = createContext<() => void>(() => {});
 export const SongContext = createContext<{ song: number; setSong: (song: number) => void }>({ song: 0, setSong: () => {} });
 
 // What the player has loaded, so track lists and play buttons can show it.
-export type NowPlaying = { trackUri: string | null; contextUri: string | null; playing: boolean };
-export const NowPlayingContext = createContext<NowPlaying>({ trackUri: null, contextUri: null, playing: false });
+// deviceId is this browser's Web Playback SDK player, once it's ready.
+export type NowPlaying = { trackUri: string | null; contextUri: string | null; playing: boolean; deviceId: string | null };
+export const NowPlayingContext = createContext<NowPlaying>({ trackUri: null, contextUri: null, playing: false, deviceId: null });

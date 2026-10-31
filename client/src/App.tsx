@@ -24,7 +24,7 @@ function App() {
   const [loginError] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('error'))
   const [userInfo, setuserInfo] = useState<User | null>(null)
   const [playlists, setPlaylists] = useState<Playlist[]>([])
-  const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false})
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false, deviceId: null})
 
   const [status, setStatus] = useState(false) 
   const [message, setMessage] = useState('')

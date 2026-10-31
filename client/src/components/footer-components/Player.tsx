@@ -90,6 +90,9 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const player = useRef<Spotify.Player | null>(null);
 	// The volume to go back to when unmuting.
 	const unmuted = useRef(0.5);
+	// Answers to reads sent before the latest bump are dropped, as they can describe playback from before a command or
+	// handoff. refreshSoon bumps it (polls too: the newer read wins), and so do volume changes and the SDK's null state.
+	const reads = useRef(0);
 
 	useEffect(() => {
 		loadScript();
@@ -163,7 +166,10 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 		// Playback status updates; the state is null once playback moves to another device, which polling then follows.
 		sdkPlayer.addListener("player_state_changed", (state: Spotify.PlaybackState | null) => {
-			if (!state) return setActiveDevice(null);
+			if (!state) {
+				reads.current++;
+				return setActiveDevice(null);
+			}
 			const { duration, position, paused, shuffle, repeat_mode, track_window, context } = state;
 			const { current_track } = track_window;
 
@@ -207,10 +213,12 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	// Asks the Web API rather than the SDK, which only reports playback on this browser's own device.
 	const apiUpdate = () => {
 		clearTimeout(timerRef.current);
+		const read = reads.current;
 
 		// Unless asked for episodes, Spotify sends a podcast episode as `item: null`, and the last song would seem to play on.
 		spotify<PlaybackResponse | undefined>("/me/player?additional_types=episode")
 			.then((state) => {
+				if (read !== reads.current) return;
 				// 204: no device is active (the in-browser player takes over once it's ready), so nothing is playing.
 				if (!state) {
 					setActiveDevice(null);
@@ -246,6 +254,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	// Spotify applies a command a moment after accepting it; reading its state at once would undo what we just showed.
 	const refreshSoon = () => {
+		reads.current++;
 		clearTimeout(timerRef.current);
 		timerRef.current = setTimeout(() => apiUpdate(), 500);
 	};
@@ -293,7 +302,10 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	const seekVolume = (ratio: number) => {
 		playerCommand(`/me/player/volume?volume_percent=${Math.round(ratio * 100)}`, deviceId, { method: "PUT" })
-			.then(() => setVolume(ratio))
+			.then(() => {
+				reads.current++;
+				setVolume(ratio);
+			})
 			.catch((error) => setMessage(`ERROR: ${error.message}`));
 	};
 

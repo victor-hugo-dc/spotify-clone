@@ -37,19 +37,51 @@ export const checks = [
     await sdkState(p, t.fixtures["/v1/me/player"].item, { repeat_mode: 2 });
     await p.getByRole("button", { name: "Disable repeat", exact: true }).waitFor({ timeout: 3000 });
   }],
-  // Once playback leaves this browser, through Devices or another device taking over, the player asks Spotify again.
+  // Once playback leaves this browser, through Devices or another device taking over, the player polls Spotify again.
+  // The re-read after the switch is answered only after the SDK says playback left, still naming this browser.
   ["player-handoff", "/", async (p, t) => {
     await inBrowser(p, t);
     const devices = [{ id: "dev-1", name: "Spotify Clone Player", is_active: true }, { id: "phone", name: "Phone", is_active: false }];
     await p.route((url) => url.pathname === "/v1/me/player/devices", (r) => r.fulfill({ json: { devices } }));
+    let switched = false, letGo;
+    const held = new Promise((resolve) => (letGo = resolve));
+    await p.route((url) => url.pathname === "/v1/me/player", async (r) => {
+      if (r.request().method() === "PUT") switched = true;
+      else if (switched) await held;
+      return r.fallback();
+    });
+    const reread = p.waitForRequest((r) => switched && isRead(r), { timeout: 3000 });
     await p.getByRole("button", { name: "Devices", exact: true }).click();
-    await p.getByRole("button", { name: "Phone", exact: true }).waitFor({ timeout: 3000 });
-    let read = p.waitForRequest(isRead, { timeout: 2000 });
     await p.getByRole("button", { name: "Phone", exact: true }).click();
-    await read.catch(() => { throw new Error("no re-read after switching to another device"); });
-    read = p.waitForRequest(isRead, { timeout: 7000 });
+    await reread.catch(() => { throw new Error("no re-read after switching to another device"); });
     await sdkState(p, null);
-    await read.catch(() => { throw new Error("no polling after playback left this browser"); });
+    const poll = p.waitForRequest(isRead, { timeout: 7000 });
+    letGo();
+    await poll.catch(() => { throw new Error("no polling after playback left this browser"); });
+  }],
+  // A read that Spotify answers after a command can describe playback from before it, so it's dropped: Pause stays done.
+  ["player-stale-read", "/", async (p, t) => {
+    // Reads asked before Pause say it's playing and wait for `early`; later ones say it's paused and wait for `late`.
+    let paused = false, early, late;
+    const gates = [new Promise((go) => (early = go)), new Promise((go) => (late = go))];
+    await p.route((url) => url.pathname === "/v1/me/player/pause", (r) => { paused = true; return r.fallback(); });
+    await p.route((url) => url.pathname === "/v1/me/player", async (r) => {
+      const playing = !paused;
+      await gates[playing ? 0 : 1];
+      await r.fulfill({ json: { ...t.fixtures["/v1/me/player"], is_playing: playing } });
+    });
+    // Coming back into view, the tab asks Spotify, as a poll does.
+    const asked = p.waitForRequest(isRead, { timeout: 3000 });
+    await p.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    await asked;
+    const reread = p.waitForRequest((r) => paused && isRead(r), { timeout: 3000 });
+    await p.getByRole("button", { name: "Pause", exact: true }).click();
+    await p.getByRole("button", { name: "Play", exact: true }).waitFor({ timeout: 3000 });
+    early();
+    // The early answer has had half a second to land when the re-read after Pause goes out.
+    await reread;
+    if (!(await p.getByRole("button", { name: "Play", exact: true }).count())) throw new Error("an answer from before Pause showed it playing again");
+    late();
   }],
   // The comment dialog stays on the song it opened on, even when the next one starts.
   ["player-comment-song", "/", async (p, t) => {

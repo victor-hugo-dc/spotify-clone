@@ -4,12 +4,16 @@ import formatTime from '../../utilities/time';
 import type { SongComment } from '../../utilities/types';
 
 export default function Comment({comment, showSong}: {comment: SongComment, showSong: boolean}) {
-    const {authorName, authorImage, timestamp, songID, commentBody} = comment;
+    const {authorName, authorImage, timestamp, commentBody} = comment;
 
     return (
           <div className="spotify-tweet-box">
             <div className="avatar">
-              <img src={authorImage ?? undefined} className="timestamp" alt=''></img>
+              {authorImage ?
+                <img src={authorImage} className="timestamp" alt=''></img> :
+                // No Spotify profile picture: show their initial, as Spotify does.
+                <span className="timestamp avatar-initial" aria-hidden='true'>{authorName.slice(0, 1).toUpperCase()}</span>
+              }
             </div>
             <div className="content">
               <div className="header">
@@ -19,12 +23,7 @@ export default function Comment({comment, showSong}: {comment: SongComment, show
               <div className="message">
                 {commentBody}
               </div>
-              {showSong ? 
-                <CommentSongInfo songID = {songID}/>
-                :
-                <></>
-              }
-              
+              {showSong && <CommentSongInfo comment={comment}/>}
             </div>
           </div>
 

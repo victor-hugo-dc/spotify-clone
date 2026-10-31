@@ -12,6 +12,7 @@ import PlayListFunctions from '../featured-components/PlayListFunctions'
 import { shareItems } from '../featured-components/MoreMenu'
 import AboutMenu from '../featured-components/AboutMenu'
 import Loading from '../featured-components/Loading'
+import LoadError from '../featured-components/LoadError'
 
 const emptyBanner: BannerInfo = {name: '', user: [], primary_color: 'rgb(83, 83, 83)'}
 
@@ -19,6 +20,7 @@ export default function ArtistPage() {
     const { id = '' } = useParams()
     const setMessage = useContext(MessageContext)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
 
     const [bannerInfo, setbannerInfo] = useState(emptyBanner)
 
@@ -36,11 +38,13 @@ export default function ArtistPage() {
         setCompilation([])
         setUri('')
         setLoading(true)
+        setError('')
 
         const controller = new AbortController()
         const { signal } = controller
 
-        const albums = (group: string) => spotify<Paging<Album>>(`/artists/${id}/albums?include_groups=${group}`, {signal})
+        // Up to 50 per section (Spotify's default is 20), in the listener's market so regional editions don't repeat.
+        const albums = (group: string) => spotify<Paging<Album>>(`/artists/${id}/albums?include_groups=${group}&limit=50&market=from_token`, {signal})
         Promise.all([spotify<Artist>(`/artists/${id}`, {signal}), albums('album'), albums('single'), albums('appears_on'), albums('compilation')])
             .then(([artistData, albumData, singleData, appearData, compilationData]) => {
                 const {name, images, uri} = artistData
@@ -53,7 +57,7 @@ export default function ArtistPage() {
                 setLoading(false)
             })
             .catch((error) => {
-                console.log(error)
+                setError(error.message)
                 setLoading(false)
             })
 
@@ -64,6 +68,9 @@ export default function ArtistPage() {
     return (
         loading ? 
             <Loading /> 
+            : 
+            error ?
+            <LoadError what='artist' error={error}/>
             : 
             <div className='listPage'>
                 <PageBanner pageTitle='artist' bannerInfo={bannerInfo}/>

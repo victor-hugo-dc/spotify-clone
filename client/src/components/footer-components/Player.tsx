@@ -380,14 +380,14 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 								{commentTip && (
 									<AddComment
 										closeTip={() => setCommentTip(false)}
-										song={{ id: playInfo.id ?? "", name: playInfo.name, artist: playInfo.artists.map((artist) => artist.name).join(", "), image: playInfo.album.images.at(-1)?.url ?? null, position: playbackState.progress }}
+										song={{ id: playInfo.id ?? "", name: playInfo.name, artist: (playInfo.artists ?? []).map((artist) => artist.name).join(", "), image: playInfo.album?.images.at(-1)?.url ?? null, position }}
 									/>
 								)}
 								<ControlButton
-									title={loaded ? "Comment" : "Play a song to comment on it"}
+									title={!loaded ? "Play a song to comment on it" : playInfo.id ? "Comment" : "Local files can't be commented on"}
 									icon="Comment"
 									size="x-larger"
-									disabled={!loaded}
+									disabled={!loaded || !playInfo.id}
 									onClick={() => setCommentTip(!commentTip)}
 								/>
 							</span>

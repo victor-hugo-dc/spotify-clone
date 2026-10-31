@@ -6,7 +6,7 @@ import React, {
 	useRef,
 	type Ref,
 } from "react";
-import { useNavigate } from "react-router";
+import { useMatch, useNavigate } from "react-router";
 
 import ProgressBar from "./ProgressBar";
 import NowPlaying, { type PlayInfo } from "./NowPlaying";
@@ -65,8 +65,6 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const [connectTip, setConnectTip] = useState(false);
 	const [commentTip, setCommentTip] = useState(false);
 
-	//added close function to annotations
-  	const [closeAnnotations, setCloseAnnotations] = useState(false);
 
 	const [playInfo, setPlayInfo] = useState<PlayInfo>({
 		album: { uri: "", images: [] },
@@ -91,6 +89,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 	const player = useRef<Spotify.Player | null>(null);
+	// The volume to go back to when unmuting.
+	const unmuted = useRef(0.5);
 
 	useEffect(() => {
 		loadScript();
@@ -133,6 +133,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		script.id = "spotify-player";
 		script.async = true;
 		script.src = "https://sdk.scdn.co/spotify-player.js";
+		script.onerror = () => setMessage("Couldn't load Spotify's web player (is a blocker stopping sdk.scdn.co?). Use Devices to play elsewhere.");
 
 		document.body.appendChild(script);
 	};
@@ -143,8 +144,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 			// The SDK asks again whenever its token runs out, so hand it a fresh one each time.
 			getOAuthToken: (cb) => {
 				accessToken()
-					.then((token) => token && cb(token))
-					.catch((error) => console.log(error));
+					.then((token) => (token ? cb(token) : setMessage("You've been logged out. Reload to log in again.")))
+					.catch((error) => setMessage(`ERROR: ${error.message}`));
 			},
 		});
 		player.current = sdkPlayer;
@@ -196,8 +197,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 			setDeviceId(null);
 		});
 
-		// Connect to the player!
-		sdkPlayer.connect();
+		// Connect to the player! It resolves false when Spotify refuses the browser (e.g. DRM is off, or a blocker).
+		sdkPlayer.connect().then((connected) => connected || setMessage("Couldn't start the in-browser player. Use Devices to play elsewhere."));
 	};
 
 	// Play buttons elsewhere in the app call this after a command.
@@ -287,10 +288,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	const position = positionAt(playbackState, now);
 
-	const scrubPlayback = (ratio: number) => {
-		const time = ratio * playbackState.total_time;
-		setScrubPb(time);
-	};
+	const scrubPlayback = (ratio: number | null) => setScrubPb(ratio === null ? null : ratio * playbackState.total_time);
 
 	const seekVolume = (ratio: number) => {
 		playerCommand(`/me/player/volume?volume_percent=${Math.round(ratio * 100)}`, deviceId, { method: "PUT" })
@@ -298,20 +296,21 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 			.catch((error) => setMessage(`ERROR: ${error.message}`));
 	};
 
-	// Redirects to the annotations page
-	const navigate = useNavigate()
-	// annotations closes when you press it again
-	const routeChangeAnnotations = () => {
-	    const path = "/annotations";
-	    if (!closeAnnotations) {
-	      setCloseAnnotations(!closeAnnotations);
-	      navigate(path);
-	    } else {
-	      const path = "/";
-	      setCloseAnnotations(!closeAnnotations);
-	      navigate(path);
-	    }
-	  };
+	// The volume icon mutes and unmutes, as on Spotify.
+	const toggleMute = () => {
+		if (volume > 0) unmuted.current = volume;
+		seekVolume(volume > 0 ? 0 : unmuted.current);
+	};
+
+	// The Annotations button opens the annotations page, or leaves it when you're already there.
+	const navigate = useNavigate();
+	const onAnnotations = useMatch("/annotations") !== null;
+	const toggleAnnotations = () => {
+		if (!onAnnotations) navigate("/annotations");
+		else if (window.history.state?.idx > 0) navigate(-1);
+		else navigate("/");
+	};
+	const loaded = playInfo.name !== "";
 
 	return (
 		<>
@@ -361,11 +360,12 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 							{formatTime(scrubPb ?? position)}
 						</div>
 						<ProgressBar
+							label="Seek"
 							extraClass="playback"
 							value={playbackState.total_time ? position / playbackState.total_time : 0}
-							engageClass="engage"
-							setValue={(ratio) => seekPlayback(ratio)}
+							setValue={seekPlayback}
 							scrubFunction={scrubPlayback}
+							valueText={(ratio) => `${formatTime(ratio * playbackState.total_time)} of ${formatTime(playbackState.total_time)}`}
 						/>
 						<div className="playback-time" draggable="false">
 							{formatTime(playbackState.total_time)}
@@ -383,27 +383,22 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 									/>
 								)}
 								<ControlButton
-									title="Comment"
+									title={loaded ? "Comment" : "Play a song to comment on it"}
 									icon="Comment"
 									size="x-larger"
-									onClick={() => {
-										if (playInfo.name !== "") {
-											setCommentTip(!commentTip)
-										}
-									}}
+									disabled={!loaded}
+									onClick={() => setCommentTip(!commentTip)}
 								/>
 							</span>
 							<span className="annotation-wrapper">
 								<ControlButton
-										title="Annotations"
-										icon="Annotation"
-										size="x-larger"
-										onClick={() => {
-											if (playInfo.name !== "") {
-												routeChangeAnnotations()
-											}
-										}}
-									/>
+									title={loaded ? "Annotations" : "Play a song to annotate it"}
+									icon="Annotation"
+									size="x-larger"
+									active={onAnnotations}
+									disabled={!loaded}
+									onClick={toggleAnnotations}
+								/>
 							</span>
 
 						</div>
@@ -425,17 +420,20 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 						<div className="volume-control">
 							<ControlButton
-								title="Volume"
+								title={volume > 0 ? "Mute" : "Unmute"}
 								icon="Volume"
 								size="x-larger"
 								extraClass="volume"
+								active={volume === 0}
+								onClick={toggleMute}
 							/>
 							<div style={{ width: "100%" }}>
 								<ProgressBar
+									label="Volume"
 									extraClass="volume"
 									value={volume}
-									engageClass="engage"
-									setValue={(ratio) => seekVolume(ratio)}
+									setValue={seekVolume}
+									valueText={(ratio) => `${Math.round(ratio * 100)}%`}
 								/>
 							</div>
 						</div>

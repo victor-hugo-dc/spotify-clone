@@ -3,9 +3,11 @@ import { MessageContext } from "../../utilities/context";
 import { spotify } from "../../utilities/spotify";
 import { api } from "../../utilities/api";
 import useCommentsLoader from "../../utilities/hooks/useCommentsLoader";
+import useCoverColor from "../../utilities/hooks/useCoverColor";
 import LyricsContainer from "../featured-components/LyricsContainer";
 import AddAnnotation from "../featured-components/AddAnnotation";
 import Annotation from "../featured-components/Annotation";
+import CommentSongInfo from "../featured-components/CommentSongInfo";
 import PageTitle from "../featured-components/PageTitle";
 import { commentSong, type CommentSong, type SongAnnotation, type Track } from "../../utilities/types";
 import "../../styles/pages.css";
@@ -18,6 +20,8 @@ export default function AnnotationsPage() {
   const [song, setSong] = useState<CommentSong | null>(null);
   const [feed, setFeed] = useState<SongAnnotation[] | null>(null);
   const [failed, setFailed] = useState(false);
+  // The lyrics card takes the song's colour, as Spotify's does.
+  const color = useCoverColor(song?.image);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -46,34 +50,31 @@ export default function AnnotationsPage() {
   }, [song?.id]);
 
   return (
-    <div className="annotation-page-content">
-      <div className="pageContent lyrics-container">
-        <LyricsContainer
-          selectionCallback={setAnnotatedText}
-          openTip={() => setAnnotationTip(song !== null)}
-        />
-        <span className="annotation-wrapper">
-          {annotationTip && song && (
-            <AddAnnotation
-              closeTip={() => setAnnotationTip(false)}
-              annotatedText={annotatedText}
-              song={song}
-            />
-          )}
-        </span>
-      </div>
-      <div className="lyrics-container">
-        <div className="socialPage">
-          <PageTitle name={song ? `Annotations · ${song.name}` : "Annotations"} />
-          <div className="socialGrid">
-            {failed && <p className='empty-state' role='alert'>Couldn't load the annotations. Try again in a moment.</p>}
-            {!failed && feed?.length === 0 && <p className='empty-state'>No one has annotated this song yet.</p>}
-            {feed?.map((comm) => (
-              <Annotation key={comm.id} annotation={comm} />
-            ))}
-          </div>
+    <div className="annotations-page">
+      <PageTitle name="Annotations" />
+      {song && <CommentSongInfo songID={song.id} songName={song.name} songArtist={song.artist} songImage={song.image} />}
+      <div className="annotations-columns">
+        <section className="lyrics-card" style={color ? { backgroundColor: color } : undefined}>
+          <LyricsContainer
+            selectionCallback={setAnnotatedText}
+            openTip={() => setAnnotationTip(song !== null)}
+          />
+        </section>
+        <div className="annotations-list">
+          {failed && <p className='empty-state' role='alert'>Couldn't load the annotations. Try again in a moment.</p>}
+          {!failed && feed?.length === 0 && <p className='empty-state'>No one has annotated this song yet.</p>}
+          {feed?.map((comm) => (
+            <Annotation key={comm.id} annotation={comm} />
+          ))}
         </div>
       </div>
+      {annotationTip && song && (
+        <AddAnnotation
+          closeTip={() => setAnnotationTip(false)}
+          annotatedText={annotatedText}
+          song={song}
+        />
+      )}
     </div>
   );
 }

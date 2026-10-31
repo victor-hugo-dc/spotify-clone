@@ -1,18 +1,7 @@
-import React, { type CSSProperties } from 'react'
+import React from 'react'
+import '../../styles/pages.css'
 
+// The title of Shoutify's own pages and of the error pages.
 export default function PageTitle({name}: {name: string}) {
-    return (
-        <div className='PageTitle'>
-            <h1 style={style}>{name}</h1>
-        </div>
-    )
-}
-
-const style: CSSProperties = {
-    fontSize: '24px',
-    fontWeight: '700',
-    lineHeight: '28px',
-    letterSpacing: '-.04em',
-    textTransform: 'none',
-    color: '#fff'
+    return <h1 className='page-title'>{name}</h1>
 }

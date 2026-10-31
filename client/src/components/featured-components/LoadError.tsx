@@ -5,7 +5,7 @@ import PageTitle from './PageTitle'
 // on nothing.
 export default function LoadError({what, error}: {what: string, error: string}) {
     return (
-        <div className='page-content' style={{paddingTop: '16px'}} role='alert'>
+        <div className='page-content page-message' role='alert'>
             <PageTitle name={`Couldn't load this ${what}`}/>
             <p className='empty-state'>{error}</p>
         </div>

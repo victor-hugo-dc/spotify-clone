@@ -16,8 +16,10 @@ function lookup(id: string) {
     return track;
 }
 
-export default function CommentSongInfo({comment}: {comment: SongComment}) {
-    const {songID, songName, songArtist, songImage} = comment;
+type Song = Pick<SongComment, 'songID' | 'songName' | 'songArtist' | 'songImage'>
+
+// The song a comment (or a page) is about, as a row like Spotify's lists, linking to the song's comments.
+export default function CommentSongInfo({songID, songName, songArtist, songImage}: Song) {
     const [song, setSong] = useState({name: songName ?? '', artist: songArtist ?? '', image: songImage ?? ''});
 
     useEffect(() => {
@@ -33,8 +35,8 @@ export default function CommentSongInfo({comment}: {comment: SongComment}) {
                 {song.image && <img src={song.image} alt=''></img>}
             </div>
             <div className="track-details">
-                <h2 className="track-name">{song.name}</h2>
-                <h3 className="artist-name">{song.artist}</h3>
+                <span className="track-name">{song.name}</span>
+                <span className="artist-name">{song.artist}</span>
             </div>
         </Link>
     );

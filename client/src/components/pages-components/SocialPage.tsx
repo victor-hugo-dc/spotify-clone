@@ -6,6 +6,7 @@ import { api } from "../../utilities/api";
 import useCommentsLoader from "../../utilities/hooks/useCommentsLoader";
 import "../../styles/pages.css";
 
+// What's New (the top bar's bell): the newest comments from everyone on this Shoutify.
 export default function SocialPage() {
     const [feed,setFeed] = useState<SongComment[] | null>(null);
     const [failed, setFailed] = useState(false);
@@ -22,11 +23,12 @@ export default function SocialPage() {
 
     return (
       <div className="socialPage">
-        <PageTitle name="Your Feed" />
+        <PageTitle name="What's New" />
+        <p className="page-subtitle">The latest comments from you and your friends.</p>
         <div className="socialGrid">
           {failed && <p className='empty-state' role='alert'>Couldn't load the feed. Try again in a moment.</p>}
           {!failed && feed?.length === 0 && <p className='empty-state'>No one's commented thus far. Play a song and hit the comment button to start the conversation.</p>}
-          {feed?.map(comm => 
+          {feed?.map(comm =>
             <Comment key={comm.id} comment={comm} showSong={true}/>)}
         </div>
       </div>

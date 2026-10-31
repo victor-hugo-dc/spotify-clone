@@ -7,23 +7,27 @@ import { spotify } from "../../utilities/spotify";
 type Device = { id: string | null; name: string; is_active: boolean };
 
 const ConnectDevices = ({ closeTip }: { closeTip: () => void }) => {
-	const [devices, setDevices] = useState<Device[]>([]);
+	const [devices, setDevices] = useState<Device[] | null>(null);
+	const [error, setError] = useState("");
 
 	useEffect(() => {
 		const controller = new AbortController();
-		const clickExit = (e: globalThis.MouseEvent) => {
-			if ((e.target as HTMLElement).dataset.source !== "inside") {
-				closeTip();
-			}
+		// pointerdown, not click: React 19 runs this effect during the click that opened the popup, which would close it
+		// again. Presses on the Devices button itself are left to its own toggle.
+		const outside = (e: PointerEvent) => {
+			if (!(e.target as Element).closest(".connect-devices-wrapper")) closeTip();
 		};
+		const escape = (e: KeyboardEvent) => e.key === "Escape" && closeTip();
 
-		window.addEventListener("click", clickExit);
+		document.addEventListener("pointerdown", outside);
+		document.addEventListener("keydown", escape);
 		spotify<{ devices: Device[] }>("/me/player/devices", { signal: controller.signal })
 			.then((response) => setDevices(response.devices))
-			.catch((error) => console.log(error));
+			.catch((error) => setError(`Couldn't load your devices: ${error.message}`));
 
 		return () => {
-			window.removeEventListener("click", clickExit);
+			document.removeEventListener("pointerdown", outside);
+			document.removeEventListener("keydown", escape);
 			controller.abort();
 		};
 		// eslint-disable-next-line
@@ -33,7 +37,7 @@ const ConnectDevices = ({ closeTip }: { closeTip: () => void }) => {
 		const id = e.currentTarget.dataset.id;
 		spotify("/me/player", { method: "PUT", body: { device_ids: [id] } })
 			.then(() => closeTip())
-			.catch((error) => console.log(error));
+			.catch((error) => setError(`Couldn't switch device: ${error.message}`));
 	};
 
 	return (
@@ -53,7 +57,10 @@ const ConnectDevices = ({ closeTip }: { closeTip: () => void }) => {
 					</p>
 				</div>
 
-				{devices.length === 0 ? (
+				{error && <p className="connect-devices-error" role="alert">{error}</p>}
+				{devices === null ? (
+					!error && <ConnectDevicesItem name="Looking for devices…" disable />
+				) : devices.length === 0 ? (
 					<ConnectDevicesItem name="No devices available" disable />
 				) : (
 					devices.map((device, index) => {

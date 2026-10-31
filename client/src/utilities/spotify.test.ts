@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { playerCommand, spotify } from "./spotify.ts";
+import { allPages, playerCommand, spotify } from "./spotify.ts";
 
 function answer(status: number, body = "") {
   const calls: { url: string; init: RequestInit }[] = [];
@@ -58,4 +58,13 @@ test("player commands retry on this browser's device when none is active", async
   await playerCommand("/me/player/play", "tok", "dev-1", { method: "PUT" });
   assert.deepEqual(calls, ["https://api.spotify.com/v1/me/player/play", "https://api.spotify.com/v1/me/player/play?device_id=dev-1"]);
   await assert.rejects(playerCommand("/me/player/play", "tok", null, { method: "PUT" }), (error: Error & { status?: number }) => error.status === 404);
+});
+
+test("allPages follows next links, unwraps nested pages and drops nulls", async () => {
+  const pages: Record<string, unknown> = {
+    "https://api.spotify.com/v1/me/following?type=artist": { artists: { items: ["a", null], next: "https://api.spotify.com/v1/me/following?after=a" } },
+    "https://api.spotify.com/v1/me/following?after=a": { artists: { items: ["b"], next: null } },
+  };
+  globalThis.fetch = (async (url: string) => Response.json(pages[url])) as typeof fetch;
+  assert.deepEqual(await allPages("/me/following?type=artist", "tok", (data) => data.artists), ["a", "b"]);
 });

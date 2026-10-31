@@ -4,8 +4,8 @@ import {Routes, Route, Navigate} from 'react-router'
 import CollectionRow from '../featured-components/CollectionRow'
 
 import {TokenContext} from '../../utilities/context'
-import { spotify } from '../../utilities/spotify'
-import type { Album, Artist, Paging, Playlist } from '../../utilities/types'
+import { allPages } from '../../utilities/spotify'
+import type { Album, Artist, Playlist } from '../../utilities/types'
 
 const CollectionPage = ({playlists}: {playlists: Playlist[]}) => {
     const [artists, setArtists] = useState<Artist[]>([])
@@ -13,18 +13,15 @@ const CollectionPage = ({playlists}: {playlists: Playlist[]}) => {
 
     const token = useContext(TokenContext)
 
+    // Every followed artist and saved album, not just Spotify's first page of 20.
     useEffect(() => {
-        const controller = new AbortController()
-
-        spotify<{artists: Paging<Artist>}>('/me/following?type=artist', token, {signal: controller.signal})
-            .then((data) => setArtists(data.artists.items))
+        allPages<Artist>('/me/following?type=artist&limit=50', token, (data) => data.artists)
+            .then(setArtists)
             .catch((error) => console.log(error))
 
-        spotify<Paging<{album: Album}>>('/me/albums', token, {signal: controller.signal})
-            .then((data) => setAlbums(data.items.map(item => item.album)))
+        allPages<{album: Album}>('/me/albums?limit=50', token)
+            .then((saved) => setAlbums(saved.map(item => item.album)))
             .catch((error) => console.log(error))
-
-        return () => controller.abort()
     }, [token])
 
     return (

@@ -16,8 +16,8 @@ import Player, { type PlayerHandle } from './components/footer-components/Player
 import Featured from './components/featured-components/Featured'
 import Loading from './components/featured-components/Loading'
 import {UserContext, TokenContext, MessageContext, PlayContext, NowPlayingContext, type NowPlaying} from './utilities/context'
-import { spotify } from './utilities/spotify'
-import type { Paging, Playlist, User } from './utilities/types'
+import { allPages, spotify } from './utilities/spotify'
+import type { Playlist, User } from './utilities/types'
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -68,9 +68,10 @@ function App() {
   }, [token])
 
 
+  // All of them, not just Spotify's first page of 20.
   const refreshPlaylist = () =>{
-    spotify<Paging<Playlist>>('/me/playlists', token)
-      .then((data) => setPlaylists(data.items))
+    allPages<Playlist>('/me/playlists?limit=50', token)
+      .then(setPlaylists)
       .catch(error => console.log(error));
   }
 

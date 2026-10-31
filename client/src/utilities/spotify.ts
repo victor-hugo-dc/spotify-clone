@@ -43,3 +43,14 @@ function parseJson(text: string) {
     return undefined;
   }
 }
+
+// Every item of a paged list, following `next` links. `unwrap` digs the page out of responses that nest it.
+export async function allPages<T>(path: string, token: string | null, unwrap: (data: any) => { items: (T | null)[]; next: string | null } = (data) => data) {
+  const items: T[] = [];
+  for (let next: string | null = path; next; ) {
+    const page = unwrap(await spotify(next, token));
+    items.push(...page.items.filter((item): item is T => item !== null));
+    next = page.next;
+  }
+  return items;
+}

@@ -22,7 +22,6 @@ import Pause from "./Pause";
 import Social from "./Social";
 import Comment from './Comment';
 import Annotation from './Annotation';
-import Bars from './Bars.js'
 
 import React from "react";
 
@@ -76,8 +75,6 @@ export default function Icon(props) {
       return <Comment />;
     case "Annotation":
       return <Annotation />;
-    case "Bars":
-      return <Bars {...props}/>
     default:
       return null;
   }

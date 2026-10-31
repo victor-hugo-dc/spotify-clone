@@ -3,7 +3,6 @@ import Icon from '../icons';
 import msTimeFormat from '../../utilities/utils';
 import { PlayContext } from '../../utilities/context';
 import ControlButton from '../footer-components/ControlButton';
-import SongCommentList from './SongCommentList';
 import { useHistory } from "react-router-dom";
 import { useEffect } from 'react';
 import axios from 'axios';
@@ -18,7 +17,6 @@ const TrackListItem = React.forwardRef(({ track, styleName, highlight, playConte
   const formattedTime = msTimeFormat(duration_ms);
   const simplifyStyle = styleName === 'simplify';
 
-  const [songCommentTip, setSongCommentTip] = useState(false);
 
   const renderThumbnail = () => (
     thumbNail ? (
@@ -107,13 +105,6 @@ const TrackListItem = React.forwardRef(({ track, styleName, highlight, playConte
         </div>
       </div>
 
-      <div className='trackItemComment'>
-        {songCommentTip && (
-          <SongCommentList 
-            closeTip={() => setSongCommentTip(false)}
-          />
-        )}
-      </div>
       <div className='trackItemCommentCount'>
         {feed.length}
       </div>

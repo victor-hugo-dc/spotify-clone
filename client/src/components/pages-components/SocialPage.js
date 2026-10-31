@@ -2,7 +2,6 @@ import React, { useState, useContext, useEffect} from "react";
 import axios from "axios";
 import PageTitle from "../featured-components/PageTitle";
 import { LoginContext } from "../../utilities/context";
-// import SocialCard from '../featured-components/SocialCard';
 import Comment from "../featured-components/Comment";
 
 export default function SocialPage() {

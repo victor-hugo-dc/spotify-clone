@@ -43,7 +43,8 @@ export const checks = [
       await r.fallback().catch(() => {});
     });
     await p.getByRole("button", { name: "Create Playlist" }).click();
-    await p.getByRole("button", { name: "More options for My Playlist #2" }).click();
+    // Named after however many playlists the fake account has.
+    await p.getByRole("button", { name: /^More options for My Playlist #\d+$/ }).click();
     await p.getByRole("menuitem", { name: "Edit details" }).click();
     const dialog = p.getByRole("dialog", { name: "Edit details" });
     await dialog.getByLabel("Name").fill("Renamed Number Two");

@@ -2,23 +2,27 @@
   .right-sidebar-header {
     position: sticky;
     top: 0;
+    z-index: 1;
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 16px;
+    padding: 0 16px;
     background: var(--background-base);
   }
 
-  .right-sidebar-header h2 {
+  .right-sidebar-title {
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     color: #fff;
     font-size: 16px;
     font-weight: 700;
     line-height: 24px;
+    text-decoration: none;
+  }
+
+  a.right-sidebar-title:hover {
+    text-decoration: underline;
   }
 
   .right-sidebar-close {
@@ -40,12 +44,27 @@
     color: #fff;
   }
 
-  .right-sidebar-track {
+  .right-sidebar-note {
+    padding: 0 16px 16px;
+    color: var(--main-text);
+  }
+
+  .right-sidebar h2 {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+  }
+
+  /* Now playing view: cover, title and artists, then the cards. */
+  .npv {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     padding: 0 16px 16px;
   }
 
-  .right-sidebar-track > img,
-  .right-sidebar-cover {
+  .npv-cover {
     display: block;
     width: 100%;
     aspect-ratio: 1;
@@ -54,15 +73,358 @@
     background: var(--background-elevated);
   }
 
-  .right-sidebar-track > h3 {
-    margin-top: 16px;
+  div.npv-cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--main-text);
+  }
+
+  div.npv-cover > svg {
+    width: 25%;
+    height: 25%;
+  }
+
+  .npv-track {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .npv-names {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .npv-title {
     color: #fff;
     font-size: 24px;
     font-weight: 700;
     line-height: 30px;
   }
 
-  .right-sidebar-track > p {
+  .npv-artists {
     color: var(--main-text);
     font-size: 16px;
+    line-height: 24px;
+  }
+
+  .npv-title > a,
+  .npv-artists > a,
+  .npv-card-link,
+  .npv-artist-name {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .npv-title > a:hover,
+  .npv-artists > a:hover,
+  .npv-card-link:hover,
+  .npv-artist-name:hover {
+    text-decoration: underline;
+  }
+
+  .npv-artists > a:hover {
+    color: #fff;
+  }
+
+  .npv-artists > :not(:last-child)::after {
+    content: ",\00a0";
+  }
+
+  /* Its check lines up with the cover's right edge. */
+  .npv-save {
+    flex: none;
+    margin-right: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--main-text);
+    cursor: pointer;
+  }
+
+  .npv-save:hover {
+    color: #fff;
+    transform: scale(1.04);
+  }
+
+  .npv-save.saved {
+    color: var(--spotify-green);
+  }
+
+  .npv-card {
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--background-highlight);
+  }
+
+  .npv-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 16px 16px 0;
+  }
+
+  .npv-card-link {
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--main-text);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .npv-card-link:hover {
+    color: #fff;
+  }
+
+  /* Comments, in the place and colours of Spotify's lyrics preview: the cover's colour behind big bold lines. */
+  .npv-comments {
+    background: var(--background-elevated);
+  }
+
+  .npv-comments .npv-card-link {
+    color: hsla(0, 0%, 100%, 0.7);
+  }
+
+  .npv-comments .npv-card-link:hover {
+    color: #fff;
+  }
+
+  .npv-comment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    list-style: none;
+  }
+
+  .npv-comment-who {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: hsla(0, 0%, 100%, 0.7);
+    font-size: 14px;
+  }
+
+  .npv-comment-author {
+    min-width: 0;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .npv-comment-at {
+    flex: none;
+  }
+
+  .npv-comment-body {
+    margin-top: 4px;
+    color: hsla(0, 0%, 100%, 0.75);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 28px;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .npv-comments-empty,
+  .npv-comments-note {
+    padding: 0 16px 16px;
+  }
+
+  .npv-comments-note {
+    color: #fff;
+  }
+
+  .npv-pill {
+    height: 32px;
+    margin-top: 16px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 500px;
+    background: #fff;
+    color: #000;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .npv-pill:hover {
+    transform: scale(1.04);
+  }
+
+  /* About the artist: their picture with the title on it, then their name. */
+  .npv-artist-image {
+    position: relative;
+  }
+
+  .npv-artist-image > img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    object-position: 50% 25%;
+  }
+
+  .npv-artist-image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), transparent 50%);
+  }
+
+  .npv-artist-image > h2 {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 1;
+  }
+
+  .npv-artist-name {
+    display: block;
+    padding: 16px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .npv-next .queue-row {
+    margin: 8px;
+  }
+
+  /* A song in the queue, here and in the Now playing view's Next in queue. */
+  .queue-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 4px;
+  }
+
+  .queue-row > img,
+  .queue-row-cover {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    object-fit: cover;
+    background: var(--background-elevated);
+  }
+
+  .queue-row-text {
+    min-width: 0;
+  }
+
+  .queue-row-name {
+    color: #fff;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .queue-row.current .queue-row-name {
+    color: var(--spotify-green);
+  }
+
+  .queue-row-by {
+    color: var(--main-text);
+    font-size: 14px;
+  }
+
+  .queue-view {
+    padding: 0 8px 16px;
+  }
+
+  .queue-view > h2 {
+    padding: 8px;
+  }
+
+  .queue-view > h2:not(:first-child) {
+    margin-top: 16px;
+  }
+
+  .queue-view > .right-sidebar-note {
+    padding: 8px;
+  }
+
+  /* Friend Activity: who commented, what, and on which song. */
+  .friend-activity {
+    padding: 0 8px 16px;
+    list-style: none;
+  }
+
+  .friend {
+    display: flex;
+    gap: 12px;
+    padding: 8px;
+  }
+
+  .comment-avatar {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    font-size: 16px;
+  }
+
+  .npv-comment-who > .comment-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .friend-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .friend-who {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .friend-name {
+    min-width: 0;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .friend-at {
+    flex: none;
+    font-size: 12px;
+  }
+
+  .friend-comment {
+    color: var(--main-text);
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .friend-song {
+    display: block;
+    color: var(--main-text);
+    text-decoration: none;
+  }
+
+  .friend-song:hover {
+    color: #fff;
+    text-decoration: underline;
   }

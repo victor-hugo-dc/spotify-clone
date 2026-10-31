@@ -37,11 +37,8 @@ const UserInfo = () => {
   const toggleOpen = () => setOpen((prevOpen) => !prevOpen);
 
   const logout = () => {
-    fetch('/api/logout')
-      .then(() => {
-        localStorage.removeItem('token');
-        window.location.reload();
-      })
+    fetch('/api/logout', { method: 'POST' })
+      .then(() => window.location.reload())
       .catch((error) => console.log(error));
   };
 

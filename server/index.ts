@@ -12,8 +12,9 @@ const {
   RE_URI = "",
   PORT = "4000",
 } = process.env;
+if (!CLIENT_ID || !CLIENT_SECRET || !RE_URI) throw new Error("Set CLIENT_ID, CLIENT_SECRET and RE_URI (see .env.example)");
 
-const app = express();
+export const app = express();
 
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
@@ -23,11 +24,8 @@ app.use("/api/annotations", noteRoute);
 
 const stateKey = "spotify_auth_state";
 const refreshKey = "refresh_key";
-const cookieOption: CookieOptions = {
-  // Comment out the following 2 lines while in development for the authorization flow to work properly
-  sameSite: "none",
-  secure: true,
-};
+// Secure cookies need HTTPS; local development runs on http://127.0.0.1.
+const cookieOption: CookieOptions = { httpOnly: true, sameSite: "lax", secure: RE_URI.startsWith("https://"), path: "/api" };
 
 const scope =
   "user-read-private user-read-playback-state streaming user-modify-playback-state playlist-modify-public user-library-modify user-top-read user-read-currently-playing playlist-read-private user-follow-read user-read-recently-played playlist-modify-private user-follow-modify user-library-read user-read-email";
@@ -41,7 +39,7 @@ if (process.env.NODE_ENV === "production") {
 
 type TokenResponse = { access_token: string; refresh_token?: string; expires_in: number };
 
-// Both the code exchange and the refresh go to the same Spotify endpoint.
+// Both the code exchange and the refresh go to the same Spotify endpoint. Errors carry Spotify's status.
 async function requestToken(params: Record<string, string>): Promise<TokenResponse> {
   const response = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
@@ -49,14 +47,14 @@ async function requestToken(params: Record<string, string>): Promise<TokenRespon
     body: new URLSearchParams(params),
   });
   const data = (await response.json()) as TokenResponse & { error?: string; error_description?: string };
-  if (!response.ok) throw new Error(data.error_description ?? data.error ?? response.statusText);
+  if (!response.ok) throw Object.assign(new Error(data.error_description ?? data.error ?? response.statusText), { status: response.status });
   return data;
 }
 
 // Store a random state in a cookie (checked in /callback against CSRF) and send the user to Spotify's login page.
 app.get("/api/login", (_req, res) => {
   const state = randomBytes(16).toString("hex");
-  res.cookie(stateKey, state);
+  res.cookie(stateKey, state, { ...cookieOption, maxAge: 10 * 60 * 1000 });
 
   const authUrl = new URL("https://accounts.spotify.com/authorize");
   authUrl.search = new URLSearchParams({
@@ -70,45 +68,54 @@ app.get("/api/login", (_req, res) => {
   res.redirect(authUrl.toString());
 });
 
+// The refresh token stays in an httpOnly cookie; the browser only ever sees short-lived access tokens from /api/token.
 app.get("/api/callback", async (req, res) => {
   const { code, state } = req.query;
   if (typeof code !== "string" || typeof state !== "string" || state !== req.cookies[stateKey]) {
     res.redirect(`/#${new URLSearchParams({ error: "state_mismatch" })}`);
     return;
   }
-  res.clearCookie(stateKey);
+  res.clearCookie(stateKey, cookieOption);
 
   try {
-    const { access_token, refresh_token = "" } = await requestToken({
+    const { refresh_token = "" } = await requestToken({
       code,
       redirect_uri: RE_URI,
       grant_type: "authorization_code",
     });
-    res.cookie(refreshKey, refresh_token, cookieOption);
-    res.redirect(`/#${new URLSearchParams({ access_token, refresh_token })}`);
+    res.cookie(refreshKey, refresh_token, { ...cookieOption, maxAge: 365 * 24 * 60 * 60 * 1000 });
+    res.redirect("/");
   } catch (error) {
     console.log(error);
     res.redirect(`/#${new URLSearchParams({ error: "invalid_token" })}`);
   }
 });
 
-app.get("/api/refresh_token", async (req, res) => {
+app.get("/api/token", async (req, res) => {
+  const refresh_token = req.cookies[refreshKey];
+  if (!refresh_token) {
+    res.sendStatus(401);
+    return;
+  }
   try {
-    const { access_token, refresh_token } = await requestToken({
-      grant_type: "refresh_token",
-      refresh_token: req.cookies[refreshKey] ?? "",
-    });
-    // Spotify sometimes rotates the refresh token.
-    if (refresh_token) res.cookie(refreshKey, refresh_token, cookieOption);
-    res.send({ access_token });
+    const { access_token, expires_in, refresh_token: rotated } = await requestToken({ grant_type: "refresh_token", refresh_token });
+    if (rotated) res.cookie(refreshKey, rotated, { ...cookieOption, maxAge: 365 * 24 * 60 * 60 * 1000 });
+    res.send({ access_token, expires_in });
   } catch (error) {
-    res.status(400).send(String(error));
+    // 400 means Spotify rejected the refresh token (access revoked): log out. Anything else is worth retrying.
+    if ((error as { status?: number }).status === 400) {
+      res.clearCookie(refreshKey, cookieOption);
+      res.sendStatus(401);
+    } else {
+      console.log(error);
+      res.sendStatus(502);
+    }
   }
 });
 
-app.get("/api/logout", (_req, res) => {
+app.post("/api/logout", (_req, res) => {
   res.clearCookie(refreshKey, cookieOption);
-  res.status(200).send("logged out");
+  res.sendStatus(204);
 });
 
-app.listen(Number(PORT), () => console.log(`Listening on port ${PORT}`));
+if (import.meta.main) app.listen(Number(PORT), () => console.log(`Listening on port ${PORT}`));

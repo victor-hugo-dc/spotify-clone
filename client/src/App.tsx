@@ -20,7 +20,8 @@ import type { Paging, Playlist, User } from './utilities/types'
 
 function App() {
   const [loading, setLoading] = useState(true)
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(null);
+  const [loginError] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('error'))
   const [userInfo, setuserInfo] = useState<User | null>(null)
   const [playlists, setPlaylists] = useState<Playlist[]>([])
 
@@ -29,17 +30,29 @@ function App() {
 
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
+  // The server keeps the refresh token in an httpOnly cookie and hands out access tokens, which last an hour.
   useEffect(() => {
-    if (!token) {
-      const access_token = new URLSearchParams(window.location.hash.slice(1)).get('access_token')
-      if (access_token) {
-        setToken(access_token)
-        localStorage.setItem('token', access_token);
-        window.location.hash = ''
-      }
+    if (loginError) window.history.replaceState(null, '', '/')
+    let timer: ReturnType<typeof setTimeout>
+    const refresh = () => {
+      fetch('/api/token')
+        .then(async (response) => {
+          if (response.status === 401) return setToken(null)
+          if (!response.ok) throw new Error(`token refresh failed (${response.status})`)
+          const { access_token, expires_in }: { access_token: string, expires_in: number } = await response.json()
+          setToken(access_token)
+          timer = setTimeout(refresh, (expires_in - 60) * 1000)
+        })
+        .catch((error) => {
+          console.log(error)
+          timer = setTimeout(refresh, 30 * 1000)
+        })
+        .finally(() => setLoading(false))
     }
-    setLoading(false);
-  }, [token])
+    refresh()
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line
+  }, [])
 
   useEffect(() => {
     if (token) {
@@ -78,7 +91,7 @@ function App() {
       {loading? 
         <Loading type='app'/> :
         !token ?
-        <Login /> :
+        <Login error={loginError} /> :
         <MessageContext.Provider value={setStatusMessage}>
           <TokenContext.Provider value={token}>
               <Sidebar>
@@ -116,11 +129,12 @@ function App() {
 
 // Shoutify is friends-only: every account has to be on the Spotify app's
 // allowlist, so there is nothing to show before logging in.
-function Login() {
+function Login({error}: {error: string | null}) {
   return (
     <div className='loading' style={{flexDirection: 'column', gap: '24px', color: '#fff', textAlign: 'center'}}>
       <h1>Shoutify</h1>
       <p>Friends only: ask whoever runs this Shoutify to add your Spotify account before you log in.</p>
+      {error && <p role='alert'>That login didn't work ({error}). Please try again.</p>}
       <PromptButton to='/api/login' name='Log in with Spotify' styleName='light'/>
     </div>
   )

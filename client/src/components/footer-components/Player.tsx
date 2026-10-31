@@ -89,8 +89,12 @@ const Player = ({ token, ref }: { token: string | null; ref?: Ref<PlayerHandle> 
 	const playerInit = () => {
 		const sdkPlayer = new window.Spotify.Player({
 			name: "Spotify Clone Player",
+			// The SDK asks again whenever its token runs out, so hand it a fresh one each time.
 			getOAuthToken: (cb) => {
-				cb(token ?? "");
+				fetch("/api/token")
+					.then((response) => response.json())
+					.then(({ access_token }) => cb(access_token))
+					.catch((error) => console.log(error));
 			},
 		});
 		player.current = sdkPlayer;

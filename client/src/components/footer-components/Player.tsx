@@ -13,13 +13,14 @@ import ProgressBar from "./ProgressBar";
 import NowPlaying, { type PlayInfo } from "./NowPlaying";
 import ConnectDevices from "./ConnectDevices";
 import ControlButton from "./ControlButton";
+import Icon from "../icons";
 
 import AddComment from "./AddComment";
 
 import { playerCommand, spotify } from "../../utilities/spotify";
 import { accessToken } from "../../utilities/session";
 import formatTime from "../../utilities/time";
-import { MessageContext, type NowPlaying as NowPlayingState, type PlayingTrack } from "../../utilities/context";
+import { LayoutContext, MessageContext, type NowPlaying as NowPlayingState, type PlayingTrack } from "../../utilities/context";
 import "../../styles/player.css";
 
 export type PlayerHandle = { updateState: () => void };
@@ -52,8 +53,13 @@ const idOf = (uri: string | null | undefined, kind: "album" | "artist") => (uri?
 
 type Props = { onNowPlaying: (nowPlaying: NowPlayingState) => void; ref?: Ref<PlayerHandle> };
 
+// The Now playing view's "Add a comment" opens the player's own Add Comment dialog, which knows where the song is at.
+const ADD_COMMENT = "shoutify:add-comment";
+export const openAddComment = () => window.dispatchEvent(new Event(ADD_COMMENT));
+
 const Player = ({ onNowPlaying, ref }: Props) => {
 	const setMessage = useContext(MessageContext);
+	const { rightPanel, setRightPanel, wide } = useContext(LayoutContext);
 	const [playbackState, setPlaybackState] = useState<PlaybackState>({
 		play: false,
 		shuffle: false,
@@ -68,7 +74,18 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const [volume, setVolume] = useState(1);
 	const [connectTip, setConnectTip] = useState(false);
 	const [commentTip, setCommentTip] = useState(false);
+	const [fullscreen, setFullscreen] = useState(() => !!document.fullscreenElement);
 
+	useEffect(() => {
+		const open = () => setCommentTip(true);
+		const resized = () => setFullscreen(!!document.fullscreenElement);
+		window.addEventListener(ADD_COMMENT, open);
+		document.addEventListener("fullscreenchange", resized);
+		return () => {
+			window.removeEventListener(ADD_COMMENT, open);
+			document.removeEventListener("fullscreenchange", resized);
+		};
+	}, []);
 
 	const [playInfo, setPlayInfo] = useState<PlayInfo>({
 		album: { uri: "", images: [] },
@@ -346,6 +363,13 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const loaded = playInfo.name !== "";
 	// Comment and annotation pages look the song up as a Spotify track, which episodes and local files aren't.
 	const isTrack = playInfo.uri.startsWith("spotify:track:");
+	// Another device is playing (a device without an id is never this browser's player): the green bar says which.
+	const elsewhere = activeDevice && (activeDevice.id === null || activeDevice.id !== deviceId) ? activeDevice : null;
+	const togglePanel = (panel: "now-playing" | "queue") => setRightPanel(rightPanel === panel ? null : panel);
+	const toggleFullscreen = () =>
+		(document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch((error) =>
+			setMessage(`Couldn't switch full screen: ${error.message}`),
+		);
 
 	return (
 		<>
@@ -409,77 +433,88 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 					</div>
 				</div>
 
+				{/* The right panel's toggles go with the panel below 1100px; Full screen only where the browser allows it. */}
 				<div className="player-right">
-					<div className="extra-controls">
-						 <div className="social-features">
-							<span className="comment-wrapper">
-								{commentTip && (
-									<AddComment
-										closeTip={() => setCommentTip(false)}
-										song={{ id: playInfo.id ?? "", name: playInfo.name, artist: (playInfo.artists ?? []).map((artist) => artist.name).join(", "), image: playInfo.album?.images.at(-1)?.url ?? null, position }}
-									/>
-								)}
-								<ControlButton
-									title={isTrack ? "Comment" : loaded ? "Podcasts and local files can't be commented on" : "Play a song to comment on it"}
-									icon="Comment"
-									size="x-larger"
-									disabled={!isTrack}
-									onClick={() => setCommentTip(!commentTip)}
-								/>
-							</span>
-							<span className="annotation-wrapper">
-								<ControlButton
-									title={isTrack || onAnnotations ? "Annotations" : loaded ? "Podcasts and local files can't be annotated" : "Play a song to annotate it"}
-									icon="Annotation"
-									size="x-larger"
-									active={onAnnotations}
-									disabled={!isTrack && !onAnnotations}
-									onClick={toggleAnnotations}
-								/>
-							</span>
+					{wide && (
+						<ControlButton
+							title="Now playing view"
+							icon="NowPlayingView"
+							active={loaded && rightPanel === "now-playing"}
+							disabled={!loaded}
+							onClick={() => togglePanel("now-playing")}
+						/>
+					)}
+					{commentTip && (
+						<AddComment
+							closeTip={() => setCommentTip(false)}
+							song={{ id: playInfo.id ?? "", name: playInfo.name, artist: (playInfo.artists ?? []).map((artist) => artist.name).join(", "), image: playInfo.album?.images.at(-1)?.url ?? null, position }}
+						/>
+					)}
+					<ControlButton
+						title={isTrack ? "Comment" : loaded ? "Podcasts and local files can't be commented on" : "Play a song to comment on it"}
+						icon="Comment"
+						size="x-larger"
+						disabled={!isTrack}
+						onClick={() => setCommentTip(!commentTip)}
+					/>
+					<ControlButton
+						title={isTrack || onAnnotations ? "Annotations" : loaded ? "Podcasts and local files can't be annotated" : "Play a song to annotate it"}
+						icon="Annotation"
+						size="x-larger"
+						active={onAnnotations}
+						disabled={!isTrack && !onAnnotations}
+						onClick={toggleAnnotations}
+					/>
+					{wide && <ControlButton title="Queue" icon="Queue" active={rightPanel === "queue"} onClick={() => togglePanel("queue")} />}
 
-						</div>
-
-						<span className="connect-devices-wrapper">
-							{connectTip && (
-								<ConnectDevices
-									closeTip={() => setConnectTip(false)}
-									onSwitch={refreshSoon}
-								/>
-							)}
-							<ControlButton
-								title="Devices"
-								icon="Speaker"
-								size="x-larger"
-								onClick={() => setConnectTip(!connectTip)}
-								active={playbackState.play}
-								expanded={connectTip}
+					<span className="connect-devices-wrapper">
+						{connectTip && (
+							<ConnectDevices
+								closeTip={() => setConnectTip(false)}
+								onSwitch={refreshSoon}
 							/>
-						</span>
+						)}
+						<ControlButton
+							title="Devices"
+							icon="Speaker"
+							size="x-larger"
+							onClick={() => setConnectTip(!connectTip)}
+							active={elsewhere !== null}
+							expanded={connectTip}
+						/>
+					</span>
 
-						<div className="volume-control">
-							<ControlButton
-								title={volume > 0 ? "Mute" : "Unmute"}
-								icon="Volume"
-								size="x-larger"
-								extraClass="volume"
-								active={volume === 0}
-								onClick={toggleMute}
-							/>
-							<div style={{ width: "100%" }}>
-								<ProgressBar
-									label="Volume"
-									extraClass="volume"
-									steps={100}
-									value={volume}
-									setValue={seekVolume}
-									valueText={(ratio) => `${Math.round(ratio * 100)}%`}
-								/>
-							</div>
-						</div>
+					<div className="volume-control">
+						<ControlButton
+							title={volume > 0 ? "Mute" : "Unmute"}
+							icon="Volume"
+							size="x-larger"
+							extraClass="volume"
+							active={volume === 0}
+							onClick={toggleMute}
+						/>
+						<ProgressBar
+							label="Volume"
+							extraClass="volume"
+							steps={100}
+							value={volume}
+							setValue={seekVolume}
+							valueText={(ratio) => `${Math.round(ratio * 100)}%`}
+						/>
 					</div>
+					{document.fullscreenEnabled && (
+						<ControlButton title={fullscreen ? "Exit full screen" : "Full screen"} icon="Fullscreen" extraClass="fullscreen" onClick={toggleFullscreen} />
+					)}
 				</div>
 			</div>
+
+			{/* Like Spotify's green bar under the player; it opens the device picker too. */}
+			{elsewhere && (
+				<button className="playing-on no-outline" aria-expanded={connectTip} onClick={() => setConnectTip(!connectTip)}>
+					<Icon name="VolumePlaying" width="16" height="16" />
+					Playing on {elsewhere.name}
+				</button>
+			)}
 		</>
 	);
 };

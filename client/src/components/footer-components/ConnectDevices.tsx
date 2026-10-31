@@ -13,9 +13,9 @@ const ConnectDevices = ({ closeTip, onSwitch }: { closeTip: () => void; onSwitch
 	useEffect(() => {
 		const controller = new AbortController();
 		// pointerdown, not click: React 19 runs this effect during the click that opened the popup, which would close it
-		// again. Presses on the Devices button itself are left to its own toggle.
+		// again. Presses on the Devices button and the "Playing on" bar are left to their own toggles.
 		const outside = (e: PointerEvent) => {
-			if (!(e.target as Element).closest(".connect-devices-wrapper")) closeTip();
+			if (!(e.target as Element).closest(".connect-devices-wrapper, .playing-on")) closeTip();
 		};
 		const escape = (e: KeyboardEvent) => e.key === "Escape" && closeTip();
 

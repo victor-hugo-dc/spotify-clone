@@ -1,4 +1,4 @@
-# Shoutify on torta, behind the shared Traefik in /home/duckdns.
+# Shoutify behind a shared Traefik reverse proxy (an external `traefik-public` network).
 #
 #   cp .env.example .env    (fill it in)
 #   docker compose up -d --build
@@ -36,6 +36,6 @@ volumes:
   data:
 
 networks:
-  # Created by the duckdns stack; Traefik lives here.
+  # Created by the stack that runs Traefik.
   traefik-public:
     external: true

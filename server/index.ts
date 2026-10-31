@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 // Secure cookies need HTTPS; local development runs on http://127.0.0.1. Over HTTPS the __Host- prefix also stops
-// sibling *.torta-server.duckdns.org sites from planting these cookies.
+// sites on sibling subdomains from planting these cookies.
 const secure = RE_URI.startsWith("https://");
 const cookieName = (name: string) => (secure ? `__Host-${name}` : name);
 const stateKey = cookieName("spotify_auth_state");

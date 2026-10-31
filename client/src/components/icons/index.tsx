@@ -24,7 +24,7 @@ import Social from "./Social";
 import Comment from "./Comment";
 import Annotation from "./Annotation";
 
-// Heart takes `fill`; Play and Install take their size.
+// Heart takes `fill`; Play, Pause and Install take their size.
 export type IconProps = { fill?: boolean; width?: string; height?: string; viewBox?: string };
 
 const icons = {

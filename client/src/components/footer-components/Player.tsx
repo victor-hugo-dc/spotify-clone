@@ -7,7 +7,6 @@ import React, {
 	useRef,
 	type Ref,
 } from "react";
-import { useMatch, useNavigate } from "react-router";
 
 import ProgressBar from "./ProgressBar";
 import NowPlaying, { type PlayInfo } from "./NowPlaying";
@@ -356,16 +355,8 @@ const Player = ({ onNowPlaying, onClock, ref }: Props) => {
 		seekVolume(volume > 0 ? 0 : unmuted.current);
 	};
 
-	// The Annotations button opens the annotations page, or leaves it when you're already there, whatever is playing.
-	const navigate = useNavigate();
-	const onAnnotations = useMatch("/annotations") !== null;
-	const toggleAnnotations = () => {
-		if (!onAnnotations) navigate("/annotations");
-		else if (window.history.state?.idx > 0) navigate(-1);
-		else navigate("/");
-	};
 	const loaded = playInfo.name !== "";
-	// Comment and annotation pages look the song up as a Spotify track, which episodes and local files aren't.
+	// The comment page looks the song up as a Spotify track, which episodes and local files aren't.
 	const isTrack = playInfo.uri.startsWith("spotify:track:");
 	// Another device is playing (a device without an id is never this browser's player): the green bar says which.
 	const elsewhere = activeDevice && (activeDevice.id === null || activeDevice.id !== deviceId) ? activeDevice : null;
@@ -460,14 +451,6 @@ const Player = ({ onNowPlaying, onClock, ref }: Props) => {
 						size="x-larger"
 						disabled={!isTrack}
 						onClick={() => setCommentTip(!commentTip)}
-					/>
-					<ControlButton
-						title={isTrack || onAnnotations ? "Annotations" : loaded ? "Podcasts and local files can't be annotated" : "Play a song to annotate it"}
-						icon="Annotation"
-						size="x-larger"
-						active={onAnnotations}
-						disabled={!isTrack && !onAnnotations}
-						onClick={toggleAnnotations}
 					/>
 					{wide && <ControlButton title="Queue" icon="Queue" active={rightPanel === "queue"} onClick={() => togglePanel("queue")} />}
 

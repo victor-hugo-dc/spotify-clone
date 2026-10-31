@@ -123,23 +123,54 @@ export const checks = [
     await p.getByText("Playlist is now public").waitFor({ timeout: 3000 });
     if (!(await focused(more))) throw new Error("choosing an item didn't put focus back on the button");
   }],
-  // Liked Songs plays as a queue of its tracks with no context; while it does, the big button pauses instead of starting over.
-  ["liked-songs-pause", "/tracks", async (p, t) => {
-    const saved = t.fixtures["/v1/me/player"];
-    t.fixtures["/v1/me/player"] = { ...saved, item: track, context: null };
+  // Liked Songs plays as a list of its tracks with no context. Its big button pauses it while the list Shoutify started
+  // from there plays, or Spotify's apps play your collection; a song card playing one of its songs is not Liked Songs.
+  ["liked-songs-play-button", "/tracks", async (p, t) => {
+    const saved = { player: t.fixtures["/v1/me/player"], liked: t.fixtures["/v1/me/tracks"] };
+    t.fixtures["/v1/me/tracks"] = { items: [{ track: track2 }, { track }], next: null };
+    // Spotify then plays the first of the tracks it was given, with no context.
+    await p.route((url) => url.pathname === "/v1/me/player/play", (r) => {
+      const uris = r.request().postDataJSON()?.uris;
+      if (uris) t.fixtures["/v1/me/player"] = { ...saved.player, item: uris[0] === track.uri ? track : track2, context: null };
+      return r.fallback();
+    });
+    const command = (path) => p.waitForRequest((r) => r.method() === "PUT" && new URL(r.url()).pathname === `/v1/me/player/${path}`);
+    // The page's big button comes before the player's own Play/Pause; with the player playing, any "Play" is the big one.
+    const big = (name) => p.getByRole("button", { name, exact: true }).first();
+    const bigPause = (why) => big("Play").waitFor({ state: "detached", timeout: 3000 }).catch(() => { throw new Error(why); });
+    // Liked Songs' rows and big button show together.
+    const listed = () => p.getByRole("button", { name: /^Comments on Track Two / }).waitFor({ timeout: 5000 });
     try {
-      await p.reload({ waitUntil: "networkidle" });
-      // The player's Pause button shows once its state is in; the page's big one, earlier in the page, should follow suit.
-      const pause = p.getByRole("button", { name: "Pause", exact: true }).first();
-      await pause.waitFor({ timeout: 3000 });
-      await p.getByRole("button", { name: "Play", exact: true }).waitFor({ state: "detached", timeout: 3000 })
-        .catch(() => { throw new Error("big button isn't Pause while Liked Songs plays"); });
-      t.sent.length = 0;
-      await pause.click();
-      await p.waitForTimeout(300);
-      if (!t.sent.includes("PUT /v1/me/player/pause") || t.sent.some((c) => c.startsWith("PUT /v1/me/player/play"))) throw new Error(`big button sent ${JSON.stringify(t.sent)}`);
+      await p.reload();
+      await listed();
+      let sent = command("play");
+      await big("Play").click();
+      if ((await sent).postDataJSON().uris.join() !== [track2.uri, track.uri].join()) throw new Error("big button didn't start Liked Songs");
+      await bigPause("big button isn't Pause while the Liked Songs it started plays");
+      sent = command("pause");
+      await big("Pause").click();
+      await sent;
+      // A top track's card starts that liked song alone; Liked Songs' big button then starts the whole list.
+      await p.getByRole("link", { name: "Home", exact: true }).click();
+      await p.getByRole("button", { name: "Play Track One" }).click();
+      await p.getByRole("button", { name: "Pause Track One" }).waitFor({ timeout: 3000 });
+      await p.getByRole("link", { name: "Liked Songs", exact: true }).first().click();
+      await listed();
+      if ((await p.getByRole("button", { name: "Pause", exact: true }).count()) !== 1) throw new Error("big button is Pause for a song card's track");
+      sent = command("play");
+      await big("Play").click();
+      if ((await sent).postDataJSON()?.uris?.length !== 2) throw new Error("big button didn't start Liked Songs over a song card's track");
+      // Liked Songs as Spotify's own apps play it.
+      t.fixtures["/v1/me/player"] = { ...saved.player, item: track, context: { uri: `spotify:user:${me.id}:collection` } };
+      await p.reload();
+      await listed();
+      await bigPause("big button isn't Pause while Spotify plays your collection");
+      sent = command("pause");
+      await big("Pause").click();
+      await sent;
     } finally {
-      t.fixtures["/v1/me/player"] = saved;
+      t.fixtures["/v1/me/player"] = saved.player;
+      t.fixtures["/v1/me/tracks"] = saved.liked;
     }
   }],
 ];

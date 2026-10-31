@@ -32,11 +32,12 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS annotations_song ON annotations (songID);
 `);
 
-// Comments carry their song's name, artist and cover so the feed needs no Spotify lookups. Older databases (and new
-// ones, from the table above) get those columns here.
-for (const column of ["songName", "songArtist", "songImage"]) {
+// Comments carry their song's name, artist and cover so the feed needs no Spotify lookups, and when they were posted
+// (ms since 1970; NULL on comments saved before that was kept). Older databases (and new ones, from the table above)
+// get those columns here.
+for (const [column, type] of Object.entries({ songName: "TEXT", songArtist: "TEXT", songImage: "TEXT", createdAt: "INTEGER" })) {
   if (!db.prepare("SELECT 1 FROM pragma_table_info('comments') WHERE name = ?").get(column)) {
-    db.exec(`ALTER TABLE comments ADD COLUMN ${column} TEXT`);
+    db.exec(`ALTER TABLE comments ADD COLUMN ${column} ${type}`);
   }
 }
 

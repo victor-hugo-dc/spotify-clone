@@ -31,13 +31,19 @@ const author = { authorID: "ana", authorName: "Ana", authorImage: null };
 
 test("stores comments with their song, per song and in the feed (newest first)", async () => {
   const withSong = { songID: song1, songName: "Never Gonna Give You Up", songArtist: "Rick Astley", songImage: cover, commentBody: "great drop", timestamp: 61000 };
-  assert.equal((await post("/comments/add", { ...withSong, authorID: "someone-else" })).status, 201);
+  const before = Date.now();
+  // The server says who wrote it and when.
+  const added = await post("/comments/add", { ...withSong, authorID: "someone-else", createdAt: 1 });
+  assert.equal(added.status, 201);
+  const { comment } = (await added.json()) as { comment: { createdAt: number } };
+  assert.ok(comment.createdAt >= before && comment.createdAt <= Date.now(), `createdAt ${comment.createdAt}`);
   assert.equal((await post("/comments/add", { songID: song2, commentBody: "meh", timestamp: 0 })).status, 201);
 
-  assert.deepEqual((await get(`/comments/song/${song1}`)).comments, [{ id: 1, ...author, ...withSong }]);
+  assert.deepEqual((await get(`/comments/song/${song1}`)).comments, [{ id: 1, ...author, ...withSong, createdAt: comment.createdAt }]);
   const feed = (await get("/comments/all")).comments;
   assert.deepEqual(feed.map((c: { id: number }) => c.id), [2, 1]);
   assert.equal(feed[0].songName, null);
+  assert.equal(feed[1].createdAt, comment.createdAt);
 });
 
 test("counts comments for a batch of songs in one request", async () => {
@@ -65,7 +71,7 @@ test("stores annotations per song", async () => {
   assert.deepEqual(annotations, [{ id: 1, ...author, ...body }]);
 });
 
-test("adds the song columns to a database made before they existed", async () => {
+test("adds the song and posting-time columns to a database made before they existed", async () => {
   const file = path.join(mkdtempSync(path.join(tmpdir(), "shoutify-")), "old.db");
   new DatabaseSync(file).exec(`CREATE TABLE comments (id INTEGER PRIMARY KEY, authorID TEXT NOT NULL, authorName TEXT NOT NULL,
     authorImage TEXT, songID TEXT NOT NULL, commentBody TEXT NOT NULL, timestamp INTEGER NOT NULL);
@@ -74,5 +80,5 @@ test("adds the song columns to a database made before they existed", async () =>
   // A query string loads db.ts again as a separate module, so it opens this file.
   const fresh: string = "./db.ts?old-database";
   const { db } = await import(fresh);
-  assert.deepEqual({ ...db.prepare("SELECT songName, commentBody FROM comments").get() }, { songName: null, commentBody: "old one" });
+  assert.deepEqual({ ...db.prepare("SELECT songName, createdAt, commentBody FROM comments").get() }, { songName: null, createdAt: null, commentBody: "old one" });
 });

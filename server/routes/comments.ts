@@ -3,7 +3,7 @@ import { db, isCoverUrl, isOptionalText, isPosition, isSongId, isText } from "..
 import type { Author } from "../user.ts";
 
 const router = Router();
-const columns = "id, authorID, authorName, authorImage, songID, songName, songArtist, songImage, commentBody, timestamp";
+const columns = "id, authorID, authorName, authorImage, songID, songName, songArtist, songImage, commentBody, timestamp, createdAt";
 
 // The feed: the newest 100.
 router.get("/all", (_req, res) => {
@@ -44,13 +44,14 @@ router.post("/add", (req, res) => {
   }
   const author: Author = res.locals.author;
   const song = { songName: songName ?? null, songArtist: songArtist ?? null, songImage: songImage ?? null };
+  const createdAt = Date.now();
   const { lastInsertRowid } = db
     .prepare(
-      "INSERT INTO comments (authorID, authorName, authorImage, songID, songName, songArtist, songImage, commentBody, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO comments (authorID, authorName, authorImage, songID, songName, songArtist, songImage, commentBody, timestamp, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
-    .run(author.id, author.name, author.image, songID, song.songName, song.songArtist, song.songImage, commentBody, timestamp);
+    .run(author.id, author.name, author.image, songID, song.songName, song.songArtist, song.songImage, commentBody, timestamp, createdAt);
   res.status(201).send({
-    comment: { id: Number(lastInsertRowid), authorID: author.id, authorName: author.name, authorImage: author.image, songID, ...song, commentBody, timestamp },
+    comment: { id: Number(lastInsertRowid), authorID: author.id, authorName: author.name, authorImage: author.image, songID, ...song, commentBody, timestamp, createdAt },
   });
 });
 

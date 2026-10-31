@@ -63,17 +63,11 @@ const UserInfo = () => {
 
   return (
     <div className="userInfo" ref={ref}>
-      <button className="UserInfoButton no-outline" aria-label={`${name}: account menu`} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <figure className="figureStyle">
-          {imgSrc ?
-            <img loading="eager" src={imgSrc} className="imgStyle" alt=""></img> :
-            <span className="imgStyle avatar-initial" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>
-          }
-        </figure>
-        <span className="UserInfoSpan mediaNoneXL">{name}</span>
-        <span className="arrowStyle mediaNoneXL" aria-hidden="true">
-          {open ? <p>&#9650;</p> : <p>&#9660;</p>}
-        </span>
+      <button className="UserInfoButton no-outline" aria-label={`${name}: account menu`} title={name} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+        {imgSrc ?
+          <img loading="eager" src={imgSrc} className="UserInfoAvatar" alt=""></img> :
+          <span className="UserInfoAvatar avatar-initial" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>
+        }
       </button>
       {open && <UserInfoOptions id={user?.id ?? null} logout={logout} />}
     </div>

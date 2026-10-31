@@ -1,0 +1,68 @@
+  /* What's inside the right panel; layout.css places and sizes the panel itself. */
+  .right-sidebar-header {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 16px;
+    background: var(--background-base);
+  }
+
+  .right-sidebar-header h2 {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+  }
+
+  .right-sidebar-close {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--main-text);
+    cursor: pointer;
+  }
+
+  .right-sidebar-close:hover {
+    background: var(--background-highlight);
+    color: #fff;
+  }
+
+  .right-sidebar-track {
+    padding: 0 16px 16px;
+  }
+
+  .right-sidebar-track > img,
+  .right-sidebar-cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    background: var(--background-elevated);
+  }
+
+  .right-sidebar-track > h3 {
+    margin-top: 16px;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 30px;
+  }
+
+  .right-sidebar-track > p {
+    color: var(--main-text);
+    font-size: 16px;
+  }

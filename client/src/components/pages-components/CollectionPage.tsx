@@ -2,6 +2,7 @@ import React, {useContext} from 'react';
 import {Routes, Route, Navigate} from 'react-router'
 
 import CollectionRow from '../featured-components/CollectionRow'
+import CollectionNav from '../featured-components/CollectionNav'
 
 import { LibraryContext } from '../../utilities/context'
 
@@ -10,6 +11,7 @@ const CollectionPage = () => {
 
     return (
         <div className='page-content' style={{paddingTop:'16px'}}>
+            <CollectionNav/>
             <Routes>
                 <Route path='playlist' element={<CollectionRow name='Playlists' playlists={playlists}/>}/>
                 <Route path='artist' element={<CollectionRow name='Artists' playlists={artists}/>}/>

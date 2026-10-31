@@ -67,20 +67,6 @@
     font-family: inherit;
   }
   
-  .App {
-    height: 100vh;
-    width: 100vw;
-    min-width: 768px;
-    display: grid;
-    /* minmax(0, ...) lets the panels shrink, so the player is never pushed below a short window. */
-    grid-template-rows: minmax(0, 1fr) auto;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: var(--panel-gap);
-    padding: var(--panel-gap) var(--panel-gap) 0;
-    background: #000;
-    overflow: hidden;
-  }
-  
   .loading {
     width: 100%;
     height: 100%;
@@ -92,85 +78,22 @@
     background: #000;
   }
   
-  .sidebar {
-    background: var(--background-base);
-    border-radius: var(--panel-radius);
-    width: 280px;
-    padding: 24px 0 8px;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-    user-select: none;
-    position: relative;
-  }
-  
-  .logo-link {
-    text-decoration: none;
-    color: white;
-  }
-  
-  .logo {
-    padding-left: var(--side-bar-margin);
-    margin-bottom: 20px;
-  }
-  
-  .spotify-logo {
-    width: 131px;
-    height: 40px;
-  }
-  
-  .nav-list {
-    list-style: none;
-  }
-  
-  .NavItem {
-    padding: 0 8px;
-    cursor: pointer;
-  }
-  
-  .NavItem:hover > .nav-link {
-    color: #fff;
-  }
-  
-  .nav-link {
-    color: var(--main-text);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    height: 40px;
-    padding: 0 16px;
-    font-size: 16px;
-    font-weight: 700;
-    transition: color 0.2s;
-    border-radius: 4px;
-  }
-  
   .activeMainNav {
     color: #fff;
-  }
-  
-  .nav-icon {
-    margin-right: 16px;
-    height: 24px;
-  }
-  
-  .playlists {
-    margin-top: 24px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
   }
   
   .play-title {
     font-size: 16px;
     font-weight: 700;
     line-height: 24px;
-    color: var(--main-text);
+    color: #fff;
     text-transform: none;
-    padding: 0 var(--side-bar-margin) 12px;
+    padding: 16px var(--side-bar-margin) 12px;
+  }
+
+  .play-title > a {
+    color: inherit;
+    text-decoration: none;
   }
   
   .create-button {
@@ -264,26 +187,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     display: block;
-  }
-  
-  .cta-wrapper {
-    padding: 0 8px;
-  }
-  
-  
-  .nav-icon.install-icon {
-    height: 20px;
-  }
-  
-  .cta-wrapper .nav-link:hover {
-    color: #fff;
-  }
-  
-  .footer {
-    background: #000;
-    grid-column: 1/-1;
-    position: relative;
-    z-index: 4;
   }
   
   .player {
@@ -737,15 +640,6 @@
     width: 93px;
   }
 
-  .featured {
-    background: var(--background-base);
-    border-radius: var(--panel-radius);
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-width: 0;
-    position: relative;
-  }
-  
   .status-bar-wrapper {
     position: fixed;
     left: 0;
@@ -776,94 +670,9 @@
     visibility: visible;
   }
   
-  .header-bar {
-    width: 100%;
-    height: 64px;
-    background: rgba(18, 18, 18, 0.88);
-    backdrop-filter: blur(8px);
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .HistoryNav {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .navButton {
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 16px;
-    cursor: pointer;
-  }
-
-  .navButton:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  .SearchContainer {
-    flex-grow: 1;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-  }
-  
-  .SearchBar {
-    position: relative;
-    flex: 0 1 364px;
-    color: var(--main-text);
-  }
-  
-  .SearchInput {
-    color: #fff;
-    background: #242424;
-    padding: 6px 36px 6px 48px;
-    height: 48px;
-    width: 100%;
-    border: 1px solid transparent;
-    border-radius: 500px;
-    text-overflow: ellipsis;
-    font: inherit;
-    font-size: 16px;
-  }
-  
-  .SearchInput:hover {
-    background: #2a2a2a;
-    border-color: hsla(0, 0%, 100%, 0.1);
-  }
-
-  .SearchInput:focus {
-    border: 2px solid #fff;
-    outline: none;
-  }
-
-  .SearchInput::placeholder {
-    color: #757575;
-  }
-
   .cNavWrapper {
     white-space: nowrap;
-    flex-grow: 1;
-    align-items: center;
-  }
-  
-  .cNav {
-    padding-left: 24px;
-    width: 100%;
+    margin-bottom: 16px;
   }
   
   .cNavList {
@@ -907,85 +716,6 @@
   
   .PromptButton:hover {
     transform: scale(1.04);
-  }
-  
-  .UserInfoButton {
-    margin-left: 16px;
-    background-color: rgba(0, 0, 0, 0.54);
-    border-radius: 23px;
-    height: 32px;
-    min-width: 32px;
-    display: flex;
-    align-items: center;
-    border: 0;
-    cursor: pointer;
-    color: #fff;
-    padding: 2px;
-  }
-  
-  .UserInfoButton:hover {
-    background-color: #272727;
-  }
-  
-  .UserInfoSpan {
-    margin-left: 8px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    max-width: 110px;
-    pointer-events: none;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 16px;
-    letter-spacing: normal;
-    text-transform: none;
-  }
-  
-  .UserInfoOptions {
-    min-width: 100%;
-    background-color: #272727;
-    border-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.7);
-    pointer-events: auto;
-    position: absolute;
-    top: 100%;
-    margin-top: 8px;
-    z-index: 1003;
-    right: 0;
-    list-style: none;
-  }
-  
-  .UserInfoOptions > li > * {
-    width: 100%;
-    padding: 3px 20px;
-    line-height: 32px;
-    white-space: nowrap;
-    background: none;
-    border: 0;
-    user-select: none;
-    cursor: default;
-    color: #b3b3b3;
-    display: flex;
-    align-items: center;
-    position: relative;
-    text-decoration: none;
-    font-size: 14px;
-  }
-  
-  .UserInfoOptions > li > *:hover,
-  .UserInfoOptions > li > *:focus {
-    color: #fff;
-    background-color: #333;
-  }
-  
-  .UserInfoOptions > :first-child {
-    border-radius: 4px 4px 0 0;
-  }
-  
-  .UserInfoOptions > :last-child {
-    border-top: 1px solid #404040;
-    border-radius: 0 0 4px 4px;
   }
   
   .page-content {
@@ -1186,7 +916,6 @@
   
   
   .listPage {
-    margin-top: -64px;
     padding-bottom: 32px;
   }
   
@@ -1825,16 +1554,6 @@
     .mediaNone {
       display: none;
     }
-  
-    .header-bar {
-      padding: 16px;
-    }
-  }
-  
-  @media (max-width: 1279px) {
-    .mediaNoneXL {
-      display: none;
-    }
   }
   
   
@@ -1967,38 +1686,6 @@
     font-weight: 700;
     font-size: 20px;
   }
-
-  .figureStyle .avatar-initial {
-    font-size: 14px;
-  }
-
-  .userInfo {
-    position: relative;
-    white-space: nowrap;
-  }
-  
-  .figureStyle {
-    width: 28px;
-    height: 28px;
-    overflow: hidden;
-    position: relative;
-    display: inline-block;
-  }
-  
-  .imgStyle {
-    border-radius: 50%;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center center;
-  }
-  
-  .arrowStyle {
-    margin-right: 6px;
-    margin-left: 8px;
-    font-size: 10px;
-  }
-
 
 /* COMMENT INFORMATION */
 

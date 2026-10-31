@@ -1,24 +1,32 @@
 import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
-import { useNavigate } from 'react-router';
 
-import Sidebar from './components/sidebar-components/Sidebar'
-import Logo from './components/sidebar-components/Logo'
-import NavList from './components/sidebar-components/NavList'
-import NavItem from './components/sidebar-components/NavItem'
-import PlayLists from './components/sidebar-components/PlayLists'
-import FeaturedPlaylist from './components/sidebar-components/FeaturedPlaylist'
-import FeaturedItem from './components/sidebar-components/FeaturedItem'
-import OtherPlaylist from './components/sidebar-components/OtherPlaylist'
-import InstallCTA from './components/sidebar-components/InstallCTA'
+import TopBar from './components/top-bar/TopBar'
+import YourLibrary from './components/sidebar-components/YourLibrary'
+import RightSidebar from './components/right-sidebar/RightSidebar'
 import Footer from './components/footer-components/Footer'
 import PromptButton from './components/featured-components/PromptButton'
 import Player, { type PlayerHandle } from './components/footer-components/Player'
-import Featured from './components/featured-components/Featured'
+import PageContent from './components/featured-components/PageContent'
 import Loading from './components/featured-components/Loading'
-import {UserContext, MessageContext, PlayContext, NowPlayingContext, LibraryContext, type NowPlaying} from './utilities/context'
+import {UserContext, MessageContext, PlayContext, NowPlayingContext, LibraryContext, LayoutContext, type NowPlaying, type RightPanel} from './utilities/context'
 import { allPages, spotify } from './utilities/spotify'
 import { refreshSession } from './utilities/session'
 import type { Artist, Paging, PlayHistory, Playlist, SavedAlbum, User } from './utilities/types'
+import './styles/layout.css'
+
+// Each viewer's right panel (or none) is remembered in their browser. Storage can be blocked or cleared (private
+// windows); then it's the Now playing view, as on Spotify.
+const PANEL_KEY = 'shoutify:right-panel'
+function storedPanel(): RightPanel {
+  try {
+    const saved = localStorage.getItem(PANEL_KEY)
+    if (saved === 'closed') return null
+    if (saved === 'queue' || saved === 'friends') return saved
+  } catch {
+    // blocked: use the default
+  }
+  return 'now-playing'
+}
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -30,12 +38,12 @@ function App() {
   const [artists, setArtists] = useState<Artist[]>([])
   const [recentlyPlayed, setRecentlyPlayed] = useState<PlayHistory[]>([])
   const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false, deviceId: null, track: null, device: null})
+  const [rightPanel, setRightPanelState] = useState(storedPanel)
 
   const [status, setStatus] = useState(false) 
   const [message, setMessage] = useState('')
 
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const navigate = useNavigate()
 
   // Logged in if the server can trade its refresh cookie for a token. A server or network hiccup isn't a logout: keep
   // showing the loading screen and try again.
@@ -79,15 +87,15 @@ function App() {
   const library = useMemo(() => ({playlists, albums, artists, recentlyPlayed, refresh: refreshLibrary}),
     [playlists, albums, artists, recentlyPlayed, refreshLibrary])
 
-  // New playlists get Spotify's default name, numbered the way its apps do.
-  const createPlaylist = () => {
-    spotify<Playlist>('/me/playlists', {method: 'POST', body: {name: `My Playlist #${playlists.length + 1}`}})
-      .then((playlist) => {
-        refreshLibrary()
-        navigate(`/playlist/${playlist.id}`)
-      })
-      .catch(error => setStatusMessage(`ERROR: ${error.message}`))
-  }
+  const setRightPanel = useCallback((panel: RightPanel) => {
+    setRightPanelState(panel)
+    try {
+      localStorage.setItem(PANEL_KEY, panel ?? 'closed')
+    } catch {
+      // blocked: remembered until the page reloads
+    }
+  }, [])
+  const layout = useMemo(() => ({rightPanel, setRightPanel}), [rightPanel, setRightPanel])
 
   // Context values keep their identity across renders, so a toast doesn't re-run the effects and callbacks that use them.
   const setStatusMessage = useCallback((message: string) => {
@@ -111,37 +119,27 @@ function App() {
         <Loading type='app'/> :
         !loggedIn ?
         <Login error={loginError} /> :
+        // The frame (styles/layout.css): top bar, Your Library, the page, the right panel and the player.
         <MessageContext.Provider value={setStatusMessage}>
-              <Sidebar>
-                <Logo />
-                <NavList>
-                    <NavItem to='/' exact={true} name='Home' label='Home' />
-                    <NavItem to='/search' exact={true} name='Search' label='Search' />
-                    <NavItem to='/social' exact={true} name='Social' label='Social'/> 
-                    <NavItem to='/collection' name='Library' label='Your Library'/>
-                </NavList>
-                <PlayLists 
-                  top={<FeaturedPlaylist onCreatePlaylist={createPlaylist}>
-                          <FeaturedItem to='/tracks' exact={true} label='Liked Songs'/>
-                        </FeaturedPlaylist>}
-                  bottom={<OtherPlaylist playlists={playlists}/>}
-                />
-                <InstallCTA />
-              </Sidebar>
-              
-              <PlayContext.Provider value={updatePlayer}>
-                <NowPlayingContext.Provider value={nowPlaying}>
-                    <UserContext.Provider value={userInfo}>
-                      <LibraryContext.Provider value={library}>
-                        <Featured message={message} status={status} />
-                      </LibraryContext.Provider>
-                    </UserContext.Provider>
-                </NowPlayingContext.Provider>
-              </PlayContext.Provider>
-
-              <Footer>
-                <Player onNowPlaying={setNowPlaying} ref={playerRef}/>
-              </Footer>
+          <UserContext.Provider value={userInfo}>
+            <LibraryContext.Provider value={library}>
+              <LayoutContext.Provider value={layout}>
+                <PlayContext.Provider value={updatePlayer}>
+                  <NowPlayingContext.Provider value={nowPlaying}>
+                    <TopBar />
+                    <YourLibrary />
+                    <main className='featured'>
+                      <PageContent message={message} status={status} />
+                    </main>
+                    <RightSidebar />
+                    <Footer>
+                      <Player onNowPlaying={setNowPlaying} ref={playerRef}/>
+                    </Footer>
+                  </NowPlayingContext.Provider>
+                </PlayContext.Provider>
+              </LayoutContext.Provider>
+            </LibraryContext.Provider>
+          </UserContext.Provider>
         </MessageContext.Provider>
       }
     </div>

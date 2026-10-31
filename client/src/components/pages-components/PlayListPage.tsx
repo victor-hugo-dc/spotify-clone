@@ -96,15 +96,17 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
             .catch(error => setMessage(`ERROR: ${error.message}`))
     }
 
+    // Both false until /me answers, which after an error it never does: on your own playlist the heart deletes it unasked.
     const owned = user !== null && ownerId === user.id
+    const theirs = user !== null && ownerId !== user.id
     const menu: MenuItem[] = [
         ...(owned ? [
             {label: 'Edit details', onSelect: () => setEditing(true)},
             {label: isPublic ? 'Make private' : 'Make public', onSelect: () => changeDetails({public: !isPublic}, isPublic ? 'Playlist is now private' : 'Playlist is now public')},
             {label: 'Delete', onSelect: deletePlaylist},
-        ] : [
+        ] : theirs ? [
             {label: like ? 'Remove from Your Library' : 'Add to Your Library', onSelect: followPlaylist},
-        ]),
+        ] : []),
         ...shareItems(uri, 'playlist', setMessage),
     ]
 
@@ -120,7 +122,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
                 {/* No heart on your own playlist: un-saving it deletes it, so that's the menu's Delete, which asks first. */}
-                <PlayListFunctions onFollow={owned ? undefined : followPlaylist} follow={like} uri={uri} menu={menu} label={bannerInfo.name}/>
+                <PlayListFunctions onFollow={theirs ? followPlaylist : undefined} follow={like} uri={uri} menu={menu} label={bannerInfo.name}/>
                 <div className="page-content">
                     {listed ?
                         <TrackList ref={lastRef} tracks={tracks} contextUri={uri}/> :

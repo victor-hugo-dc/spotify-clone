@@ -1,6 +1,6 @@
 // Footer player checks. The default session plays on another device, which the player polls; inBrowser() makes this
 // browser the active device instead, with a stand-in Web Playback SDK whose listeners a check calls as Spotify's would.
-import { track2 } from "../data.mjs";
+import { img, track2 } from "../data.mjs";
 
 const sdk = `window.Spotify = { Player: class {
   constructor() { this.listeners = {}; window.sdkPlayer = this; }
@@ -94,5 +94,15 @@ export const checks = [
     await p.waitForTimeout(300);
     const seeks = t.sent.filter((c) => c.includes("/seek?"));
     if (seeks.length !== 1) throw new Error(`drag sent ${JSON.stringify(seeks)}`);
+  }],
+  // Spotify leaves a podcast episode out (item: null) unless asked for episodes.
+  ["player-episode", "/", async (p, t) => {
+    const episode = { id: "Episode000000000000001", type: "episode", uri: "spotify:episode:Episode000000000000001", name: "Episode One", duration_ms: 1800000, images: img(5) };
+    await p.route((url) => url.pathname === "/v1/me/player", (r) => r.fulfill({ json: {
+      ...t.fixtures["/v1/me/player"], context: null, currently_playing_type: "episode",
+      item: new URL(r.request().url()).searchParams.get("additional_types")?.split(",").includes("episode") ? episode : null,
+    } }));
+    await p.reload({ waitUntil: "networkidle" });
+    await p.waitForFunction((name) => document.title.startsWith(name), episode.name, { timeout: 3000 });
   }],
 ];

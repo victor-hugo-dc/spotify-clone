@@ -19,7 +19,6 @@ import { playerCommand, spotify } from "../../utilities/spotify";
 import { accessToken } from "../../utilities/session";
 import formatTime from "../../utilities/time";
 import { MessageContext, type NowPlaying as NowPlayingState } from "../../utilities/context";
-import type { Album, Track } from "../../utilities/types";
 
 export type PlayerHandle = { updateState: () => void };
 
@@ -29,7 +28,7 @@ type PlaybackResponse = {
 	is_playing: boolean;
 	progress_ms: number | null;
 	context: { uri: string } | null;
-	item: (Track & { album: Album }) | null;
+	item: (PlayInfo & { duration_ms: number }) | null;
 	device: { id: string | null; volume_percent: number | null };
 };
 
@@ -208,7 +207,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const apiUpdate = () => {
 		clearTimeout(timerRef.current);
 
-		spotify<PlaybackResponse | undefined>("/me/player")
+		// Unless asked for episodes, Spotify sends a podcast episode as `item: null`, and the last song would seem to play on.
+		spotify<PlaybackResponse | undefined>("/me/player?additional_types=episode")
 			.then((state) => {
 				// 204: no device is active (the in-browser player takes over once it's ready), so nothing is playing.
 				if (!state) {

@@ -33,20 +33,28 @@ type PlaybackResponse = {
 	device: { volume_percent: number | null };
 };
 
+type PlaybackState = { play: boolean; shuffle: boolean; repeat: boolean; progress: number; at: number; total_time: number };
+
+// Where playback is at `now`: the position measured at `at`, plus the time since while playing, never past the end.
+// Counting time rather than timer ticks keeps it right in background tabs, whose timers browsers slow down.
+const positionAt = ({ play, progress, at, total_time }: PlaybackState, now: number) =>
+	Math.min(progress + (play ? Math.max(0, now - at) : 0), total_time);
+
 type Props = { onNowPlaying: (nowPlaying: NowPlayingState) => void; ref?: Ref<PlayerHandle> };
 
 const Player = ({ onNowPlaying, ref }: Props) => {
 	const setMessage = useContext(MessageContext);
-	const [playbackState, setPlaybackState] = useState({
+	const [playbackState, setPlaybackState] = useState<PlaybackState>({
 		play: false,
 		shuffle: false,
 		repeat: false,
 		progress: 0,
+		at: 0,
 		total_time: 0,
 	});
+	const [now, setNow] = useState(Date.now);
 
 	const [scrubPb, setScrubPb] = useState<number | null>(null);
-	const [playback, setPlayback] = useState(0);
 	const [volume, setVolume] = useState(1);
 	const [connectTip, setConnectTip] = useState(false);
 	const [commentTip, setCommentTip] = useState(false);
@@ -69,7 +77,6 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	}, [playInfo.uri, contextUri, playbackState.play, deviceId, onNowPlaying]);
 
 	const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-	const playbackIntervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
 	const player = useRef<Spotify.Player | null>(null);
 
 	useEffect(() => {
@@ -80,11 +87,17 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 		return () => {
 			clearTimeout(timerRef.current);
-			clearInterval(playbackIntervalRef.current);
 			player.current?.disconnect();
 		};
 		// eslint-disable-next-line
 	}, []);
+
+	// Re-render twice a second while playing, so the clock and the bar move.
+	useEffect(() => {
+		if (!playbackState.play) return;
+		const tick = setInterval(() => setNow(Date.now()), 500);
+		return () => clearInterval(tick);
+	}, [playbackState.play]);
 
 	const loadScript = () => {
 		if (document.getElementById("spotify-player")) return;
@@ -129,13 +142,13 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 			// A relinked track plays under another URI; lists show the one it was linked from.
 			setPlayInfo({ ...current_track, uri: current_track.linked_from?.uri ?? current_track.uri });
 			setContextUri(context?.uri ?? null);
-			setPlayback(position / duration);
 			setPlaybackState((state) => ({
 				...state,
 				play: !paused,
 				shuffle: shuffle,
 				repeat: repeat_mode !== 0,
 				progress: position,
+				at: Date.now(),
 				total_time: duration,
 			}));
 		});
@@ -180,7 +193,6 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 				const { repeat_state, shuffle_state, is_playing, progress_ms, item, device, context } = state;
 				if (!item) return;
 				const progress = progress_ms ?? 0;
-				setPlayback(progress / item.duration_ms);
 
 				// Check again when the track ends.
 				timerRef.current = setTimeout(() => apiUpdate(), item.duration_ms - progress + 10);
@@ -192,6 +204,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 					shuffle: shuffle_state,
 					repeat: repeat_state !== "off",
 					progress,
+					at: Date.now(),
 					total_time: item.duration_ms,
 				}));
 				setPlayInfo(item);
@@ -199,23 +212,6 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 			})
 			.catch((error) => console.log(error));
 	};
-
-	const updatePlayback = () => {
-		const interval = 500 / playbackState.total_time;
-		setPlayback((playback) => playback + interval);
-		setPlaybackState((state) => ({ ...state, progress: state.progress + 500 }));
-	};
-
-	useEffect(() => {
-		if (playbackState.play) {
-			playbackIntervalRef.current = setInterval(updatePlayback, 500);
-		} else {
-			clearInterval(playbackIntervalRef.current);
-		}
-
-		return () => clearInterval(playbackIntervalRef.current);
-		// eslint-disable-next-line
-	  }, [playbackState.play]);
 
 	// Player commands fail with Spotify's reason, e.g. no active device or no Premium.
 	const command = (path: string, method: "PUT" | "POST", onDone: () => void) => {
@@ -226,7 +222,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	const togglePlay = () => {
 		command(`/me/player/${playbackState.play ? "pause" : "play"}`, "PUT", () => {
-			setPlaybackState((state) => ({ ...state, play: !state.play }));
+			setPlaybackState((state) => ({ ...state, play: !state.play, progress: positionAt(state, Date.now()), at: Date.now() }));
 			apiUpdate();
 		});
 	};
@@ -254,13 +250,14 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const seekPlayback = (ratio: number) => {
 		const time = Math.round(ratio * playbackState.total_time);
 		command(`/me/player/seek?position_ms=${time}`, "PUT", () => {
-			setPlayback(ratio);
-			setPlaybackState((state) => ({ ...state, progress: time }));
+			setPlaybackState((state) => ({ ...state, progress: time, at: Date.now() }));
 			apiUpdate();
 		});
 
 		setScrubPb(null);
 	};
+
+	const position = positionAt(playbackState, now);
 
 	const scrubPlayback = (ratio: number) => {
 		const time = ratio * playbackState.total_time;
@@ -331,13 +328,11 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 					<div className="player-playback" draggable="false">
 						<div className="playback-time" draggable="false">
-							{scrubPb
-								? formatTime(scrubPb)
-								: formatTime(playbackState.progress)}
+							{formatTime(scrubPb ?? position)}
 						</div>
 						<ProgressBar
 							extraClass="playback"
-							value={playback}
+							value={playbackState.total_time ? position / playbackState.total_time : 0}
 							engageClass="engage"
 							setValue={(ratio) => seekPlayback(ratio)}
 							scrubFunction={scrubPlayback}

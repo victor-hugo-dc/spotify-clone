@@ -1,3 +1,18 @@
+  /* Shared rules only: tokens, the font, the reset, base elements, scrollbars, focus, and classes that more than one
+     area's markup uses. Every other rule lives in its owner's file in styles/, imported by the owner's components;
+     they load after this file and layout.css (the frame), in this order, so on equal specificity the later one wins:
+     library.css: Your Library, the left panel (YourLibrary.tsx)
+     right-sidebar.css: the right panel (RightSidebar.tsx)
+     player.css: the player bar, its devices popup and the Add Comment dialog (Player.tsx)
+     cards.css: the cards on every shelf and grid (PlayCard.tsx)
+     home.css: the home page (HomePage.tsx)
+     search.css: the search page (SearchPage.tsx)
+     lists.css: the playlist, album, Liked Songs, artist and profile pages and their track table (those pages)
+     pages.css: Your Library's page, the comment feed, a song's comments, annotations (those pages)
+     Shared because two areas use them: .pageContent, .CollectionRow, .RowTitle, .RowGrid (home and search);
+     .listPage, .playListContent (list pages and song comments); .player-cover (player and comment feed);
+     .textareacomment (Add Comment and annotations). */
+
   /* Figtree (SIL OFL, client/public/fonts) stands in for Spotify's own typeface, which isn't free to use. */
   @font-face {
     font-family: "Figtree";

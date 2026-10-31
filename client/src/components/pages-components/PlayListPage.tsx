@@ -15,6 +15,7 @@ import useLibrary from '../../utilities/hooks/useLibrary'
 import { spotify } from '../../utilities/spotify'
 import { plainText } from '../../utilities/html'
 import type { Paging, Playlist, Track } from '../../utilities/types'
+import '../../styles/lists.css'
 
 type PlaylistEntry = {item: Track | {type: 'episode'} | null}
 // Playlists can hold podcast episodes and local files too; only Spotify tracks are listed (local files have no id).

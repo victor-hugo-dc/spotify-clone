@@ -1,5 +1,7 @@
 import React from "react";
-import { Routes, Route } from "react-router";
+import { Routes, Route, Link, useLocation } from "react-router";
+import PageErrorBoundary from "./PageErrorBoundary";
+import PageTitle from "./PageTitle";
 
 import HomePage from "../pages-components/HomePage";
 import SearchPage from "../pages-components/SearchPage";
@@ -16,7 +18,6 @@ import CommentPage from "../pages-components/CommentPage";
 import type { Playlist } from "../../utilities/types";
 
 export type PageContentProps = {
-  query: string;
   playlists: Playlist[];
   refreshPlaylist: () => void;
   message: string;
@@ -24,17 +25,18 @@ export type PageContentProps = {
 };
 
 export default function PageContent({
-  query,
   playlists,
   refreshPlaylist,
   message,
   status,
 }: PageContentProps) {
+  const location = useLocation();
   return (
     <>
+      <PageErrorBoundary resetKey={location.pathname}>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/search" element={<SearchPage query={query} />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/playlist/:id" element={<PlayListPage refreshPlaylist={refreshPlaylist} />} />
         <Route path="/album/:id" element={<AlbumPage />} />
         <Route path="/user/:id" element={<UserPage />} />
@@ -44,9 +46,16 @@ export default function PageContent({
         <Route path="/tracks" element={<LikePage />} />
         <Route path="/annotations" element={<AnnotationsPage />} />
         <Route path="/comments/:id" element={<CommentPage />} />
+        <Route path="*" element={
+          <div className="page-content" style={{ paddingTop: "16px" }}>
+            <PageTitle name="Page not found" />
+            <p className="empty-state">There's nothing at this address. <Link to="/">Go home</Link></p>
+          </div>
+        } />
       </Routes>
+      </PageErrorBoundary>
       <div className={`status-bar-wrapper ${status ? "active" : ""}`}>
-        <div className={`status-bar ${status ? "active" : ""}`}>{message}</div>
+        <div className={`status-bar ${status ? "active" : ""}`} role="status">{message}</div>
       </div>
     </>
   );

@@ -1,11 +1,20 @@
-import React, {useEffect, type CSSProperties} from 'react'
+import React, {useEffect, useRef, useState, type CSSProperties} from 'react'
+import {useSearchParams} from 'react-router'
 import Icon from '../icons'
 
-export default function SearchBar({query, setQuery, resetQuery}: {query: string, setQuery: (query: string) => void, resetQuery: () => void}) {
+// The query lives in the URL (/search?q=...), so Back from a result, a reload or a shared link keeps it. Typing replaces
+// the history entry instead of adding one per keystroke.
+export default function SearchBar() {
+    const [params, setParams] = useSearchParams()
+    const q = params.get('q') ?? ''
+    // What's typed lives here, so the caret stays where you type while the URL catches up (navigations are async).
+    const [text, setText] = useState(q)
+    const input = useRef<HTMLInputElement>(null)
+
+    // Follow the URL when it changes while you're not typing (Back, or the Search link).
     useEffect(() => {
-        return () => resetQuery()
-        // eslint-disable-next-line
-    }, [])
+        if (document.activeElement !== input.current) setText(q)
+    }, [q])
 
     return (
         <div className="SearchContainer">
@@ -20,8 +29,12 @@ export default function SearchBar({query, setQuery, resetQuery}: {query: string,
                         spellCheck='false'
                         autoFocus={true}
                         placeholder='Search for Artists, Songs, or Podcasts'
-                        value={query}
-                        onChange={e => setQuery(e.target.value)}/>
+                        ref={input}
+                        value={text}
+                        onChange={e => {
+                            setText(e.target.value)
+                            setParams(e.target.value ? {q: e.target.value} : {}, {replace: true})
+                        }}/>
             </div>
         </div>
     )

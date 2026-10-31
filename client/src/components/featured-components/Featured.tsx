@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {useMatch} from 'react-router'
 
 import Headerbar from './Headerbar'
@@ -11,21 +11,16 @@ import CollectionNav from './CollectionNav'
 
 
 // top bar that features additional information for a sidebar page
-function Featured (props: Omit<PageContentProps, 'query'>){
-    const [query, setQuery] = useState('')
+function Featured (props: PageContentProps){
     const onSearch = useMatch('/search')
     const onCollection = useMatch('/collection/*')
-
-    const resetQuery = ()=>{
-        setQuery('')
-    }
 
     return (
         <div className='featured'>
             <Headerbar>
                 <HistoryNav />
 
-                {onSearch && <SearchBar query={query} setQuery={setQuery} resetQuery={resetQuery}/>}
+                {onSearch && <SearchBar/>}
 
                 {onCollection && <CollectionNav/>}
 
@@ -33,7 +28,7 @@ function Featured (props: Omit<PageContentProps, 'query'>){
 
             </Headerbar>
 
-            <PageContent query={query} {...props}/>
+            <PageContent {...props}/>
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import { useNavigate } from 'react-router';
 
 import Sidebar from './components/sidebar-components/Sidebar'
@@ -67,11 +67,11 @@ function App() {
 
 
   // All of them, not just Spotify's first page of 20.
-  const refreshPlaylist = () =>{
+  const refreshPlaylist = useCallback(() =>{
     allPages<Playlist>('/me/playlists?limit=50')
       .then(setPlaylists)
       .catch(error => console.log(error));
-  }
+  }, [])
 
   // New playlists get Spotify's default name, numbered the way its apps do.
   const createPlaylist = () => {
@@ -83,20 +83,21 @@ function App() {
       .catch(error => setStatusMessage(`ERROR: ${error.message}`))
   }
 
-  const setStatusMessage = (message: string) => {
+  // Context values keep their identity across renders, so a toast doesn't re-run the effects and callbacks that use them.
+  const setStatusMessage = useCallback((message: string) => {
       clearTimeout(timerRef.current)
       setStatus(true)
       setMessage(message)
       timerRef.current = setTimeout(() => {
           setStatus(false)
       }, 3000)
-  }
+  }, [])
 
 
   const playerRef = useRef<PlayerHandle>(null)
-  const updatePlayer = () => {
+  const updatePlayer = useCallback(() => {
     playerRef.current?.updateState();
-  }
+  }, [])
 
   return (
     <div className="App">
@@ -125,7 +126,7 @@ function App() {
               <PlayContext.Provider value={updatePlayer}>
                 <NowPlayingContext.Provider value={nowPlaying}>
                     <UserContext.Provider value={userInfo}>
-                      <Featured playlists={playlists} refreshPlaylist={() => refreshPlaylist()} message={message} status={status} />
+                      <Featured playlists={playlists} refreshPlaylist={refreshPlaylist} message={message} status={status} />
                     </UserContext.Provider>
                 </NowPlayingContext.Provider>
               </PlayContext.Provider>

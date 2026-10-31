@@ -15,10 +15,9 @@ type Props = {to?: string, name: string, styleName: 'dark' | 'light', onClick?: 
 
 export default function PromptButton({to, name, styleName, onClick}: Props) {
     return (
-        to? 
-        <a href={to}>
-            <button className="PromptButton no-outline" name={name} style={styles[styleName]} >{name}</button>
-        </a>
+        // A link that looks like a button (a <button> inside an <a> is two controls in one).
+        to?
+        <a href={to} className="PromptButton no-outline" style={styles[styleName]}>{name}</a>
             :
         <button className="PromptButton no-outline" name={name} style={styles[styleName]} onClick={onClick}>{name}</button>
     )

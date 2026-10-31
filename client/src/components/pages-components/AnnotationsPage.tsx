@@ -8,6 +8,7 @@ import AddAnnotation from "../featured-components/AddAnnotation";
 import Annotation from "../featured-components/Annotation";
 import PageTitle from "../featured-components/PageTitle";
 import { commentSong, type CommentSong, type SongAnnotation, type Track } from "../../utilities/types";
+import "../../styles/pages.css";
 
 export default function AnnotationsPage() {
   const setMessage = useContext(MessageContext);

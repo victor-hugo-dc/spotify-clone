@@ -5,6 +5,7 @@ import CollectionRow from '../featured-components/CollectionRow'
 import CollectionNav from '../featured-components/CollectionNav'
 
 import { LibraryContext } from '../../utilities/context'
+import '../../styles/pages.css'
 
 const CollectionPage = () => {
     const {playlists, artists, albums} = useContext(LibraryContext)

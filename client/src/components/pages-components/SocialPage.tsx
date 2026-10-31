@@ -4,6 +4,7 @@ import Comment from "../featured-components/Comment";
 import type { SongComment } from "../../utilities/types";
 import { api } from "../../utilities/api";
 import useCommentsLoader from "../../utilities/hooks/useCommentsLoader";
+import "../../styles/pages.css";
 
 export default function SocialPage() {
     const [feed,setFeed] = useState<SongComment[] | null>(null);

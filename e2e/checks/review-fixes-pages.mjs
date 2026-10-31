@@ -18,4 +18,15 @@ export const checks = [
     release();
     await p.getByRole("menuitem", { name: "Edit details" }).waitFor({ timeout: 3000 });
   }],
+  // Going back to another playlist with Edit details open doesn't open it again there.
+  ["edit-details-back", "/playlist/p1", async (p) => {
+    await p.getByRole("button", { name: "Create Playlist" }).click();
+    await p.getByRole("button", { name: "More options for My Playlist #2" }).click();
+    await p.getByRole("menuitem", { name: "Edit details" }).click();
+    await p.getByRole("dialog", { name: "Edit details" }).waitFor({ timeout: 3000 });
+    await p.goBack();
+    await p.getByRole("heading", { name: "Mix", exact: true }).waitFor({ timeout: 5000 });
+    await p.waitForTimeout(300);
+    if (await p.getByRole("dialog").count()) throw new Error("Edit details opened again on the other playlist");
+  }],
 ];

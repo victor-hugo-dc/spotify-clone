@@ -47,6 +47,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
         setNext(null)
         setLoading(true)
         setError('')
+        setEditing(false)
 
         const controller = new AbortController()
         // `items` only comes back for playlists the user owns or collaborates on.

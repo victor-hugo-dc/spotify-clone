@@ -14,7 +14,7 @@
     "build": "vite build",
     "start": "node server/index.ts",
     "typecheck": "tsc -p server && tsc -p client",
-    "test": "node --test server/*.test.ts"
+    "test": "node --test 'server/**/*.test.ts' 'client/src/**/*.test.ts'"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",

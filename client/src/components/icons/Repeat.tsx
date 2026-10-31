@@ -6,7 +6,7 @@ const Repeat = () => {
             x="0px" 
             y="0px" 
             viewBox="0 0 511.991 511.991" 
-            space="preserve">
+            xmlSpace="preserve">
             <g>
                 <path 
                     fill="currentColor"

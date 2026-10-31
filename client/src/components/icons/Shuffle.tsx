@@ -5,7 +5,7 @@ const Shuffle = () => {
         <svg 
             xmlns="http://www.w3.org/2000/svg"  
             x="0px" y="0px" viewBox="0 0 512 512" 
-            space="preserve">
+            xmlSpace="preserve">
 
                 <g>
                     <path 

@@ -6,7 +6,7 @@ const Volume = () => {
         x="0px" 
         y="0px" 
         viewBox="0 0 477.526 477.526" 
-        space="preserve">
+        xmlSpace="preserve">
 
             <g>
                 <path 

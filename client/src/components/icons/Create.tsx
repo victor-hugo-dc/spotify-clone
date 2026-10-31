@@ -6,7 +6,7 @@ const style = {
     height: '32px'
 }
 
-const Create = (props) => {
+const Create = () => {
     return(
         <svg
         viewBox='0 0 36 36'

@@ -19,6 +19,7 @@ const expectedConsole = {
 const snap = (p, name) => shots && p.screenshot({ path: `${shots}/${name}.png` });
 
 async function check(name, ctx, path, after) {
+  if (replaced.has(name)) return;
   const page = await ctx.newPage();
   const problems = [];
   const allowed = (text) => expectedConsole[name]?.test(text);
@@ -47,6 +48,9 @@ const coverRoute = (r) => r.fulfill({ body: cover(r.request().url()), contentTyp
 const areas = await Promise.all(readdirSync(new URL("./checks/", import.meta.url)).filter((f) => f.endsWith(".mjs")).sort()
   .map((f) => import(`./checks/${f}`)));
 for (const area of areas) Object.assign(fixtures, area.fixtures);
+// An area whose new markup breaks a check above writes its own version and lists the old check's name in
+// `export const replaces = [...]`; the old one is skipped. Keep everything the old check proved.
+const replaced = new Set(areas.flatMap((area) => area.replaces ?? []));
 
 // Logged out: no token anywhere, the login screen should render.
 const anon = await browser.newContext();

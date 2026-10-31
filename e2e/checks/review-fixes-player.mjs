@@ -105,4 +105,13 @@ export const checks = [
     await p.reload({ waitUntil: "networkidle" });
     await p.waitForFunction((name) => document.title.startsWith(name), episode.name, { timeout: 3000 });
   }],
+  // Devices opens the device picker: it says whether that's open, not whether music is playing.
+  ["player-devices-button", "/", async (p) => {
+    const devices = p.getByRole("button", { name: "Devices", exact: true });
+    if ((await devices.getAttribute("aria-pressed")) !== null) throw new Error("Devices is announced as a pressed toggle");
+    if ((await devices.getAttribute("aria-expanded")) !== "false") throw new Error("Devices doesn't say the picker is closed");
+    await devices.click();
+    await p.getByRole("button", { name: "Devices", exact: true, expanded: true }).waitFor({ timeout: 3000 });
+    await p.keyboard.press("Escape");
+  }],
 ];

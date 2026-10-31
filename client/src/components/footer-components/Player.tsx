@@ -419,6 +419,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 								size="x-larger"
 								onClick={() => setConnectTip(!connectTip)}
 								active={playbackState.play}
+								expanded={connectTip}
 							/>
 						</span>
 

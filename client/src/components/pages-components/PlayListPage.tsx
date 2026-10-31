@@ -42,6 +42,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
         setUri('')
         setbannerInfo(emptyBanner)
         setTracks([])
+        setNext(null)
         setLoading(true)
 
         const controller = new AbortController()

@@ -1,4 +1,5 @@
-  /* The player bar: what's playing, the controls, seek and volume, the devices popup and the Add Comment dialog. */
+  /* The player bar: what's playing, the controls, seek and volume, the devices popup and the Add Comment dialog; and
+     under it the green "Playing on" bar. */
 
   .player {
     height: var(--player-height);
@@ -20,20 +21,20 @@
 
   .player-right {
     display: flex;
-    flex-direction: row;
+    align-items: center;
     justify-content: flex-end;
   }
 
-  .extra-controls {
-    /* width: 180px; */
-    display: flex;
-    align-items: center;
-  }
-
+  /* The volume slider gives way first when the window is narrow. */
   .volume-control {
     display: flex;
     align-items: center;
-    gap: 4px;
+    min-width: 0;
+  }
+
+  /* As on Spotify, the last button reaches the window's 8px margin, while play stays in the middle. */
+  .control-button.fullscreen {
+    margin: 0 -8px 0 8px;
   }
 
   .now-playing {
@@ -62,27 +63,35 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin: 0 14px;
+    margin: 0 16px;
     min-width: 0;
-    color: #fff;
-    font-size: 14px;
   }
 
-  .player-info-track > a {
-    font-size: 14px;
+  .player-info-track {
     color: #fff;
-    text-decoration: none;
+    font-size: 14px;
+    line-height: 20px;
   }
 
-  .player-info-artist > a {
-    font-size: 12px;
+  .player-info-artist {
     color: var(--main-text);
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .player-info-track > a,
+  .player-info-artist > a {
+    color: inherit;
     text-decoration: none;
   }
 
-  .player-info-artist > a:not(:last-child)::after {
+  .player-info-artist > :not(:last-child)::after {
     content: ",\00a0";
     display: inline-block;
+  }
+
+  .player-info-artist > a:hover {
+    color: #fff;
   }
 
   .player-info-track > a:hover,
@@ -90,25 +99,23 @@
     text-decoration: underline;
   }
 
+  /* Save to Liked Songs: an AddCircle, a green check once saved. */
   .player-like-button {
     background-color: transparent;
     border: none;
-    color: #b3b3b3;
+    color: var(--main-text);
     width: 32px;
     min-width: 32px;
     height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .player-like-button > svg {
-    width: 15px;
-    height: 15px;
+    cursor: pointer;
   }
 
   .player-like-button:hover {
     color: #fff;
+    transform: scale(1.04);
   }
 
   .player-like-button.liked {
@@ -127,9 +134,7 @@
   .player-control-buttons {
     display: flex;
     margin-bottom: 8px;
-    width: 224px;
     gap: 8px;
-    justify-content: space-between;
     align-items: center;
   }
 
@@ -153,6 +158,7 @@
   }
 
   .control-button.circle-border {
+    margin: 0 8px;
     border-radius: 50%;
     background: #fff;
     color: #000;
@@ -342,13 +348,18 @@
     padding: 0 14px 10px;
   }
 
+  /* The times hug the seek bar between them. */
   .playback-time {
     min-width: 40px;
     font-size: 12px;
     line-height: 16px;
-    text-align: center;
+    text-align: right;
     font-variant-numeric: tabular-nums;
     user-select: none;
+  }
+
+  .playback-time:last-child {
+    text-align: left;
   }
 
   /* Seek and volume: native range inputs drawn like Spotify's bars. --progress (set inline) is the filled part:
@@ -414,7 +425,32 @@
   }
 
   .volume-control .progress-range {
-    width: 93px;
+    flex: 0 1 93px;
+    min-width: 24px;
+  }
+
+  /* While another device plays: Spotify's green bar under the player, naming it. */
+  .playing-on {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+    height: 24px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 4px;
+    background: var(--spotify-green);
+    color: #000;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .playing-on:hover {
+    background: var(--spotify-green-bright);
   }
 
 /* COMMENT INFORMATION */
@@ -522,8 +558,3 @@
 
 /* END COMMENT INFORMATION */
 
-/* Comment Viewbox Info */
-
-.social-features {
-  display: flex;
-}

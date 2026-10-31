@@ -2,7 +2,7 @@ import React from 'react'
 import {Link} from 'react-router'
 import Icon from '../icons'
 
-import useLibrary from '../../utilities/hooks/useLibrary';
+import useLiked from '../../utilities/hooks/useLiked';
 
 // Fits both a Web API track and the Web Playback SDK's current_track, which has URIs but no album or artist ids.
 // Local files and podcast episodes have no album or artist URIs, and episodes from the Web API no album at all.
@@ -19,7 +19,9 @@ const pageOf = (uri: string | null | undefined, kind: 'album' | 'artist') =>
     uri?.startsWith(`spotify:${kind}:`) ? `/${kind}/${uri.split(':').pop()}` : null
 
 export default function NowPlaying({playInfo}: {playInfo: PlayInfo | null}) {
-    const [liked, toggleLiked] = useLibrary(playInfo?.uri ?? '', 'Liked Songs')
+    // Local files can't be saved to Liked Songs.
+    const savable = !!playInfo?.uri && !playInfo.uri.startsWith('spotify:local:')
+    const [liked, toggleLiked] = useLiked(savable ? playInfo.uri : '')
 
     if (!playInfo) {
         return (<></>);
@@ -33,7 +35,7 @@ export default function NowPlaying({playInfo}: {playInfo: PlayInfo | null}) {
         <div className="now-playing">
 
             <div className="player-cover">
-                {imageUrl ? 
+                {imageUrl ?
                     <img draggable="false" loading="eager" src={imageUrl} alt=""></img>
                     :
                     <div>
@@ -57,12 +59,12 @@ export default function NowPlaying({playInfo}: {playInfo: PlayInfo | null}) {
 
             </div>
 
-            <div className="player-like" style={{display: name === ''? 'none':undefined}}>
+            {name !== '' && savable &&
                 <button title={liked ? 'Remove from Liked Songs' : 'Save to Liked Songs'} aria-label={liked ? 'Remove from Liked Songs' : 'Save to Liked Songs'} aria-pressed={liked} className={`player-like-button no-outline ${liked ? 'liked' : ''}`} onClick={toggleLiked}>
-                    <Icon name='Heart' fill={liked} />
+                    <Icon name={liked ? 'Saved' : 'AddCircle'} width='16' height='16' />
                 </button>
-            </div>
-        
+            }
+
         </div>
     )
 }

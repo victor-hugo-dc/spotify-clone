@@ -1447,7 +1447,8 @@
   .contextMenu button:focus-visible {
     background: hsla(0, 0%, 100%, 0.1);
     color: #fff;
-    outline: none;
+    /* Keyboard users keep the global focus ring (the lighter background alone is too faint), inside the item. */
+    outline-offset: -2px;
   }
 
   /* The playlist "Edit details" dialog */

@@ -35,7 +35,7 @@ export default function PageBanner({pageTitle, bannerInfo}: {pageTitle: string, 
                 <span style={spanStyle}>
                     <h1 className={name.length > 15? "bannerTitleXL":"bannerTitle"}>{name}</h1>
                 </span>
-                <p className="bannerDescription" style={{display: description? 'flex':'none'}}>{description}</p>
+                {description && <p className="bannerDescription">{description}</p>}
                 <div className="additionalInfo">
                     {user[0] && user.map((person, index) => (
                         <Link to={`/${person.type}/${person.id}`} key={index}>

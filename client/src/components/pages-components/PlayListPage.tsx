@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useContext} from 'react'
+import React, {useEffect, useRef, useState, useContext} from 'react'
 import {useNavigate, useParams} from 'react-router'
 
 import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
@@ -39,14 +39,18 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
     const [ownerId, setOwnerId] = useState('')
     const [isPublic, setIsPublic] = useState(false)
     const [editing, setEditing] = useState(false)
+    // The playlist on show, for saves that finish after the page has moved on to another.
+    const shown = useRef(id)
 
     useEffect(() => {
+        shown.current = id
         setUri('')
         setbannerInfo(emptyBanner)
         setTracks([])
         setNext(null)
         setLoading(true)
         setError('')
+        setEditing(false)
 
         const controller = new AbortController()
         // `items` only comes back for playlists the user owns or collaborates on.
@@ -71,18 +75,23 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
     // eslint-disable-next-line
     }, [id])
 
-    // PUT /playlists/{id} changes the name, description or visibility; only the owner may.
-    const changeDetails = (details: {name?: string, description?: string, public?: boolean}, done: string) => {
+    // PUT /playlists/{id} changes the name, description or visibility; only the owner may. Resolves to the error, if any.
+    const changeDetails = (details: {name?: string, description?: string, public?: boolean}, done: string) =>
         spotify(`/playlists/${id}`, {method: 'PUT', body: details})
             .then(() => {
-                const {public: shared, ...text} = details
-                setbannerInfo((banner) => ({...banner, ...text}))
-                if (shared !== undefined) setIsPublic(shared)
+                if (shown.current === id) {
+                    const {public: shared, ...text} = details
+                    setbannerInfo((banner) => ({...banner, ...text}))
+                    if (shared !== undefined) setIsPublic(shared)
+                }
                 setMessage(done)
                 refreshPlaylist()
+                return null
             })
-            .catch(error => setMessage(`ERROR: ${error.message}`))
-    }
+            .catch((error: Error) => {
+                setMessage(`ERROR: ${error.message}`)
+                return error
+            })
 
     // Deleting your own playlist means removing it from your library, as Spotify's apps do.
     const deletePlaylist = () => {
@@ -96,15 +105,17 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
             .catch(error => setMessage(`ERROR: ${error.message}`))
     }
 
+    // Both false until /me answers, which after an error it never does: on your own playlist the heart deletes it unasked.
     const owned = user !== null && ownerId === user.id
+    const theirs = user !== null && ownerId !== user.id
     const menu: MenuItem[] = [
         ...(owned ? [
             {label: 'Edit details', onSelect: () => setEditing(true)},
             {label: isPublic ? 'Make private' : 'Make public', onSelect: () => changeDetails({public: !isPublic}, isPublic ? 'Playlist is now private' : 'Playlist is now public')},
             {label: 'Delete', onSelect: deletePlaylist},
-        ] : [
+        ] : theirs ? [
             {label: like ? 'Remove from Your Library' : 'Add to Your Library', onSelect: followPlaylist},
-        ]),
+        ] : []),
         ...shareItems(uri, 'playlist', setMessage),
     ]
 
@@ -120,18 +131,20 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
             <div className="playListContent">
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
                 {/* No heart on your own playlist: un-saving it deletes it, so that's the menu's Delete, which asks first. */}
-                <PlayListFunctions onFollow={owned ? undefined : followPlaylist} follow={like} uri={uri} menu={menu} label={bannerInfo.name}/>
+                <PlayListFunctions onFollow={theirs ? followPlaylist : undefined} follow={like} uri={uri} menu={menu} label={bannerInfo.name}/>
                 <div className="page-content">
                     {listed ?
                         <TrackList ref={lastRef} tracks={tracks} contextUri={uri}/> :
                         <p style={{color: '#fff', padding: '16px 0'}}>Spotify only shows apps the tracks of playlists you own or collaborate on. Press play to listen to this one.</p>
                     }
+                    {/* Paging starts from the last row, so when the first page had none to list (local files, episodes), from here. */}
+                    {tracks.length === 0 && <div ref={lastRef}/>}
                 </div>
             </div>
             {editing &&
                 <EditDetails
                     details={{name: bannerInfo.name, description: bannerInfo.description ?? ''}}
-                    onSave={(details) => { setEditing(false); changeDetails(details, 'Details saved') }}
+                    onSave={(details) => changeDetails(details, 'Details saved')}
                     onClose={() => setEditing(false)}
                 />
             }

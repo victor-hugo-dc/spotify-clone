@@ -362,6 +362,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 						<ProgressBar
 							label="Seek"
 							extraClass="playback"
+							steps={playbackState.total_time / 1000}
 							value={playbackState.total_time ? position / playbackState.total_time : 0}
 							setValue={seekPlayback}
 							scrubFunction={scrubPlayback}
@@ -433,6 +434,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 								<ProgressBar
 									label="Volume"
 									extraClass="volume"
+									steps={100}
 									value={volume}
 									setValue={seekVolume}
 									valueText={(ratio) => `${Math.round(ratio * 100)}%`}

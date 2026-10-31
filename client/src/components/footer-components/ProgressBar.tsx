@@ -1,8 +1,10 @@
-import React, {useState, type CSSProperties} from 'react';
+import React, {useRef, useState, type CSSProperties} from 'react';
 
 type Props = {
     label: string,
     extraClass: string,
+    // How many steps the bar has. An arrow key moves one, so make one a change you notice (1%, a second).
+    steps: number,
     value: number,
     setValue: (ratio: number) => void,
     // Called while dragging, and with null once the drag is committed.
@@ -11,12 +13,15 @@ type Props = {
 }
 
 // A native range input, so the keyboard, screen readers and touch all work; CSS draws it like Spotify's bars, with
-// --progress as the filled part. The value is only sent (setValue) when the drag or key press ends.
-const ProgressBar = ({label, extraClass, value, setValue, scrubFunction, valueText}: Props) => {
+// --progress as the filled part. The value is sent (setValue) when the drag or key press ends, so a held key sends it
+// once. A screen reader sets it with no key or pointer down, so that is sent at once.
+const ProgressBar = ({label, extraClass, steps, value, setValue, scrubFunction, valueText}: Props) => {
     const [scrub, setScrub] = useState<number | null>(null)
+    const pressed = useRef(false)
     const position = Math.min(1, Math.max(0, scrub ?? (Number.isFinite(value) ? value : 0)))
 
     const commit = () => {
+        pressed.current = false
         if (scrub === null) return
         setValue(scrub)
         setScrub(null)
@@ -30,14 +35,17 @@ const ProgressBar = ({label, extraClass, value, setValue, scrubFunction, valueTe
             aria-label={label}
             aria-valuetext={valueText?.(position)}
             min={0}
-            max={1000}
-            value={Math.round(position * 1000)}
+            max={steps}
+            value={Math.round(position * steps)}
             style={{'--progress': `${position * 100}%`} as CSSProperties}
             onChange={(e) => {
-                const ratio = Number(e.target.value) / 1000
+                const ratio = Number(e.target.value) / steps
+                if (!pressed.current) return setValue(ratio)
                 setScrub(ratio)
                 scrubFunction?.(ratio)
             }}
+            onKeyDown={() => (pressed.current = true)}
+            onPointerDown={() => (pressed.current = true)}
             onPointerUp={commit}
             onKeyUp={commit}
             onBlur={commit}

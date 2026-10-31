@@ -67,4 +67,32 @@ export const checks = [
     await p.getByText("Comment Added!").waitFor({ timeout: 3000 });
     if (posted?.songID !== first.id) throw new Error(`comment saved on ${posted?.songID}, not ${first.id}`);
   }],
+  // An arrow key moves the volume 1%, and a change from a screen reader (no key or pointer events) is sent at once.
+  ["player-slider-steps", "/", async (p, t) => {
+    t.sent.length = 0;
+    const volume = p.getByRole("slider", { name: "Volume" });
+    await volume.focus();
+    await p.keyboard.press("ArrowRight");
+    await p.waitForTimeout(300);
+    if (!t.sent.some((c) => c.endsWith("volume_percent=51"))) throw new Error(`arrow key sent ${JSON.stringify(t.sent)}`);
+    if ((await volume.getAttribute("aria-valuetext")) !== "51%") throw new Error(`volume reads ${await volume.getAttribute("aria-valuetext")}`);
+    t.sent.length = 0;
+    await volume.evaluate((el) => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(el, "40");
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await p.waitForTimeout(300);
+    if (!t.sent.some((c) => c.endsWith("volume_percent=40"))) throw new Error(`screen reader change sent ${JSON.stringify(t.sent)}`);
+    // A drag sends one seek, when it ends.
+    t.sent.length = 0;
+    const seek = await p.getByRole("slider", { name: "Seek" }).boundingBox();
+    await p.mouse.move(seek.x + seek.width / 4, seek.y + seek.height / 2);
+    await p.mouse.down();
+    await p.mouse.move(seek.x + seek.width / 2, seek.y + seek.height / 2, { steps: 5 });
+    await p.mouse.up();
+    await p.waitForTimeout(300);
+    const seeks = t.sent.filter((c) => c.includes("/seek?"));
+    if (seeks.length !== 1) throw new Error(`drag sent ${JSON.stringify(seeks)}`);
+  }],
 ];

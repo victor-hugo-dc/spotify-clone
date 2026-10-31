@@ -1,23 +1,15 @@
-import React, { useState, useEffect, type Ref } from 'react';
+import React, { type Ref } from 'react';
 import { Link, useNavigate } from "react-router";
 import Icon from '../icons';
 import formatTime from '../../utilities/time';
-import { api } from '../../utilities/api';
 import ControlButton from '../footer-components/ControlButton';
-import type { SongComment, Track } from '../../utilities/types';
+import type { Track } from '../../utilities/types';
 
-type Props = { track: Track; highlight: boolean; current: boolean; playing: boolean; onPlay: () => void; ref?: Ref<HTMLLIElement> };
+type Props = { track: Track; highlight: boolean; current: boolean; playing: boolean; commentCount: number; onPlay: () => void; ref?: Ref<HTMLLIElement> };
 
-export default function TrackListItem({ track, highlight, current, playing, onPlay, ref }: Props) {
+export default function TrackListItem({ track, highlight, current, playing, commentCount, onPlay, ref }: Props) {
   const { album, artists, name, explicit, duration_ms, id } = track;
-  const [commentCount, setCommentCount] = useState(0);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    api<{ comments: SongComment[] }>(`/comments/song/${id}`)
-      .then((data) => setCommentCount(data.comments.length))
-      .catch((error) => console.log(error));
-  }, [id])
 
   return (
     <li ref={ref} className={`trackListItem ${highlight ? 'highlight' : ''} ${current ? 'current' : ''}`}>
@@ -36,17 +28,18 @@ export default function TrackListItem({ track, highlight, current, playing, onPl
           <div className='trackInfo'>
             {explicit && <span className='explicit-label'>E</span>}
             <span className='trackArtists ellipsis-one-line'>
-              {artists.map((artist) => (
-                <Link to={`/artist/${artist.id}`} key={artist.id}>
+              {/* Local files have no artist or album ids to link to. */}
+              {artists.map((artist, index) => artist.id ? (
+                <Link to={`/artist/${artist.id}`} key={index}>
                   {artist.name}
                 </Link>
-              ))}
+              ) : <span key={index}>{artist.name}</span>)}
             </span>
             {album && (
               <>
                 <span className='trackInfoSep'>•</span>
                 <span className='trackAlbum ellipsis-one-line'>
-                  <Link to={`/album/${album.id}`}>{album.name}</Link>
+                  {album.id ? <Link to={`/album/${album.id}`}>{album.name}</Link> : album.name}
                 </span>
               </>
             )}
@@ -54,18 +47,22 @@ export default function TrackListItem({ track, highlight, current, playing, onPl
         </div>
       </div>
 
-      <div className='trackItemCommentCount'>
-        {commentCount}
-      </div>
-      
-      <div className='trackItemCommentButton'>
-        <ControlButton
-          title="Comment"
-          icon="Comment" 
-          size="x-larger"
-          onClick={() => navigate(`/comments/${id}`)}
-				/>
-      </div>
+      {id && (
+        <>
+          <div className='trackItemCommentCount' aria-hidden='true'>
+            {commentCount}
+          </div>
+
+          <div className='trackItemCommentButton'>
+            <ControlButton
+              title={`Comments on ${name} (${commentCount})`}
+              icon="Comment"
+              size="x-larger"
+              onClick={() => navigate(`/comments/${id}`)}
+            />
+          </div>
+        </>
+      )}
       
 
       <div className='trackItemDuration'>

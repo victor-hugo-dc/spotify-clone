@@ -12,6 +12,8 @@ services:
   web:
     build: .
     restart: unless-stopped
+    # Node as PID 1 ignores SIGTERM, so every stop waited 10 s for a SIGKILL; an init passes the signal on.
+    init: true
     environment:
       CLIENT_ID: ${CLIENT_ID:?CLIENT_ID is required}
       CLIENT_SECRET: ${CLIENT_SECRET:?CLIENT_SECRET is required}

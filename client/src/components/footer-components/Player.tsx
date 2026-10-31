@@ -355,6 +355,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 								{commentTip && (
 									<AddComment
 										closeTip={() => setCommentTip(false)}
+										song={{ id: playInfo.id ?? "", name: playInfo.name, artist: playInfo.artists.map((artist) => artist.name).join(", "), image: playInfo.album.images.at(-1)?.url ?? null, position: playbackState.progress }}
 									/>
 								)}
 								<ControlButton

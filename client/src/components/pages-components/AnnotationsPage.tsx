@@ -2,58 +2,71 @@ import React, { useContext, useEffect, useState } from "react";
 import { MessageContext } from "../../utilities/context";
 import { spotify } from "../../utilities/spotify";
 import { api } from "../../utilities/api";
+import useCommentsLoader from "../../utilities/hooks/useCommentsLoader";
 import LyricsContainer from "../featured-components/LyricsContainer";
 import AddAnnotation from "../featured-components/AddAnnotation";
 import Annotation from "../featured-components/Annotation";
 import PageTitle from "../featured-components/PageTitle";
-import type { SongAnnotation, Track } from "../../utilities/types";
+import { commentSong, type CommentSong, type SongAnnotation, type Track } from "../../utilities/types";
 
 export default function AnnotationsPage() {
   const setMessage = useContext(MessageContext);
   const [annotatedText, setAnnotatedText] = useState("");
   const [annotationTip, setAnnotationTip] = useState(false);
-  const [id, setId] = useState("");
+  // The song this page is about: what was playing when it opened. New annotations go to it, not to whatever plays later.
+  const [song, setSong] = useState<CommentSong | null>(null);
   const [feed, setFeed] = useState<SongAnnotation[] | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
-    spotify<{ item: Track | null } | undefined>("/me/player/currently-playing", { signal: controller.signal })
-      .then((playing) => playing?.item ? setId(playing.item.id) : setMessage("Play a song to see and add its annotations"))
+    spotify<{ progress_ms: number; item: Track | null } | undefined>("/me/player/currently-playing", { signal: controller.signal })
+      .then((playing) => {
+        const item = playing?.item;
+        if (!item) setMessage("Play a song to see and add its annotations");
+        // Local files have no Spotify id to attach annotations to.
+        else if (!item.id) setMessage("Local files can't be annotated");
+        else setSong(commentSong(item, playing.progress_ms));
+      })
       .catch((error) => setMessage(error.message));
     return () => controller.abort();
     // eslint-disable-next-line
   }, []);
 
   // Newest annotations first.
-  useEffect(() => {
-    if (id.length > 0) {
-      api<{ annotations: SongAnnotation[] }>(`/annotations/song/${id}`)
-        .then((data) => setFeed(data.annotations.reverse()))
-        .catch((error) => console.log(error));
-    }
-  }, [id]);
+  useCommentsLoader(() => {
+    if (!song) return;
+    api<{ annotations: SongAnnotation[] }>(`/annotations/song/${song.id}`)
+      .then((data) => {
+        setFeed(data.annotations.reverse());
+        setFailed(false);
+      })
+      .catch(() => setFailed(true));
+  }, [song?.id]);
 
   return (
     <div className="annotation-page-content">
       <div className="pageContent lyrics-container">
         <LyricsContainer
           selectionCallback={setAnnotatedText}
-          openTip={() => setAnnotationTip(true)}
+          openTip={() => setAnnotationTip(song !== null)}
         />
         <span className="annotation-wrapper">
-          {annotationTip && (
+          {annotationTip && song && (
             <AddAnnotation
               closeTip={() => setAnnotationTip(false)}
               annotatedText={annotatedText}
+              song={song}
             />
           )}
         </span>
       </div>
       <div className="lyrics-container">
         <div className="socialPage">
-          <PageTitle name="Comments" />
+          <PageTitle name={song ? `Annotations · ${song.name}` : "Annotations"} />
           <div className="socialGrid">
-            {feed?.length === 0 && <p className='empty-state'>No one has annotated this song yet.</p>}
+            {failed && <p className='empty-state' role='alert'>Couldn't load the annotations. Try again in a moment.</p>}
+            {!failed && feed?.length === 0 && <p className='empty-state'>No one has annotated this song yet.</p>}
             {feed?.map((comm) => (
               <Annotation key={comm.id} annotation={comm} />
             ))}

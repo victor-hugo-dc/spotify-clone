@@ -23,7 +23,7 @@ const LyricsContainer = ({selectionCallback, openTip}: {selectionCallback: (text
             </div>
             <div className='lyric-container-body'>
                 <p>Lyrics are switched off for now. Type the line you want to annotate.</p>
-                <textarea className='textareacomment' rows={3} value={line} onChange={e => setLine(e.target.value)}></textarea>
+                <textarea className='textareacomment' rows={3} maxLength={500} aria-label='Line to annotate' value={line} onChange={e => setLine(e.target.value)}></textarea>
                 <PromptButton name='Annotate' styleName='light' onClick={annotate}/>
             </div>
         </div>

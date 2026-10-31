@@ -1597,11 +1597,6 @@
     color: #fff;
   }
   
-  .handle {
-    color: #697787;
-    margin-right: 8px;
-  }
-  
   .time {
     color: var(--main-text);
     font-size: 12px;

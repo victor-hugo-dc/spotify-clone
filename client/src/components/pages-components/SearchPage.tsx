@@ -1,17 +1,12 @@
 import React from 'react'
 import {useSearchParams} from 'react-router'
 import QueryPage from './QueryPage'
+import BrowseAll from '../search/BrowseAll'
 import '../../styles/search.css'
 
-// Search page that displays the search results for the query in the URL (?q=)
+// The search page: Browse all until something is typed in the top bar's box, which puts it in the URL (?q=).
 export default function SearchPage() {
     const [params] = useSearchParams()
     const query = params.get('q') ?? ''
-    if (query === ''){
-        return null
-    }else{
-        return (
-            <QueryPage query={query}/>
-        )
-    }
+    return query.trim() === '' ? <BrowseAll/> : <QueryPage query={query}/>
 }

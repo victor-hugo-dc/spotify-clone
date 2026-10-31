@@ -23,13 +23,15 @@ import Pause from "./Pause";
 import Social from "./Social";
 import Comment from "./Comment";
 import Annotation from "./Annotation";
+import * as Lucide from "./Lucide";
 
-// Heart takes `fill`; Play, Pause and Install take their size.
+// Heart takes `fill`; Play, Pause, Install and the Lucide icons take their size.
 export type IconProps = { fill?: boolean; width?: string; height?: string; viewBox?: string };
 
 const icons = {
   Home, Search, Library, Create, Heart, Like, Install, Back, Forward, "N-Search": NSearch, Play, Music, Music2, CD,
   TrackBack, TrackNext, Shuffle, Repeat, Speaker, Volume, Pause, Social, Comment, Annotation,
+  ...Lucide,
 };
 
 export type IconName = keyof typeof icons;

@@ -161,9 +161,9 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		// Browsers only let audio start after the page has been clicked; this unlocks the player on the first click.
 		document.addEventListener("click", () => sdkPlayer.activateElement(), { once: true });
 
-		// Playback status updates; the state is null once playback moves to another device.
+		// Playback status updates; the state is null once playback moves to another device, which polling then follows.
 		sdkPlayer.addListener("player_state_changed", (state: Spotify.PlaybackState | null) => {
-			if (!state) return;
+			if (!state) return setActiveDevice(null);
 			const { duration, position, paused, shuffle, repeat_mode, track_window, context } = state;
 			const { current_track } = track_window;
 
@@ -408,6 +408,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 							{connectTip && (
 								<ConnectDevices
 									closeTip={() => setConnectTip(false)}
+									onSwitch={refreshSoon}
 								/>
 							)}
 							<ControlButton

@@ -1,5 +1,13 @@
 // Playlist page, Liked Songs and "• • •" menu checks from the pages review.
-import { me } from "../data.mjs";
+import { me, playlist, track2 } from "../data.mjs";
+
+// How Spotify lists a local file in a playlist: no id, so the app leaves it out.
+const local = (n) => ({ item: { id: null, uri: `spotify:local:Me:Tape:Song+${n}:180`, name: `Local Song ${n}`, type: "track", is_local: true, duration_ms: 180000, explicit: false, album: { uri: null, name: "Tape", images: [] }, artists: [{ uri: null, name: "Me" }] } });
+
+export const fixtures = {
+  "/v1/playlists/plocal": { ...playlist, id: "plocal", name: "Tape Mix", uri: "spotify:playlist:plocal", description: "", items: { items: [local(1), local(2), { item: null }], next: "https://api.spotify.com/v1/playlists/plocal/items?offset=3" } },
+  "/v1/playlists/plocal/items": { items: [{ item: track2 }], next: null },
+};
 
 export const checks = [
   // Until /me answers (after an error it never does) the app can't tell your playlist from one you follow: no heart, which
@@ -55,4 +63,6 @@ export const checks = [
     await p.getByRole("heading", { name: "Kept Name" }).waitFor({ timeout: 3000 });
     if (await dialog.isVisible()) throw new Error("dialog stayed open after saving");
   }],
+  // A first page with nothing to list (local files) still leads on to the next one.
+  ["playlist-local-files", "/playlist/plocal", (p) => p.getByText("Track Two").waitFor({ timeout: 5000 })],
 ];

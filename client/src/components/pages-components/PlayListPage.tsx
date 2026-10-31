@@ -132,6 +132,8 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
                         <TrackList ref={lastRef} tracks={tracks} contextUri={uri}/> :
                         <p style={{color: '#fff', padding: '16px 0'}}>Spotify only shows apps the tracks of playlists you own or collaborate on. Press play to listen to this one.</p>
                     }
+                    {/* Paging starts from the last row, so when the first page had none to list (local files, episodes), from here. */}
+                    {tracks.length === 0 && <div ref={lastRef}/>}
                 </div>
             </div>
             {editing &&

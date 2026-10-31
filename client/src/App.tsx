@@ -10,7 +10,7 @@ import PromptButton from './components/featured-components/PromptButton'
 import Player, { type PlayerHandle } from './components/footer-components/Player'
 import PageContent from './components/featured-components/PageContent'
 import Loading from './components/featured-components/Loading'
-import {UserContext, MessageContext, PlayContext, NowPlayingContext, LibraryContext, LayoutContext, type Library, type LibraryKind, type NowPlaying, type RightPanel} from './utilities/context'
+import {UserContext, MessageContext, PlayContext, NowPlayingContext, PlaybackClockContext, SeekContext, LibraryContext, LayoutContext, type Library, type LibraryKind, type NowPlaying, type PlaybackClock, type RightPanel} from './utilities/context'
 import { allPages, spotify } from './utilities/spotify'
 import { retried } from './utilities/retry'
 import { refreshSession } from './utilities/session'
@@ -54,6 +54,7 @@ function App() {
   const [userInfo, setuserInfo] = useState<User | null>(null)
   const [libraryData, setLibraryData] = useState<Omit<Library, 'refresh'>>({playlists: [], albums: [], artists: [], recentlyPlayed: [], likedTotal: null, failed: []})
   const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false, deviceId: null, track: null, device: null})
+  const [clock, setClock] = useState<PlaybackClock>({uri: null, play: false, progress: 0, at: 0, total_time: 0})
   const [rightPanel, setRightPanelState] = useState(storedPanel)
 
   const [status, setStatus] = useState(false) 
@@ -138,6 +139,9 @@ function App() {
   const updatePlayer = useCallback(() => {
     playerRef.current?.updateState();
   }, [])
+  const seek = useCallback((ms: number) => {
+    playerRef.current?.seek(ms);
+  }, [])
 
   return (
     <div className="App">
@@ -151,18 +155,22 @@ function App() {
             <LibraryContext.Provider value={library}>
               <LayoutContext.Provider value={layout}>
                 <PlayContext.Provider value={updatePlayer}>
-                  <NowPlayingContext.Provider value={nowPlaying}>
-                    <TopBar />
-                    <YourLibrary />
-                    {/* Focusable, for focus to land on when the right panel closes. */}
-                    <main className='featured' tabIndex={-1}>
-                      <PageContent message={message} status={status} />
-                    </main>
-                    <RightSidebar />
-                    <Footer>
-                      <Player onNowPlaying={setNowPlaying} ref={playerRef}/>
-                    </Footer>
-                  </NowPlayingContext.Provider>
+                  <SeekContext.Provider value={seek}>
+                    <NowPlayingContext.Provider value={nowPlaying}>
+                      <PlaybackClockContext.Provider value={clock}>
+                        <TopBar />
+                        <YourLibrary />
+                        {/* Focusable, for focus to land on when the right panel closes. */}
+                        <main className='featured' tabIndex={-1}>
+                          <PageContent message={message} status={status} />
+                        </main>
+                        <RightSidebar />
+                        <Footer>
+                          <Player onNowPlaying={setNowPlaying} onClock={setClock} ref={playerRef}/>
+                        </Footer>
+                      </PlaybackClockContext.Provider>
+                    </NowPlayingContext.Provider>
+                  </SeekContext.Provider>
                 </PlayContext.Provider>
               </LayoutContext.Provider>
             </LibraryContext.Provider>

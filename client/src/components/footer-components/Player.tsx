@@ -19,11 +19,11 @@ import AddComment from "./AddComment";
 
 import { playerCommand, spotify } from "../../utilities/spotify";
 import { accessToken } from "../../utilities/session";
-import formatTime from "../../utilities/time";
-import { LayoutContext, MessageContext, type NowPlaying as NowPlayingState, type PlayingTrack } from "../../utilities/context";
+import formatTime, { positionAt } from "../../utilities/time";
+import { LayoutContext, MessageContext, type NowPlaying as NowPlayingState, type PlaybackClock, type PlayingTrack } from "../../utilities/context";
 import "../../styles/player.css";
 
-export type PlayerHandle = { updateState: () => void };
+export type PlayerHandle = { updateState: () => void; seek: (ms: number) => void };
 
 type PlaybackResponse = {
 	repeat_state: Repeat;
@@ -43,21 +43,16 @@ const nextRepeat: Record<Repeat, Repeat> = { off: "context", context: "track", t
 // The SDK numbers them: 0 off, 1 repeat the context, 2 repeat this track (the @types comment has 1 and 2 swapped).
 const sdkRepeat: Repeat[] = ["off", "context", "track"];
 
-// Where playback is at `now`: the position measured at `at`, plus the time since while playing, never past the end.
-// Counting time rather than timer ticks keeps it right in background tabs, whose timers browsers slow down.
-const positionAt = ({ play, progress, at, total_time }: PlaybackState, now: number) =>
-	Math.min(progress + (play ? Math.max(0, now - at) : 0), total_time);
-
 // The id in a spotify:album:… or spotify:artist:… URI; null for local files and episodes, which have neither.
 const idOf = (uri: string | null | undefined, kind: "album" | "artist") => (uri?.startsWith(`spotify:${kind}:`) ? (uri.split(":")[2] ?? null) : null);
 
-type Props = { onNowPlaying: (nowPlaying: NowPlayingState) => void; ref?: Ref<PlayerHandle> };
+type Props = { onNowPlaying: (nowPlaying: NowPlayingState) => void; onClock: (clock: PlaybackClock) => void; ref?: Ref<PlayerHandle> };
 
 // The Now playing view's "Add a comment" opens the player's own Add Comment dialog, which knows where the song is at.
 const ADD_COMMENT = "shoutify:add-comment";
 export const openAddComment = () => window.dispatchEvent(new Event(ADD_COMMENT));
 
-const Player = ({ onNowPlaying, ref }: Props) => {
+const Player = ({ onNowPlaying, onClock, ref }: Props) => {
 	const setMessage = useContext(MessageContext);
 	const { rightPanel, setRightPanel, wide } = useContext(LayoutContext);
 	const [playbackState, setPlaybackState] = useState<PlaybackState>({
@@ -116,6 +111,14 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	useEffect(() => {
 		onNowPlaying({ trackUri: playInfo.uri || null, contextUri, playing: playbackState.play, deviceId, device: activeDevice, track });
 	}, [playInfo.uri, contextUri, playbackState.play, deviceId, activeDevice, track, onNowPlaying]);
+
+	// Pages that follow playback get the clock when it changes and count on from it themselves, so the app isn't
+	// re-rendered on every tick.
+	useEffect(() => {
+		const { play, progress, at, total_time } = playbackState;
+		onClock({ uri: playInfo.uri || null, play, progress, at, total_time });
+		// eslint-disable-next-line
+	}, [playInfo.uri, playbackState.play, playbackState.progress, playbackState.at, playbackState.total_time, onClock]);
 
 	// Like Spotify's tab title: what's playing, while it plays.
 	useEffect(() => {
@@ -244,8 +247,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		sdkPlayer.connect().then((connected) => connected || setMessage("Couldn't start the in-browser player. Use Devices to play elsewhere."));
 	};
 
-	// Play buttons elsewhere in the app call this after a command.
-	useImperativeHandle(ref, () => ({ updateState: () => refreshSoon() }));
+	// Play buttons elsewhere in the app call updateState after a command; the comment page seeks.
+	useImperativeHandle(ref, () => ({ updateState: () => refreshSoon(), seek }));
 
 	// Asks the Web API rather than the SDK, which only reports playback on this browser's own device.
 	const apiUpdate = () => {
@@ -327,10 +330,11 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	const skipPrev = () => command("/me/player/previous", "POST");
 
+	const seek = (time: number) => command(`/me/player/seek?position_ms=${time}`, "PUT", (state) => ({ ...state, progress: time, at: Date.now() }));
+
 	const seekPlayback = (ratio: number) => {
-		const time = Math.round(ratio * playbackState.total_time);
 		setScrubPb(null);
-		return command(`/me/player/seek?position_ms=${time}`, "PUT", (state) => ({ ...state, progress: time, at: Date.now() }));
+		return seek(Math.round(ratio * playbackState.total_time));
 	};
 
 	const position = positionAt(playbackState, now);

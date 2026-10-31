@@ -1,11 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import formatTime, { addedAgo, totalLength } from "./time.ts";
+import formatTime, { addedAgo, positionAt, totalLength } from "./time.ts";
 
 test("formats milliseconds as m:ss without rounding up to :60", () => {
   assert.equal(formatTime(0), "0:00");
   assert.equal(formatTime(61000), "1:01");
   assert.equal(formatTime(59999), "0:59");
+});
+
+test("counts on from the last reading while playing, never past the end", () => {
+  const clock = { play: true, progress: 1000, at: 5000, total_time: 3000 };
+  assert.equal(positionAt(clock, 5500), 1500);
+  assert.equal(positionAt(clock, 4000), 1000); // a tick from before the reading doesn't go back
+  assert.equal(positionAt(clock, 9000), 3000);
+  assert.equal(positionAt({ ...clock, play: false }, 9000), 1000);
 });
 
 test("says how long ago a song was added, then switches to the date", () => {

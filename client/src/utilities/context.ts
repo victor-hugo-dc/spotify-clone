@@ -28,6 +28,13 @@ export type NowPlaying = {
 };
 export const NowPlayingContext = createContext<NowPlaying>({ trackUri: null, contextUri: null, playing: false, deviceId: null, track: null, device: null });
 
+// The player's clock, for pages that follow playback: the loaded track, and its position (ms) as read at `at`
+// (Date.now()), moving on while `play` (positionAt() in time.ts works it out). It changes with playback, not every tick.
+export type PlaybackClock = { uri: string | null; play: boolean; progress: number; at: number; total_time: number };
+export const PlaybackClockContext = createContext<PlaybackClock>({ uri: null, play: false, progress: 0, at: 0, total_time: 0 });
+// Moves the loaded track to a position (ms), as the player's seek bar does.
+export const SeekContext = createContext<(ms: number) => void>(() => {});
+
 // Which view the right panel shows, or null when it's closed. App keeps it, remembered per browser. `wide`: the window
 // has room for the panel (1100px and up); when it hasn't, the panel and every button that opens it are hidden.
 export type RightPanel = "now-playing" | "queue" | "friends" | null;

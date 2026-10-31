@@ -1,8 +1,15 @@
+import type { PlaybackClock } from './context.ts'
+
 // 61000 -> "1:01"
 export default function formatTime(ms: number) {
     const s = Math.floor(ms / 1000)
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
+
+// Where playback is at `now`: the position measured at `at`, plus the time since while playing, never past the end.
+// Counting time rather than timer ticks keeps it right in background tabs, whose timers browsers slow down.
+export const positionAt = ({play, progress, at, total_time}: Omit<PlaybackClock, 'uri'>, now: number) =>
+    Math.min(progress + (play ? Math.max(0, now - at) : 0), total_time)
 
 // Spotify's "Date added": "14 hours ago" up to a month back, then "Sep 3, 2025".
 export function addedAgo(iso: string, now = Date.now()) {

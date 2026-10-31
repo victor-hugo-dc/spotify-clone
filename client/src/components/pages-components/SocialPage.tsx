@@ -7,10 +7,10 @@ import { api } from "../../utilities/api";
 export default function SocialPage() {
     const [feed,setFeed] = useState<SongComment[] | null>(null);
 
-    // Newest comments first.
+    // The server sends the newest 100, newest first.
     useEffect(() => {
       api<{ comments: SongComment[] }>("/comments/all")
-        .then((data) => setFeed(data.comments.reverse()))
+        .then((data) => setFeed(data.comments))
         .catch((error) => console.log(error))
     },[])
 

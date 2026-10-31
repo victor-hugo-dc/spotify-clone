@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, isPosition, isText } from "../db.ts";
+import { db, isPosition, isSongId, isText } from "../db.ts";
 import type { Author } from "../user.ts";
 
 const router = Router();
@@ -13,7 +13,7 @@ router.get("/song/:song", (req, res) => {
 
 router.post("/add", (req, res) => {
   const { songID, annotatedText, noteBody, timestamp } = req.body ?? {};
-  if (!isText(songID, 100) || !isText(annotatedText, 500) || !isText(noteBody, 2000) || !isPosition(timestamp)) {
+  if (!isSongId(songID) || !isText(annotatedText, 500) || !isText(noteBody, 2000) || !isPosition(timestamp)) {
     res.sendStatus(400);
     return;
   }

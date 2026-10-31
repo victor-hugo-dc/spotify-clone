@@ -60,8 +60,9 @@ await check("login-error", anon, "/#error=state_mismatch", async (page) => {
   if (new URL(page.url()).hash) throw new Error("error stayed in the URL");
 });
 
-// Logged in, with Spotify mocked.
-const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+// Logged in, with Spotify mocked, at the size of the reference screenshot of Spotify's web player.
+const viewport = { width: 1512, height: 982 };
+const ctx = await browser.newContext({ viewport });
 const unmocked = new Set();
 const searches = [];
 const sent = [];
@@ -78,7 +79,7 @@ await ctx.route("https://api.spotify.com/**", (r) => {
     const types = url.searchParams.get("type").split(",");
     return r.fulfill({ json: Object.fromEntries(types.map((type) => [`${type}s`, { items: (searchItemsOverride ?? searchItems)[type] ?? [], next: null }])) });
   }
-  if (r.request().method() === "POST" && url.pathname === "/v1/me/playlists") return r.fulfill({ status: 201, json: { ...playlist, id: "p3", name: "My Playlist #2", uri: "spotify:playlist:p3" } });
+  if (r.request().method() === "POST" && url.pathname === "/v1/me/playlists") return r.fulfill({ status: 201, json: { ...playlist, id: "p3", name: "My Playlist #9", uri: "spotify:playlist:p3" } });
   if (r.request().method() !== "GET") { sent.push(`${r.request().method()} ${url.pathname}${url.search}`); return r.fulfill({ status: 200, body: "" }); }
   if (r.request().method() !== "GET") return r.fulfill({ status: 200, body: "" });
   if (url.pathname === "/v1/albums/missing") return r.fulfill({ status: 404, json: { error: { status: 404, message: "Resource not found" } } });
@@ -141,7 +142,7 @@ for (const [name, path, after] of [
   }],
   ["scroll-race", "/", async (p) => {
     await p.getByRole("button", { name: "Create Playlist" }).click();
-    await p.getByRole("heading", { name: "My Playlist #2" }).waitFor({ timeout: 3000 });
+    await p.getByRole("heading", { name: "My Playlist #9" }).waitFor({ timeout: 3000 });
     let requested, release;
     const asked = new Promise((resolve) => (requested = resolve));
     const held = new Promise((resolve) => (release = resolve));
@@ -151,12 +152,12 @@ for (const [name, path, after] of [
       await r.fulfill({ json: page2 }).catch(() => {});
     });
     // Same /playlist/:id page, so the same component: p1, then back to p3 while p1's page 2 is pending.
-    await p.locator(".other-list").getByText("Mix").click();
+    await p.locator(".other-list").getByText("Mix", { exact: true }).click();
     await p.getByText("Listed 29").waitFor({ timeout: 5000 });
     await p.locator(".featured").evaluate((el) => el.scrollTo(0, el.scrollHeight));
     await asked;
     await p.getByRole("button", { name: "Go back" }).click();
-    await p.getByRole("heading", { name: "My Playlist #2" }).waitFor({ timeout: 3000 });
+    await p.getByRole("heading", { name: "My Playlist #9" }).waitFor({ timeout: 3000 });
     release();
     await p.waitForTimeout(500);
     if (await p.getByText("Track Two").count()) throw new Error("the other playlist's page 2 landed in this one");
@@ -210,9 +211,13 @@ for (const [name, path, after] of [
     if (await p.getByRole("menu").count()) throw new Error("menu did not close on Escape");
   }],
   ["create-playlist", "/", async (p) => {
+    const created = p.waitForRequest((r) => r.method() === "POST" && r.url().endsWith("/v1/me/playlists"));
     await p.getByRole("button", { name: "Create Playlist" }).click();
+    // Numbered after the playlists already there, as Spotify's apps do.
+    const name = (await created).postDataJSON().name;
+    if (name !== `My Playlist #${fixtures["/v1/me/playlists"].items.length + 1}`) throw new Error(`new playlist named "${name}"`);
     await p.waitForURL("**/playlist/p3");
-    await p.getByRole("heading", { name: "My Playlist #2" }).waitFor({ timeout: 3000 });
+    await p.getByRole("heading", { name: "My Playlist #9" }).waitFor({ timeout: 3000 });
   }],
   ["hearts", "/album/al1", async (p) => {
     await p.getByRole("button", { name: "Save to Your Library" }).click();
@@ -378,7 +383,7 @@ for (const [name, path, after] of areas.flatMap((area) => area.checks ?? [])) {
 }
 
 // Fresh session: nothing active anywhere, and a fake Web Playback SDK that becomes ready as device "dev-1".
-const fresh = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+const fresh = await browser.newContext({ viewport });
 const commands = [];
 await fresh.addCookies(session);
 await fresh.route(/^https:\/\/(i|t|misc)\.scdn\.co\//, coverRoute);

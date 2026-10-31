@@ -15,13 +15,14 @@ import PromptButton from './components/featured-components/PromptButton'
 import Player, { type PlayerHandle } from './components/footer-components/Player'
 import Featured from './components/featured-components/Featured'
 import Loading from './components/featured-components/Loading'
-import {UserContext, TokenContext, MessageContext, PlayContext, NowPlayingContext, type NowPlaying} from './utilities/context'
+import {UserContext, MessageContext, PlayContext, NowPlayingContext, type NowPlaying} from './utilities/context'
 import { allPages, spotify } from './utilities/spotify'
+import { refreshSession } from './utilities/session'
 import type { Playlist, User } from './utilities/types'
 
 function App() {
   const [loading, setLoading] = useState(true)
-  const [token, setToken] = useState<string | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false)
   const [loginError] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('error'))
   const [userInfo, setuserInfo] = useState<User | null>(null)
   const [playlists, setPlaylists] = useState<Playlist[]>([])
@@ -33,51 +34,48 @@ function App() {
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const navigate = useNavigate()
 
-  // The server keeps the refresh token in an httpOnly cookie and hands out access tokens, which last an hour.
+  // Logged in if the server can trade its refresh cookie for a token. A server or network hiccup isn't a logout: keep
+  // showing the loading screen and try again.
   useEffect(() => {
     if (loginError) window.history.replaceState(null, '', '/')
     let timer: ReturnType<typeof setTimeout>
-    const refresh = () => {
-      fetch('/api/token')
-        .then(async (response) => {
-          if (response.status === 401) return setToken(null)
-          if (!response.ok) throw new Error(`token refresh failed (${response.status})`)
-          const { access_token, expires_in }: { access_token: string, expires_in: number } = await response.json()
-          setToken(access_token)
-          timer = setTimeout(refresh, (expires_in - 60) * 1000)
+    const check = () => {
+      refreshSession()
+        .then((session) => {
+          setLoggedIn(session !== null)
+          setLoading(false)
         })
         .catch((error) => {
           console.log(error)
-          timer = setTimeout(refresh, 30 * 1000)
+          timer = setTimeout(check, 30 * 1000)
         })
-        .finally(() => setLoading(false))
     }
-    refresh()
+    check()
     return () => clearTimeout(timer)
   // eslint-disable-next-line
   }, [])
 
   useEffect(() => {
-    if (token) {
-      spotify<User>('/me', token)
+    if (loggedIn) {
+      spotify<User>('/me')
         .then(setuserInfo)
         .catch(error => console.log(error))
       refreshPlaylist()
     }
   // eslint-disable-next-line
-  }, [token])
+  }, [loggedIn])
 
 
   // All of them, not just Spotify's first page of 20.
   const refreshPlaylist = () =>{
-    allPages<Playlist>('/me/playlists?limit=50', token)
+    allPages<Playlist>('/me/playlists?limit=50')
       .then(setPlaylists)
       .catch(error => console.log(error));
   }
 
   // New playlists get Spotify's default name, numbered the way its apps do.
   const createPlaylist = () => {
-    spotify<Playlist>('/me/playlists', token, {method: 'POST', body: {name: `My Playlist #${playlists.length + 1}`}})
+    spotify<Playlist>('/me/playlists', {method: 'POST', body: {name: `My Playlist #${playlists.length + 1}`}})
       .then((playlist) => {
         refreshPlaylist()
         navigate(`/playlist/${playlist.id}`)
@@ -104,10 +102,9 @@ function App() {
     <div className="App">
       {loading? 
         <Loading type='app'/> :
-        !token ?
+        !loggedIn ?
         <Login error={loginError} /> :
         <MessageContext.Provider value={setStatusMessage}>
-          <TokenContext.Provider value={token}>
               <Sidebar>
                 <Logo />
                 <NavList>
@@ -134,9 +131,8 @@ function App() {
               </PlayContext.Provider>
 
               <Footer>
-                <Player token={token} onNowPlaying={setNowPlaying} ref={playerRef}/>
+                <Player onNowPlaying={setNowPlaying} ref={playerRef}/>
               </Footer>
-          </TokenContext.Provider>
         </MessageContext.Provider>
       }
     </div>

@@ -1,17 +1,22 @@
+import { accessToken, refreshSession } from "./session.ts";
+
 // Calls the Spotify Web API as the logged-in user. `path` is relative to /v1;
 // full URLs (the `next` links of paged results) are used as they are.
 export async function spotify<T = undefined>(
   path: string,
-  token: string | null,
   { method = "GET", body, signal }: { method?: string; body?: unknown; signal?: AbortSignal } = {},
 ): Promise<T> {
   try {
-    const response = await fetch(path.startsWith("https://") ? path : `https://api.spotify.com/v1${path}`, {
-      method,
-      signal,
-      headers: { Authorization: `Bearer ${token}`, ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    const send = async (token: string | null) =>
+      fetch(path.startsWith("https://") ? path : `https://api.spotify.com/v1${path}`, {
+        method,
+        signal,
+        headers: { Authorization: `Bearer ${token}`, ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    let response = await send(await accessToken());
+    // The token can be revoked or expire early; try once more with a fresh one.
+    if (response.status === 401) response = await send((await refreshSession())?.token ?? null);
     const data = parseJson(await response.text());
     if (!response.ok) {
       const message = data?.error?.message ?? (response.status >= 500 ? `Spotify is having trouble (${response.status}), try again` : `Spotify answered ${response.status}`);
@@ -26,12 +31,12 @@ export async function spotify<T = undefined>(
 }
 
 // Player commands answer 404 when no device is active; then they go to `deviceId` (this browser's player) instead.
-export async function playerCommand(path: string, token: string | null, deviceId: string | null, init: { method: string; body?: unknown }) {
+export async function playerCommand(path: string, deviceId: string | null, init: { method: string; body?: unknown }) {
   try {
-    return await spotify(path, token, init);
+    return await spotify(path, init);
   } catch (error) {
     if ((error as { status?: number }).status !== 404 || !deviceId) throw error;
-    return spotify(`${path}${path.includes("?") ? "&" : "?"}device_id=${deviceId}`, token, init);
+    return spotify(`${path}${path.includes("?") ? "&" : "?"}device_id=${deviceId}`, init);
   }
 }
 
@@ -45,10 +50,10 @@ function parseJson(text: string) {
 }
 
 // Every item of a paged list, following `next` links. `unwrap` digs the page out of responses that nest it.
-export async function allPages<T>(path: string, token: string | null, unwrap: (data: any) => { items: (T | null)[]; next: string | null } = (data) => data) {
+export async function allPages<T>(path: string, unwrap: (data: any) => { items: (T | null)[]; next: string | null } = (data) => data) {
   const items: T[] = [];
   for (let next: string | null = path; next; ) {
-    const page = unwrap(await spotify(next, token));
+    const page = unwrap(await spotify(next));
     items.push(...page.items.filter((item): item is T => item !== null));
     next = page.next;
   }

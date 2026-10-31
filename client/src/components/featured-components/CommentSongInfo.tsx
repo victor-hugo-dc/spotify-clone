@@ -1,11 +1,9 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-import { TokenContext } from '../../utilities/context';
 import { spotify } from '../../utilities/spotify';
 import type { Track } from '../../utilities/types';
 
 export default function CommentSongInfo({songID}: {songID: string}) {
-    const token = useContext(TokenContext);
     const [songData, setSongData] = useState({
         artist: "",
         album: "",
@@ -14,14 +12,14 @@ export default function CommentSongInfo({songID}: {songID: string}) {
 
     useEffect(() => {
         const controller = new AbortController();
-        spotify<Track>(`/tracks/${songID}`, token, { signal: controller.signal })
+        spotify<Track>(`/tracks/${songID}`, { signal: controller.signal })
             .then((track) => {
                 const images = track.album?.images ?? [];
                 setSongData({artist: track.artists[0]?.name ?? "", album: images[images.length - 1]?.url ?? "", track: track.name});
             })
             .catch((error) => console.log(error))
         return () => controller.abort()
-    }, [songID, token])
+    }, [songID])
 
     return (
         <div className="spotify-track">

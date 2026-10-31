@@ -6,7 +6,7 @@ import { spotify } from "../../utilities/spotify";
 
 type Device = { id: string | null; name: string; is_active: boolean };
 
-const ConnectDevices = ({ token, closeTip }: { token: string | null; closeTip: () => void }) => {
+const ConnectDevices = ({ closeTip }: { closeTip: () => void }) => {
 	const [devices, setDevices] = useState<Device[]>([]);
 
 	useEffect(() => {
@@ -18,7 +18,7 @@ const ConnectDevices = ({ token, closeTip }: { token: string | null; closeTip: (
 		};
 
 		window.addEventListener("click", clickExit);
-		spotify<{ devices: Device[] }>("/me/player/devices", token, { signal: controller.signal })
+		spotify<{ devices: Device[] }>("/me/player/devices", { signal: controller.signal })
 			.then((response) => setDevices(response.devices))
 			.catch((error) => console.log(error));
 
@@ -31,7 +31,7 @@ const ConnectDevices = ({ token, closeTip }: { token: string | null; closeTip: (
 
 	const switchDevice = (e: MouseEvent<HTMLButtonElement>) => {
 		const id = e.currentTarget.dataset.id;
-		spotify("/me/player", token, { method: "PUT", body: { device_ids: [id] } })
+		spotify("/me/player", { method: "PUT", body: { device_ids: [id] } })
 			.then(() => closeTip())
 			.catch((error) => console.log(error));
 	};

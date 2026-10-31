@@ -10,7 +10,7 @@ import Loading from '../featured-components/Loading'
 
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import useLibrary from '../../utilities/hooks/useLibrary'
-import {TokenContext, MessageContext} from '../../utilities/context'
+import {MessageContext} from '../../utilities/context'
 import { spotify } from '../../utilities/spotify'
 import type { Album, Paging, Track } from '../../utilities/types'
 
@@ -20,7 +20,6 @@ export default function AlbumPage() {
     const { id = '' } = useParams()
     const [searchParams] = useSearchParams()
     const highlight = searchParams.get('highlight')
-    const token = useContext(TokenContext)
     const setMessage = useContext(MessageContext)
     const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
@@ -40,7 +39,7 @@ export default function AlbumPage() {
         setUri('')
         setLoading(true)
         const controller = new AbortController()
-        spotify<Album & {tracks: Paging<Track>}>(`/albums/${id}`, token, {signal: controller.signal})
+        spotify<Album & {tracks: Paging<Track>}>(`/albums/${id}`, {signal: controller.signal})
             .then(({album_type, name, artists, tracks, images, release_date, uri}) => {
                 setAlbumType(album_type)
                 setbannerInfo({...emptyBanner, name, user: artists, images, release_date})

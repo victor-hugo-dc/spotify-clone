@@ -8,7 +8,7 @@ import EditDetails from '../featured-components/EditDetails'
 import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
 
-import {TokenContext, MessageContext, UserContext} from '../../utilities/context'
+import {MessageContext, UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import useLibrary from '../../utilities/hooks/useLibrary'
 import { spotify } from '../../utilities/spotify'
@@ -22,7 +22,6 @@ const emptyBanner: BannerInfo = {name: '', user: [], primary_color: '#262626'}
 
 export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => void}) {
     const { id = '' } = useParams()
-    const token = useContext(TokenContext)
     const setMessage = useContext(MessageContext)
     const user = useContext(UserContext)
     const navigate = useNavigate()
@@ -47,7 +46,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
 
         const controller = new AbortController()
         // `items` only comes back for playlists the user owns or collaborates on.
-        spotify<Playlist & {items?: Paging<PlaylistEntry>}>(`/playlists/${id}`, token, {signal: controller.signal})
+        spotify<Playlist & {items?: Paging<PlaylistEntry>}>(`/playlists/${id}`, {signal: controller.signal})
             .then(({name, description, owner, followers, primary_color, items, images, uri, public: shared}) => {
                 setOwnerId(owner.id)
                 setIsPublic(shared === true)
@@ -70,7 +69,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
 
     // PUT /playlists/{id} changes the name, description or visibility; only the owner may.
     const changeDetails = (details: {name?: string, description?: string, public?: boolean}, done: string) => {
-        spotify(`/playlists/${id}`, token, {method: 'PUT', body: details})
+        spotify(`/playlists/${id}`, {method: 'PUT', body: details})
             .then(() => {
                 const {public: shared, ...text} = details
                 setbannerInfo((banner) => ({...banner, ...text}))
@@ -84,7 +83,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
     // Deleting your own playlist means removing it from your library, as Spotify's apps do.
     const deletePlaylist = () => {
         if (!window.confirm(`Delete "${bannerInfo.name}" from Your Library?`)) return
-        spotify(`/me/library?uris=${encodeURIComponent(uri)}`, token, {method: 'DELETE'})
+        spotify(`/me/library?uris=${encodeURIComponent(uri)}`, {method: 'DELETE'})
             .then(() => {
                 setMessage('Removed from Your Library')
                 refreshPlaylist()

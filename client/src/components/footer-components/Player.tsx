@@ -16,6 +16,7 @@ import ControlButton from "./ControlButton";
 import AddComment from "./AddComment";
 
 import { playerCommand, spotify } from "../../utilities/spotify";
+import { accessToken } from "../../utilities/session";
 import formatTime from "../../utilities/time";
 import { MessageContext, type NowPlaying as NowPlayingState } from "../../utilities/context";
 import type { Album, Track } from "../../utilities/types";
@@ -32,9 +33,9 @@ type PlaybackResponse = {
 	device: { volume_percent: number | null };
 };
 
-type Props = { token: string | null; onNowPlaying: (nowPlaying: NowPlayingState) => void; ref?: Ref<PlayerHandle> };
+type Props = { onNowPlaying: (nowPlaying: NowPlayingState) => void; ref?: Ref<PlayerHandle> };
 
-const Player = ({ token, onNowPlaying, ref }: Props) => {
+const Player = ({ onNowPlaying, ref }: Props) => {
 	const setMessage = useContext(MessageContext);
 	const [playbackState, setPlaybackState] = useState({
 		play: false,
@@ -101,9 +102,8 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 			name: "Spotify Clone Player",
 			// The SDK asks again whenever its token runs out, so hand it a fresh one each time.
 			getOAuthToken: (cb) => {
-				fetch("/api/token")
-					.then((response) => (response.ok ? response.json() : Promise.reject(new Error(`token refresh failed (${response.status})`))))
-					.then(({ access_token }) => cb(access_token))
+				accessToken()
+					.then((token) => token && cb(token))
 					.catch((error) => console.log(error));
 			},
 		});
@@ -144,8 +144,8 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 		// Ready: unless something else is already playing, make this browser the active device so play buttons just work.
 		sdkPlayer.addListener("ready", ({ device_id }) => {
 			setDeviceId(device_id);
-			spotify<PlaybackResponse | undefined>("/me/player", token)
-				.then((state) => state ?? spotify("/me/player", token, { method: "PUT", body: { device_ids: [device_id], play: false } }))
+			spotify<PlaybackResponse | undefined>("/me/player")
+				.then((state) => state ?? spotify("/me/player", { method: "PUT", body: { device_ids: [device_id], play: false } }))
 				.then(() => apiUpdate())
 				.catch((error) => setMessage(`ERROR: ${error.message}`));
 		});
@@ -173,7 +173,7 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 	const apiUpdate = () => {
 		clearTimeout(timerRef.current);
 
-		spotify<PlaybackResponse | undefined>("/me/player", token)
+		spotify<PlaybackResponse | undefined>("/me/player")
 			.then((state) => {
 				// 204: no device is active; the in-browser player takes over once it's ready.
 				if (!state) return;
@@ -219,7 +219,7 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 
 	// Player commands fail with Spotify's reason, e.g. no active device or no Premium.
 	const command = (path: string, method: "PUT" | "POST", onDone: () => void) => {
-		playerCommand(path, token, deviceId, { method })
+		playerCommand(path, deviceId, { method })
 			.then(onDone)
 			.catch((error) => setMessage(`ERROR: ${error.message}`));
 	};
@@ -355,7 +355,6 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 								{commentTip && (
 									<AddComment
 										closeTip={() => setCommentTip(false)}
-										token={token}
 									/>
 								)}
 								<ControlButton
@@ -387,7 +386,6 @@ const Player = ({ token, onNowPlaying, ref }: Props) => {
 						<span className="connect-devices-wrapper">
 							{connectTip && (
 								<ConnectDevices
-									token={token}
 									closeTip={() => setConnectTip(false)}
 								/>
 							)}

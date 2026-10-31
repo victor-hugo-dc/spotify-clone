@@ -5,7 +5,7 @@ import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
 import PlayListFunctions from '../featured-components/PlayListFunctions'
 import TrackList from '../featured-components/TrackList'
 
-import {TokenContext, UserContext} from '../../utilities/context'
+import {UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import { spotify } from '../../utilities/spotify'
 import type { Paging, Track } from '../../utilities/types'
@@ -13,7 +13,6 @@ import type { Paging, Track } from '../../utilities/types'
 const toTrack = (saved: {track: Track}) => saved.track
 
 const LikePage = () => {
-    const token = useContext(TokenContext);
     const user = useContext(UserContext);
 
 
@@ -28,7 +27,7 @@ const LikePage = () => {
 
     useEffect(() => {
         const controller = new AbortController()
-        spotify<Paging<{track: Track}>>('/me/tracks?limit=50', token, {signal: controller.signal})
+        spotify<Paging<{track: Track}>>('/me/tracks?limit=50', {signal: controller.signal})
             .then((data) => {
                 setTracks(data.items.map(toTrack))
                 setNext(data.next)
@@ -36,7 +35,7 @@ const LikePage = () => {
             .catch((error) => console.log(error))
         return () => controller.abort()
     // eslint-disable-next-line
-    }, [token])
+    }, [])
 
     return (
         <div className='listPage' style={{display: `${tracks.length===0? 'none':'block'}`}}>

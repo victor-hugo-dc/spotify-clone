@@ -9,7 +9,7 @@ import CollectionRow from '../featured-components/CollectionRow'
 import Loading from '../featured-components/Loading'
 
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
-import {UserContext, TokenContext, MessageContext} from '../../utilities/context'
+import {UserContext, MessageContext} from '../../utilities/context'
 import { spotify } from '../../utilities/spotify'
 import type { Paging, Playlist } from '../../utilities/types'
 
@@ -19,7 +19,6 @@ const emptyBanner: BannerInfo = {name: '', user: [], primary_color: 'rgb(83, 83,
 export default function UserPage() {
     const { id = '' } = useParams()
     const user = useContext(UserContext)
-    const token = useContext(TokenContext)
     const setStatusMessage = useContext(MessageContext)
     const [loading, setLoading] = useState(true)
 
@@ -33,7 +32,7 @@ export default function UserPage() {
         setLoading(true)
 
         const controller = new AbortController()
-        spotify<Paging<Playlist>>('/me/playlists', token, {signal: controller.signal})
+        spotify<Paging<Playlist>>('/me/playlists', {signal: controller.signal})
             .then(({items, total, next}) => {
                 setbannerInfo({...emptyBanner, name: user.display_name ?? user.id, images: user.images, total})
                 setplayLists(items)

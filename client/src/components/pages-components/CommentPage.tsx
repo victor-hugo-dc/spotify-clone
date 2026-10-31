@@ -1,15 +1,13 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import PageBanner, { type BannerInfo } from '../featured-components/PageBanner';
 import Comment from '../featured-components/Comment';
-import { TokenContext } from '../../utilities/context';
 import { spotify } from '../../utilities/spotify';
 import { api } from '../../utilities/api';
 import type { SongComment, Track } from '../../utilities/types';
 
 export default function CommentPage() {
     const { id = '' } = useParams();
-    const token = useContext(TokenContext);
     const [feed,setFeed] = useState<SongComment[] | null>(null);
     const [albumType, setAlbumType] = useState('');
 
@@ -21,7 +19,7 @@ export default function CommentPage() {
 
     useEffect(() => {
         const controller = new AbortController();
-        spotify<Track>(`/tracks/${id}`, token, { signal: controller.signal })
+        spotify<Track>(`/tracks/${id}`, { signal: controller.signal })
             .then(({album, name, artists}) => {
                 if (album) {
                     setAlbumType(album.album_type)
@@ -36,7 +34,7 @@ export default function CommentPage() {
             })
             .catch((error) => console.log(error))
         return () => controller.abort()
-    }, [id, token])
+    }, [id])
 
     // In song order.
     useEffect(() => {

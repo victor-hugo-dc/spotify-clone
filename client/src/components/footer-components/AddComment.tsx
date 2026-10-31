@@ -5,9 +5,9 @@ import { spotify } from "../../utilities/spotify";
 import { api } from "../../utilities/api";
 import type { Track } from "../../utilities/types";
 
-type Props = { closeTip: () => void; token: string | null; annotation?: boolean; text?: string };
+type Props = { closeTip: () => void; annotation?: boolean; text?: string };
 
-const AddComment = ({ closeTip, token, annotation = false, text = ''}: Props) => {
+const AddComment = ({ closeTip, annotation = false, text = ''}: Props) => {
 	const [songInfo, setSongInfo] = useState({
 		songId: "",
 		timestamp: 0
@@ -21,12 +21,12 @@ const AddComment = ({ closeTip, token, annotation = false, text = ''}: Props) =>
 	useEffect(() => {
 		const controller = new AbortController();
 
-		spotify<{ progress_ms: number; item: Track | null } | undefined>("/me/player/currently-playing", token, { signal: controller.signal })
+		spotify<{ progress_ms: number; item: Track | null } | undefined>("/me/player/currently-playing", { signal: controller.signal })
 			.then((playing) => playing?.item && setSongInfo({ songId: playing.item.id, timestamp: playing.progress_ms }))
 			.catch((error) => console.log(error));
 
 		return () => controller.abort();
-	}, [token]);
+	}, []);
 
 	const save = (path: string, data: object, done: string) => {
 		api(path, data)

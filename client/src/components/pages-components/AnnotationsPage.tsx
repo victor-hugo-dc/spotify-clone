@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { MessageContext, TokenContext } from "../../utilities/context";
+import { MessageContext } from "../../utilities/context";
 import { spotify } from "../../utilities/spotify";
 import { api } from "../../utilities/api";
 import LyricsContainer from "../featured-components/LyricsContainer";
@@ -9,7 +9,6 @@ import PageTitle from "../featured-components/PageTitle";
 import type { SongAnnotation, Track } from "../../utilities/types";
 
 export default function AnnotationsPage() {
-  const token = useContext(TokenContext);
   const setMessage = useContext(MessageContext);
   const [annotatedText, setAnnotatedText] = useState("");
   const [annotationTip, setAnnotationTip] = useState(false);
@@ -18,12 +17,12 @@ export default function AnnotationsPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    spotify<{ item: Track | null } | undefined>("/me/player/currently-playing", token, { signal: controller.signal })
+    spotify<{ item: Track | null } | undefined>("/me/player/currently-playing", { signal: controller.signal })
       .then((playing) => playing?.item ? setId(playing.item.id) : setMessage("Play a song to see and add its annotations"))
       .catch((error) => setMessage(error.message));
     return () => controller.abort();
     // eslint-disable-next-line
-  }, [token]);
+  }, []);
 
   // Newest annotations first.
   useEffect(() => {
@@ -45,7 +44,6 @@ export default function AnnotationsPage() {
           {annotationTip && (
             <AddAnnotation
               closeTip={() => setAnnotationTip(false)}
-              token={token}
               annotatedText={annotatedText}
             />
           )}

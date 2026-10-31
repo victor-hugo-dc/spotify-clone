@@ -4,7 +4,7 @@ import {useParams} from 'react-router'
 
 import { spotify } from '../../utilities/spotify'
 import useLibrary from '../../utilities/hooks/useLibrary'
-import {TokenContext, MessageContext} from '../../utilities/context'
+import {MessageContext} from '../../utilities/context'
 import type { Album, Artist, Paging } from '../../utilities/types'
 
 import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
@@ -17,7 +17,6 @@ const emptyBanner: BannerInfo = {name: '', user: [], primary_color: 'rgb(83, 83,
 
 export default function ArtistPage() {
     const { id = '' } = useParams()
-    const token = useContext(TokenContext)
     const setMessage = useContext(MessageContext)
     const [loading, setLoading] = useState(true)
 
@@ -41,8 +40,8 @@ export default function ArtistPage() {
         const controller = new AbortController()
         const { signal } = controller
 
-        const albums = (group: string) => spotify<Paging<Album>>(`/artists/${id}/albums?include_groups=${group}`, token, {signal})
-        Promise.all([spotify<Artist>(`/artists/${id}`, token, {signal}), albums('album'), albums('single'), albums('appears_on'), albums('compilation')])
+        const albums = (group: string) => spotify<Paging<Album>>(`/artists/${id}/albums?include_groups=${group}`, {signal})
+        Promise.all([spotify<Artist>(`/artists/${id}`, {signal}), albums('album'), albums('single'), albums('appears_on'), albums('compilation')])
             .then(([artistData, albumData, singleData, appearData, compilationData]) => {
                 const {name, images, uri} = artistData
                 setbannerInfo({...emptyBanner, name, images})

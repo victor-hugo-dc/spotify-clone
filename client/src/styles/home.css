@@ -1,1 +1,146 @@
-  /* The home page's own rules. Its shelves use the shared rows in index.css and the cards in cards.css. */
+  /* Home: the filter chips, the shortcut grid over a wash of colour, and the shelves (CollectionRow oneRow, whose cards
+     and rows are in cards.css and index.css). */
+  .home {
+    container: home / inline-size;
+    padding-top: 16px;
+    padding-bottom: 32px;
+  }
+
+  /* The cover colour of the shortcut you point at (or the first), darkened and fading into the panel; grey until known. */
+  .home-wash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 332px;
+    z-index: -1;
+    background-color: #535353;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), var(--background-base));
+    transition: background-color 0.6s ease;
+  }
+
+  .home-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .home-filter {
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 500px;
+    background: hsla(0, 0%, 100%, 0.07);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .home-filter:hover {
+    background: hsla(0, 0%, 100%, 0.1);
+  }
+
+  .home-filter[aria-pressed="true"] {
+    background: #fff;
+    color: #000;
+  }
+
+  .home-shelves {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  /* Up to 8 shortcuts: 4 columns when the page is wide, 2 when it's narrow. */
+  .shortcuts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  @container home (width >= 700px) {
+    .shortcuts {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .shortcut {
+    position: relative;
+    height: 48px;
+    border-radius: 4px;
+    background: hsla(0, 0%, 100%, 0.07);
+    transition: background-color 0.3s;
+  }
+
+  .shortcut:hover,
+  .shortcut:focus-within {
+    background: hsla(0, 0%, 100%, 0.2);
+  }
+
+  .shortcut-link {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    border-radius: inherit;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .shortcut-cover {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 4px 0 0 4px;
+    object-fit: cover;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .shortcut-name {
+    padding: 0 8px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 18px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  /* Room for the play button while it shows. */
+  .shortcut:hover .shortcut-name,
+  .shortcut:focus-within .shortcut-name,
+  .shortcut.playing .shortcut-name {
+    padding-right: 48px;
+  }
+
+  .shortcut-play {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--spotify-green);
+    color: #000;
+    box-shadow: 0 8px 8px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s, transform 33ms;
+    cursor: pointer;
+  }
+
+  .shortcut:hover .shortcut-play,
+  .shortcut:focus-within .shortcut-play,
+  .shortcut.playing .shortcut-play {
+    opacity: 1;
+  }
+
+  .shortcut-play:hover {
+    transform: scale(1.04);
+    background: var(--spotify-green-bright);
+  }

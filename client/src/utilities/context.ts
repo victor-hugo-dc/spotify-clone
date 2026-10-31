@@ -28,11 +28,13 @@ export type NowPlaying = {
 };
 export const NowPlayingContext = createContext<NowPlaying>({ trackUri: null, contextUri: null, playing: false, deviceId: null, track: null, device: null });
 
-// Which view the right panel shows, or null when it's closed. App keeps it, remembered per browser.
+// Which view the right panel shows, or null when it's closed. App keeps it, remembered per browser. `wide`: the window
+// has room for the panel (1100px and up); when it hasn't, the panel and every button that opens it are hidden.
 export type RightPanel = "now-playing" | "queue" | "friends" | null;
-export const LayoutContext = createContext<{ rightPanel: RightPanel; setRightPanel: (panel: RightPanel) => void }>({
+export const LayoutContext = createContext<{ rightPanel: RightPanel; setRightPanel: (panel: RightPanel) => void; wide: boolean }>({
   rightPanel: null,
   setRightPanel: () => {},
+  wide: true,
 });
 
 // Your Library, loaded by App at login: every playlist, saved album and followed artist, the last 50 plays, and how many

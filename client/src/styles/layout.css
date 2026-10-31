@@ -52,19 +52,9 @@
     overflow-y: auto;
   }
 
-  /* Without a right panel the page takes its column, and the gap before it. */
+  /* Without a right panel (closed, or the window is under 1100px) the page takes its column, and the gap before it. */
   .App:not(:has(> .right-sidebar)) > .featured {
     grid-column: main-start / right-end;
-  }
-
-  @media (max-width: 1099px) {
-    .right-sidebar {
-      display: none;
-    }
-
-    .App > .featured {
-      grid-column: main-start / right-end;
-    }
   }
 
   /* The player bar, 8px below the panels; above them, so its popups can overlap the page. */

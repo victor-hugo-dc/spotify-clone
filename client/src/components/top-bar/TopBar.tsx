@@ -10,7 +10,7 @@ import { LayoutContext } from '../../utilities/context'
 
 // Spotify's top bar: the logo and history at the left, home and search in the middle, the account at the right.
 export default function TopBar() {
-    const { rightPanel, setRightPanel } = useContext(LayoutContext)
+    const { rightPanel, setRightPanel, wide } = useContext(LayoutContext)
     const friends = rightPanel === 'friends'
 
     return (
@@ -36,10 +36,12 @@ export default function TopBar() {
                 <NavLink to='/social' className='top-bar-button no-outline' aria-label="What's New" title="What's New">
                     <Icon name='Bell' width='20' height='20' />
                 </NavLink>
-                <button className={`top-bar-button no-outline${friends ? ' active' : ''}`} aria-label='Friend Activity' title='Friend Activity'
-                        aria-pressed={friends} onClick={() => setRightPanel(friends ? null : 'friends')}>
-                    <Icon name='Friends' width='20' height='20' />
-                </button>
+                {wide &&
+                    <button className={`top-bar-button no-outline${friends ? ' active' : ''}`} aria-label='Friend Activity' title='Friend Activity'
+                            aria-pressed={friends} onClick={() => setRightPanel(friends ? null : 'friends')}>
+                        <Icon name='Friends' width='20' height='20' />
+                    </button>
+                }
                 <UserInfo />
             </div>
         </header>

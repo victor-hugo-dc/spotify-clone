@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
+import React, {useState, useEffect, useRef, useCallback, useMemo, useSyncExternalStore} from 'react';
 // Before the components, so each area's own stylesheet (imported by its component) comes after the frame's.
 import './styles/layout.css'
 
@@ -28,6 +28,13 @@ function storedPanel(): RightPanel {
     // blocked: use the default
   }
   return 'now-playing'
+}
+
+// Below 1100px the right panel gives its room to the page.
+const wideQuery = window.matchMedia('(min-width: 1100px)')
+const onWideChange = (change: () => void) => {
+  wideQuery.addEventListener('change', change)
+  return () => wideQuery.removeEventListener('change', change)
 }
 
 // Your Library's lists, each loaded on its own: every page (not just Spotify's first 20); recently played has no more
@@ -121,7 +128,8 @@ function App() {
       // blocked: remembered until the page reloads
     }
   }, [])
-  const layout = useMemo(() => ({rightPanel, setRightPanel}), [rightPanel, setRightPanel])
+  const wide = useSyncExternalStore(onWideChange, () => wideQuery.matches)
+  const layout = useMemo(() => ({rightPanel, setRightPanel, wide}), [rightPanel, setRightPanel, wide])
 
 
   const playerRef = useRef<PlayerHandle>(null)

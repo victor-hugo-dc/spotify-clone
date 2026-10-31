@@ -7,7 +7,7 @@ export default function SocialPage() {
     const [feed,setFeed] = useState([]);
 
     useEffect(() => {
-      axios.get(process.env.REACT_APP_BACK_URI + "/comments/all")
+      axios.get("/api/comments/all")
       .then(response => {
         const data = response.data;
         console.log(data);

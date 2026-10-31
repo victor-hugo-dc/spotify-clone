@@ -19,7 +19,7 @@ import requestWithToken from "../../utilities/requestWithToken";
 import msTimeFormat from "../../utilities/utils";
 import putWithToken from "../../utilities/putWithToken";
 import { MessageContext } from "../../utilities/context";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 const Player = forwardRef(({ token }, ref) => {
 	const setMessage = useContext(MessageContext);
@@ -383,17 +383,17 @@ const Player = forwardRef(({ token }, ref) => {
 	};
 
 	// Redirects to the annotations page
-	const history = useHistory()
+	const navigate = useNavigate()
 	// annotations closes when you press it again
 	const routeChangeAnnotations = () => {
 	    const path = "/annotations";
 	    if (!closeAnnotations) {
 	      setCloseAnnotations(!closeAnnotations);
-	      history.push(path);
+	      navigate(path);
 	    } else {
 	      const path = "/";
 	      setCloseAnnotations(!closeAnnotations);
-	      history.push(path);
+	      navigate(path);
 	    }
 	  };
 

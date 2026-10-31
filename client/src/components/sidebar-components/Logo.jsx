@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 
 //Spotify icon logo with letter in svg format
 export default function Logo() {

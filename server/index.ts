@@ -3,14 +3,12 @@ import { randomBytes } from "node:crypto";
 import express from "express";
 import cookieParser from "cookie-parser";
 import type { CookieOptions } from "express";
-import cors from "cors";
 import commentRoute from "./routes/comments.ts";
 import noteRoute from "./routes/annotations.ts";
 
 const {
   CLIENT_ID = "",
   CLIENT_SECRET = "",
-  FRONT_URI = "",
   RE_URI = "",
   PORT = "4000",
 } = process.env;
@@ -18,11 +16,10 @@ const {
 const app = express();
 
 app.use(cookieParser());
-app.use(cors({ origin: FRONT_URI, credentials: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use("/comments", commentRoute);
-app.use("/annotations", noteRoute);
+app.use("/api/comments", commentRoute);
+app.use("/api/annotations", noteRoute);
 
 const stateKey = "spotify_auth_state";
 const refreshKey = "refresh_key";
@@ -35,10 +32,11 @@ const cookieOption: CookieOptions = {
 const scope =
   "user-read-private user-read-playback-state streaming user-modify-playback-state playlist-modify-public user-library-modify user-top-read user-read-currently-playing playlist-read-private user-follow-read user-read-recently-played playlist-modify-private user-follow-modify user-library-read user-read-email";
 
+// In production the server also hands out the built client; any non-API path is a client-side route.
 if (process.env.NODE_ENV === "production") {
-  const build = path.resolve(import.meta.dirname, "..", "client", "build");
-  app.use(express.static(build));
-  app.get("/{*splat}", (_req, res) => res.sendFile(path.join(build, "index.html")));
+  const dist = path.resolve(import.meta.dirname, "..", "dist");
+  app.use(express.static(dist));
+  app.get(/^\/(?!api\/)/, (_req, res) => res.sendFile(path.join(dist, "index.html")));
 }
 
 type TokenResponse = { access_token: string; refresh_token?: string; expires_in: number };
@@ -56,7 +54,7 @@ async function requestToken(params: Record<string, string>): Promise<TokenRespon
 }
 
 // Store a random state in a cookie (checked in /callback against CSRF) and send the user to Spotify's login page.
-app.get("/login", (_req, res) => {
+app.get("/api/login", (_req, res) => {
   const state = randomBytes(16).toString("hex");
   res.cookie(stateKey, state);
 
@@ -72,10 +70,10 @@ app.get("/login", (_req, res) => {
   res.redirect(authUrl.toString());
 });
 
-app.get("/callback", async (req, res) => {
+app.get("/api/callback", async (req, res) => {
   const { code, state } = req.query;
   if (typeof code !== "string" || typeof state !== "string" || state !== req.cookies[stateKey]) {
-    res.redirect(`${FRONT_URI}/#${new URLSearchParams({ error: "state_mismatch" })}`);
+    res.redirect(`/#${new URLSearchParams({ error: "state_mismatch" })}`);
     return;
   }
   res.clearCookie(stateKey);
@@ -87,14 +85,14 @@ app.get("/callback", async (req, res) => {
       grant_type: "authorization_code",
     });
     res.cookie(refreshKey, refresh_token, cookieOption);
-    res.redirect(`${FRONT_URI}/#${new URLSearchParams({ access_token, refresh_token })}`);
+    res.redirect(`/#${new URLSearchParams({ access_token, refresh_token })}`);
   } catch (error) {
     console.log(error);
-    res.redirect(`${FRONT_URI}/#${new URLSearchParams({ error: "invalid_token" })}`);
+    res.redirect(`/#${new URLSearchParams({ error: "invalid_token" })}`);
   }
 });
 
-app.get("/refresh_token", async (req, res) => {
+app.get("/api/refresh_token", async (req, res) => {
   try {
     const { access_token, refresh_token } = await requestToken({
       grant_type: "refresh_token",
@@ -108,7 +106,7 @@ app.get("/refresh_token", async (req, res) => {
   }
 });
 
-app.get("/logout", (_req, res) => {
+app.get("/api/logout", (_req, res) => {
   res.clearCookie(refreshKey, cookieOption);
   res.status(200).send("logged out");
 });

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {Route} from 'react-router-dom'
+import {useMatch} from 'react-router'
 
 import Headerbar from './Headerbar'
 import PageContent from './PageContent'
@@ -13,6 +13,8 @@ import CollectionNav from './CollectionNav'
 // top bar that features additional information for a sidebar page
 function Featured (props){
     const [query, setQuery] = useState('')
+    const onSearch = useMatch('/search')
+    const onCollection = useMatch('/collection/*')
 
     const resetQuery = ()=>{
         setQuery('')
@@ -23,13 +25,9 @@ function Featured (props){
             <Headerbar>
                 <HistoryNav />
 
-                <Route exact path='/search'>
-                    <SearchBar query={query} setQuery={setQuery} resetQuery={resetQuery}/>
-                </Route>
+                {onSearch && <SearchBar query={query} setQuery={setQuery} resetQuery={resetQuery}/>}
 
-                <Route path='/collection'>
-                    <CollectionNav/>
-                </Route>
+                {onCollection && <CollectionNav/>}
 
                 <UserInfo />
 

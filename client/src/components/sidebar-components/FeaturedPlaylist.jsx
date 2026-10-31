@@ -1,5 +1,5 @@
 import React from 'react';
-import CreatePLaylist from './CreatePlaylist.js'
+import CreatePLaylist from './CreatePlaylist'
 
 
 

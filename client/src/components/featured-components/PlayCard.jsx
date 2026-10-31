@@ -1,5 +1,5 @@
 import React, {useContext} from 'react'
-import {useHistory, Link} from 'react-router-dom'
+import {useNavigate, Link} from 'react-router'
 import axios from 'axios'
 
 import CardInfo from './CardInfo'
@@ -10,7 +10,7 @@ import putWithToken from '../../utilities/putWithToken'
 import {TokenContext, PlayContext, MessageContext} from '../../utilities/context'
 
 const PlayCard = React.forwardRef(({info, type}, ref) => {
-    const history = useHistory()
+    const navigate = useNavigate()
     const description = returnDescription(type, info)
     const {name, id, uri} = info
     const setMessage = useContext(MessageContext)
@@ -55,7 +55,7 @@ const PlayCard = React.forwardRef(({info, type}, ref) => {
                 })
                 .catch(error => setMessage(`ERROR: ${error}`))
         }else{
-            history.push(`/tracks`)
+            navigate(`/tracks`)
         }
     }
 

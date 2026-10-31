@@ -1,21 +1,21 @@
 import React, {useState, useEffect, useRef} from 'react';
 
-import Sidebar from './components/sidebar-components/Sidebar.js'
-import Logo from './components/sidebar-components/Logo.js'
-import NavList from './components/sidebar-components/NavList.js'
-import NavItem from './components/sidebar-components/NavItem.js'
-import PlayLists from './components/sidebar-components/PlayLists.js'
-import FeaturedPlaylist from './components/sidebar-components/FeaturedPlaylist.js'
-import FeaturedItem from './components/sidebar-components/FeaturedItem.js'
-import OtherPlaylist from './components/sidebar-components/OtherPlaylist.js'
-import InstallCTA from './components/sidebar-components/InstallCTA.js'
-import Footer from './components/footer-components/Footer.js'
+import Sidebar from './components/sidebar-components/Sidebar'
+import Logo from './components/sidebar-components/Logo'
+import NavList from './components/sidebar-components/NavList'
+import NavItem from './components/sidebar-components/NavItem'
+import PlayLists from './components/sidebar-components/PlayLists'
+import FeaturedPlaylist from './components/sidebar-components/FeaturedPlaylist'
+import FeaturedItem from './components/sidebar-components/FeaturedItem'
+import OtherPlaylist from './components/sidebar-components/OtherPlaylist'
+import InstallCTA from './components/sidebar-components/InstallCTA'
+import Footer from './components/footer-components/Footer'
 import PromptButton from './components/featured-components/PromptButton'
 import Player from './components/footer-components/Player'
-import Featured from './components/featured-components/Featured.js'
-import Loading from './components/featured-components/Loading.js'
+import Featured from './components/featured-components/Featured'
+import Loading from './components/featured-components/Loading'
 import {UserContext, TokenContext, MessageContext, PlayContext, SongContext} from './utilities/context'
-import getHashParams from './utilities/getHashParams.js';
+import getHashParams from './utilities/getHashParams';
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -174,7 +174,7 @@ function Login() {
     <div className='loading' style={{flexDirection: 'column', gap: '24px', color: '#fff', textAlign: 'center'}}>
       <h1>Shoutify</h1>
       <p>Friends only: ask whoever runs this Shoutify to add your Spotify account before you log in.</p>
-      <PromptButton to={`${process.env.REACT_APP_BACK_URI}/login`} name='Log in with Spotify' styleName='light'/>
+      <PromptButton to='/api/login' name='Log in with Spotify' styleName='light'/>
     </div>
   )
 }

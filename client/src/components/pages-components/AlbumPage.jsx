@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useContext} from 'react'
 import axios from 'axios'
-import {useLocation} from 'react-router-dom'
+import {useLocation} from 'react-router'
 
 
 import PageBanner from '../featured-components/PageBanner'

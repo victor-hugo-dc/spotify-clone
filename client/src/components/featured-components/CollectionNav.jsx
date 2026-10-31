@@ -1,5 +1,5 @@
 import React from 'react';
-import {NavLink} from 'react-router-dom'
+import {NavLink} from 'react-router'
 
 const CollectionNav = () => {
     return (
@@ -7,13 +7,13 @@ const CollectionNav = () => {
             <nav className='cNav'>
                 <ul className='cNavList'>
                     <li>
-                        <NavLink to='/collection/playlist' activeStyle={activeStyle}>Playlists</NavLink>
+                        <NavLink to='/collection/playlist' style={({isActive}) => isActive ? activeStyle : undefined}>Playlists</NavLink>
                     </li>
                     <li>
-                        <NavLink to='/collection/artist' activeStyle={activeStyle}>Artists</NavLink>
+                        <NavLink to='/collection/artist' style={({isActive}) => isActive ? activeStyle : undefined}>Artists</NavLink>
                     </li>
                     <li>
-                        <NavLink to='/collection/album' activeStyle={activeStyle}>Albums</NavLink>
+                        <NavLink to='/collection/album' style={({isActive}) => isActive ? activeStyle : undefined}>Albums</NavLink>
                     </li>
                 </ul>
             </nav>

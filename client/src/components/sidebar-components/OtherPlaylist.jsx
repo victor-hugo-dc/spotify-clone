@@ -1,5 +1,5 @@
 import React from 'react';
-import ListItem from './ListItem.js';
+import ListItem from './ListItem';
 
 function OtherPlaylist({ playlists }) {
     const renderListItems = () => {

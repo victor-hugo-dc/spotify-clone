@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {Route} from 'react-router-dom'
+import {Routes, Route, Navigate} from 'react-router'
 import axios from 'axios'
 
 import CollectionRow from '../featured-components/CollectionRow'
@@ -55,15 +55,12 @@ const CollectionPage = ({playlists}) => {
 
     return (
         <div className='page-content' style={{paddingTop:'16px'}}>
-            <Route exact path='/collection/playlist'>
-                <CollectionRow name='Playlists' playlists={playlists}/>
-            </Route>
-            <Route exact path='/collection/artist'>
-                <CollectionRow name='Artists' playlists={artists}/>
-            </Route>
-            <Route exact path='/collection/album'>
-                <CollectionRow name='Albums' playlists={albums}/>
-            </Route>
+            <Routes>
+                <Route path='playlist' element={<CollectionRow name='Playlists' playlists={playlists}/>}/>
+                <Route path='artist' element={<CollectionRow name='Artists' playlists={artists}/>}/>
+                <Route path='album' element={<CollectionRow name='Albums' playlists={albums}/>}/>
+                <Route path='*' element={<Navigate to='/collection/playlist' replace/>}/>
+            </Routes>
         </div>
     );
 }

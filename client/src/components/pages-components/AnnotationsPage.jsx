@@ -42,7 +42,7 @@ export default function AnnotationsPage() {
     console.log(`/annotations/${id}`);
 
     if (id.length > 0) {
-      axios.get(process.env.REACT_APP_BACK_URI + `/annotations/song/${id}`).then((response) => {
+      axios.get(`/api/annotations/song/${id}`).then((response) => {
         const data = response.data;
         console.log(data);
         const jsonData = data.f_annotation.map((item) => {

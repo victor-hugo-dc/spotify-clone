@@ -1,6 +1,6 @@
 import React from 'react'
 import Icon from '../icons'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 
 export default function PageBanner({pageTitle, bannerInfo}) {
     const {name, description, user, followers, primary_color, images, release_date, total} = bannerInfo

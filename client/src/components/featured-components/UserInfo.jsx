@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import axios from 'axios';
 
 import { UserContext } from '../../utilities/context';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 const UserInfoOptions = ({ id, logout }) => (
     <ul className="UserInfoOptions" style={{ display: 'block' }}>
@@ -38,7 +38,7 @@ const UserInfo = () => {
   const toggleOpen = () => setOpen((prevOpen) => !prevOpen);
 
   const logout = () => {
-    axios(`${process.env.REACT_APP_BACK_URI}/logout`, { withCredentials: true })
+    axios(`/api/logout`, { withCredentials: true })
       .then((response) => {
         window.location.reload();
         localStorage.removeItem('token');

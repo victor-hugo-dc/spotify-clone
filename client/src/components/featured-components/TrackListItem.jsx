@@ -3,7 +3,7 @@ import Icon from '../icons';
 import msTimeFormat from '../../utilities/utils';
 import { PlayContext } from '../../utilities/context';
 import ControlButton from '../footer-components/ControlButton';
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useEffect } from 'react';
 import axios from 'axios';
 
@@ -61,16 +61,16 @@ const TrackListItem = React.forwardRef(({ track, styleName, highlight, playConte
     return splitArr[splitArr.length - 1];
   }
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const routeChangeComments = () => {
     console.log(getId(uri))
     const path = '/comments/' + getId(uri);
-    history.push(path);
+    navigate(path);
   }
 
   useEffect(() => {
     if (uri.length > 0) {
-      axios.get(process.env.REACT_APP_BACK_URI + `/comments/song/${getId(uri)}`)
+      axios.get(`/api/comments/song/${getId(uri)}`)
         .then((response) => {
           const data = response.data;
           setFeed(data.comments);

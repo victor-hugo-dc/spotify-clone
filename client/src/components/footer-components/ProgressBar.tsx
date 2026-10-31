@@ -1,11 +1,19 @@
 import React, {useState, useEffect, useRef} from 'react';
 
-const ProgressBar = ({extraClass, value, engageClass, setValue, scrubFunction}) => {
+type Props = {
+    extraClass: string,
+    value: number,
+    engageClass: string,
+    setValue: (ratio: number) => void,
+    scrubFunction?: (ratio: number) => void,
+}
+
+const ProgressBar = ({extraClass, value, engageClass, setValue, scrubFunction}: Props) => {
     const [engage, setEngage] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
-    const [scrub, setScrub] = useState(null)
+    const [scrub, setScrub] = useState<number | null>(null)
 
-    const wrapperRef = useRef(null)
+    const wrapperRef = useRef<HTMLDivElement>(null)
 
 
     useEffect(() => {
@@ -18,22 +26,23 @@ const ProgressBar = ({extraClass, value, engageClass, setValue, scrubFunction}) 
         }
     })
 
-    const handleMouseUp = (e) => {
+    const handleMouseUp = (e: MouseEvent) => {
         setIsDragging(false)
-        if (engage){
+        if (engage && scrub !== null){
             setValue(scrub)
         }
         setScrub(null)
-        if (!e.target.classList.contains('progress-wrapper') &&
-            !e.target.classList.contains('progress-bar') &&
-            !e.target.classList.contains('progress') &&
-            !e.target.classList.contains('progress-slider') ){
+        const classes = (e.target as Element).classList
+        if (!classes.contains('progress-wrapper') &&
+            !classes.contains('progress-bar') &&
+            !classes.contains('progress') &&
+            !classes.contains('progress-slider') ){
             setEngage(false)
         }
     }
 
-    const handleMove = (e) => {
-        if (engage && isDragging) {
+    const handleMove = (e: MouseEvent) => {
+        if (engage && isDragging && wrapperRef.current) {
             const rect = wrapperRef.current.getBoundingClientRect()
             let offsetRatio = (e.pageX - rect.x)/rect.width
 
@@ -60,20 +69,22 @@ const ProgressBar = ({extraClass, value, engageClass, setValue, scrubFunction}) 
         }
     }
 
-    const handleMouseDown = (e) => {
+    const handleMouseDown = (e: React.MouseEvent) => {
         setIsDragging(true)
+        if (!wrapperRef.current) return
         const rect = wrapperRef.current.getBoundingClientRect()
         const offsetRatio = (e.pageX - rect.x)/rect.width
         setScrub(offsetRatio)
     }
 
+    const position = scrub ?? value
+
     return (
         <div ref={wrapperRef} className="progress-wrapper" onMouseEnter={handleEnter} onMouseLeave={handleLeave} onMouseDown={handleMouseDown}>
             <div className={`progress-bar`} >
-                {/* {console.log(((1-(scrub || value))*100).toFixed(1))} */}
-                <div className={`progress ${extraClass} ${engage? engageClass:''}`} style={{transform: `translate(-${((1-(scrub || value))*100).toFixed(2)}%)`}} ></div>
+                <div className={`progress ${extraClass} ${engage? engageClass:''}`} style={{transform: `translate(-${((1-position)*100).toFixed(2)}%)`}} ></div>
             </div>
-            <button className={`progress-slider ${extraClass} no-outline ${engage? engageClass:''}`} style={{left: `${((scrub || value)*100).toFixed(2)}%`}} ></button>
+            <button className={`progress-slider ${extraClass} no-outline ${engage? engageClass:''}`} style={{left: `${(position*100).toFixed(2)}%`}} ></button>
         </div>
     );
 }

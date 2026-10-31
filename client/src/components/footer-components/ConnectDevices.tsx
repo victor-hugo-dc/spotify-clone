@@ -1,47 +1,38 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect, type MouseEvent } from "react";
 
 import ConnectDevicesItem from "./ConnectDevicesItem";
 
-import requestWithToken from "../../utilities/requestWithToken";
-import putWithToken from "../../utilities/putWithToken";
+import { spotify } from "../../utilities/spotify";
 
-const ConnectDevices = ({ token, closeTip }) => {
-	const [devices, setDevices] = useState([]);
+type Device = { id: string | null; name: string; is_active: boolean };
 
-	const source = axios.CancelToken.source();
+const ConnectDevices = ({ token, closeTip }: { token: string | null; closeTip: () => void }) => {
+	const [devices, setDevices] = useState<Device[]>([]);
+
 	useEffect(() => {
+		const controller = new AbortController();
+		const clickExit = (e: globalThis.MouseEvent) => {
+			if ((e.target as HTMLElement).dataset.source !== "inside") {
+				closeTip();
+			}
+		};
+
 		window.addEventListener("click", clickExit);
-		requestWithToken("https://api.spotify.com/v1/me/player/devices", token, source)
-			.then((response) => {
-				const _devices = response.data.devices;
-				setDevices(_devices);
-			})
+		spotify<{ devices: Device[] }>("/me/player/devices", token, { signal: controller.signal })
+			.then((response) => setDevices(response.devices))
 			.catch((error) => console.log(error));
 
 		return () => {
 			window.removeEventListener("click", clickExit);
-			source.cancel();
+			controller.abort();
 		};
 		// eslint-disable-next-line
 	}, []);
 
-	const clickExit = (e) => {
-		if (e.target.dataset.source !== "inside") {
-			closeTip();
-		}
-	};
-
-	const switchDevice = (e) => {
-		console.log(e);
+	const switchDevice = (e: MouseEvent<HTMLButtonElement>) => {
 		const id = e.currentTarget.dataset.id;
-		const data = { device_ids: [id] };
-		putWithToken("https://api.spotify.com/v1/me/player", token, source, data)
-			.then((response) => {
-				if (response.status === 204) {
-					closeTip();
-				}
-			})
+		spotify("/me/player", token, { method: "PUT", body: { device_ids: [id] } })
+			.then(() => closeTip())
 			.catch((error) => console.log(error));
 	};
 
@@ -60,15 +51,6 @@ const ConnectDevices = ({ token, closeTip }) => {
 						This app also works as a remote controller - log in to an official
 						Spotify app on the same network to checkout this feature
 					</p>
-				</div>
-				<div className="cd-img" data-source="inside">
-					<img
-						loading="lazy"
-						data-source="inside"
-						src="https://open.scdn.co/cdn/images/connect_header@1x.ecc6912d.png"
-						alt=""
-						draggable="false"
-					/>
 				</div>
 
 				{devices.length === 0 ? (

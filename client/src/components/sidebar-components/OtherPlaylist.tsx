@@ -1,7 +1,8 @@
 import React from 'react';
 import ListItem from './ListItem';
+import type { Playlist } from '../../utilities/types';
 
-function OtherPlaylist({ playlists }) {
+function OtherPlaylist({ playlists }: { playlists: (Playlist | null)[] }) {
     const renderListItems = () => {
         if (!playlists) return null;
 

@@ -9,7 +9,8 @@
       "DOM.Iterable"
     ],
     "types": [
-      "vite/client"
+      "vite/client",
+      "spotify-web-playback-sdk"
     ],
     "jsx": "react-jsx",
     "strict": true,

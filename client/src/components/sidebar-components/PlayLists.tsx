@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 //Playlists components - contain 2 other main component - the featured playlist link (with icons) and the other playlist (just the links)
-function PlayLists({top, bottom}){
+function PlayLists({top, bottom}: {top: ReactNode, bottom: ReactNode}){
     return (
         <div className='playlists'>
             <h1 className='play-title'>playlists</h1>

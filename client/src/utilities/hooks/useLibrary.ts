@@ -1,10 +1,11 @@
 import { useContext, useEffect, useState } from 'react';
-import { MessageContext } from '../context';
+import { LibraryContext, MessageContext } from '../context';
 import { spotify } from '../spotify';
 
 // Whether `uri` (a track, album, artist or playlist) is in the user's library, and a toggle for it.
-export default function useLibrary(uri: string, place = 'Your Library', onChange?: () => void) {
+export default function useLibrary(uri: string, place = 'Your Library') {
     const setMessage = useContext(MessageContext)
+    const {refresh} = useContext(LibraryContext)
     const [saved, setSaved] = useState(false)
 
     useEffect(() => {
@@ -22,7 +23,8 @@ export default function useLibrary(uri: string, place = 'Your Library', onChange
             .then(() => {
                 setMessage(saved ? `Removed from ${place}` : `Added to ${place}`)
                 setSaved(!saved)
-                onChange?.()
+                // Your Library lists albums, artists and playlists (not songs); Spotify takes a moment to show the change.
+                if (!uri.startsWith('spotify:track:')) setTimeout(refresh, 1000)
             })
             .catch((error) => setMessage(`ERROR: ${error.message}`))
     }

@@ -30,7 +30,7 @@ type PlaybackResponse = {
 	progress_ms: number | null;
 	context: { uri: string } | null;
 	item: (Track & { album: Album }) | null;
-	device: { id: string | null; volume_percent: number | null };
+	device: { id: string | null; name: string; volume_percent: number | null };
 };
 
 type Repeat = "off" | "context" | "track";
@@ -45,6 +45,9 @@ const sdkRepeat: Repeat[] = ["off", "track", "context"];
 // Counting time rather than timer ticks keeps it right in background tabs, whose timers browsers slow down.
 const positionAt = ({ play, progress, at, total_time }: PlaybackState, now: number) =>
 	Math.min(progress + (play ? Math.max(0, now - at) : 0), total_time);
+
+// The id in a spotify:album:… or spotify:artist:… URI; null for local files and episodes, which have neither.
+const idOf = (uri: string | null | undefined, kind: "album" | "artist") => (uri?.startsWith(`spotify:${kind}:`) ? (uri.split(":")[2] ?? null) : null);
 
 type Props = { onNowPlaying: (nowPlaying: NowPlayingState) => void; ref?: Ref<PlayerHandle> };
 
@@ -75,11 +78,28 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	});
 	const [contextUri, setContextUri] = useState<string | null>(null);
 	const [deviceId, setDeviceId] = useState<string | null>(null);
-	const [activeDevice, setActiveDevice] = useState<string | null>(null);
+	const [activeDevice, setActiveDevice] = useState<NowPlayingState["device"]>(null);
 
+	// Keyed on the track's URI, not on playInfo: polling hands over an equal copy every few seconds.
 	useEffect(() => {
-		onNowPlaying({ trackUri: playInfo.uri || null, contextUri, playing: playbackState.play, deviceId });
-	}, [playInfo.uri, contextUri, playbackState.play, deviceId, onNowPlaying]);
+		const { id, uri, name, album, artists = [] } = playInfo;
+		onNowPlaying({
+			trackUri: uri || null,
+			contextUri,
+			playing: playbackState.play,
+			deviceId,
+			device: activeDevice,
+			track: name === "" ? null : {
+				id,
+				uri,
+				name,
+				artists: artists.map((artist) => ({ id: idOf(artist.uri, "artist"), name: artist.name })),
+				album: { id: idOf(album?.uri, "album"), name: album?.name ?? "", images: album?.images ?? [] },
+				duration_ms: playbackState.total_time,
+			},
+		});
+		// eslint-disable-next-line
+	}, [playInfo.uri, contextUri, playbackState.play, playbackState.total_time, deviceId, activeDevice?.id, activeDevice?.name, onNowPlaying]);
 
 	// Like Spotify's tab title: what's playing, while it plays.
 	useEffect(() => {
@@ -108,7 +128,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	// The SDK only reports playback on this browser's own device. While another device (or none) is active, ask Spotify
 	// every few seconds, and only while the tab is visible: the request quota is shared by the whole developer account.
 	useEffect(() => {
-		if (deviceId !== null && activeDevice === deviceId) return;
+		if (deviceId !== null && activeDevice?.id === deviceId) return;
 		const poll = () => document.visibilityState === "visible" && apiUpdate();
 		const timer = setInterval(poll, 5000);
 		document.addEventListener("visibilitychange", poll);
@@ -117,7 +137,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 			document.removeEventListener("visibilitychange", poll);
 		};
 		// eslint-disable-next-line
-	}, [activeDevice, deviceId]);
+	}, [activeDevice?.id, deviceId]);
 
 	// Re-render twice a second while playing, so the clock and the bar move.
 	useEffect(() => {
@@ -217,7 +237,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 					return;
 				}
 				const { repeat_state, shuffle_state, is_playing, progress_ms, item, device, context } = state;
-				setActiveDevice(device.id);
+				setActiveDevice({ id: device.id, name: device.name });
 				if (!item) {
 					setPlaybackState((state) => ({ ...state, play: is_playing }));
 					return;

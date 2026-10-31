@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useCallback} from 'react';
+import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
 import { useNavigate } from 'react-router';
 
 import Sidebar from './components/sidebar-components/Sidebar'
@@ -15,10 +15,10 @@ import PromptButton from './components/featured-components/PromptButton'
 import Player, { type PlayerHandle } from './components/footer-components/Player'
 import Featured from './components/featured-components/Featured'
 import Loading from './components/featured-components/Loading'
-import {UserContext, MessageContext, PlayContext, NowPlayingContext, type NowPlaying} from './utilities/context'
+import {UserContext, MessageContext, PlayContext, NowPlayingContext, LibraryContext, type NowPlaying} from './utilities/context'
 import { allPages, spotify } from './utilities/spotify'
 import { refreshSession } from './utilities/session'
-import type { Playlist, User } from './utilities/types'
+import type { Artist, Paging, PlayHistory, Playlist, SavedAlbum, User } from './utilities/types'
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -26,7 +26,10 @@ function App() {
   const [loginError] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('error'))
   const [userInfo, setuserInfo] = useState<User | null>(null)
   const [playlists, setPlaylists] = useState<Playlist[]>([])
-  const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false, deviceId: null})
+  const [albums, setAlbums] = useState<SavedAlbum[]>([])
+  const [artists, setArtists] = useState<Artist[]>([])
+  const [recentlyPlayed, setRecentlyPlayed] = useState<PlayHistory[]>([])
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false, deviceId: null, track: null, device: null})
 
   const [status, setStatus] = useState(false) 
   const [message, setMessage] = useState('')
@@ -60,24 +63,27 @@ function App() {
       spotify<User>('/me')
         .then(setuserInfo)
         .catch(error => console.log(error))
-      refreshPlaylist()
+      refreshLibrary()
     }
   // eslint-disable-next-line
   }, [loggedIn])
 
-
-  // All of them, not just Spotify's first page of 20.
-  const refreshPlaylist = useCallback(() =>{
-    allPages<Playlist>('/me/playlists?limit=50')
-      .then(setPlaylists)
-      .catch(error => console.log(error));
+  // Your Library, every page of it (not just Spotify's first 20). Recently played has no more than 50 to page through.
+  const refreshLibrary = useCallback(() => {
+    const log = (error: Error) => console.log(error)
+    allPages<Playlist>('/me/playlists?limit=50').then(setPlaylists).catch(log)
+    allPages<SavedAlbum>('/me/albums?limit=50').then(setAlbums).catch(log)
+    allPages<Artist>('/me/following?type=artist&limit=50', (data) => data.artists).then(setArtists).catch(log)
+    spotify<Paging<PlayHistory>>('/me/player/recently-played?limit=50').then((page) => setRecentlyPlayed(page.items)).catch(log)
   }, [])
+  const library = useMemo(() => ({playlists, albums, artists, recentlyPlayed, refresh: refreshLibrary}),
+    [playlists, albums, artists, recentlyPlayed, refreshLibrary])
 
   // New playlists get Spotify's default name, numbered the way its apps do.
   const createPlaylist = () => {
     spotify<Playlist>('/me/playlists', {method: 'POST', body: {name: `My Playlist #${playlists.length + 1}`}})
       .then((playlist) => {
-        refreshPlaylist()
+        refreshLibrary()
         navigate(`/playlist/${playlist.id}`)
       })
       .catch(error => setStatusMessage(`ERROR: ${error.message}`))
@@ -126,7 +132,9 @@ function App() {
               <PlayContext.Provider value={updatePlayer}>
                 <NowPlayingContext.Provider value={nowPlaying}>
                     <UserContext.Provider value={userInfo}>
-                      <Featured playlists={playlists} refreshPlaylist={refreshPlaylist} message={message} status={status} />
+                      <LibraryContext.Provider value={library}>
+                        <Featured message={message} status={status} />
+                      </LibraryContext.Provider>
                     </UserContext.Provider>
                 </NowPlayingContext.Provider>
               </PlayContext.Provider>

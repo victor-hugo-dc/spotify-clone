@@ -10,7 +10,7 @@ export type PlayInfo = {
     id: string | null,
     uri: string,
     name: string,
-    album?: {uri: string | null, images: {url: string}[]},
+    album?: {uri: string | null, name?: string, images: {url: string}[]},
     artists?: {uri: string | null, name: string}[],
 }
 

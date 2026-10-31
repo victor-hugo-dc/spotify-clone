@@ -1,12 +1,41 @@
 import { createContext } from "react";
-import type { User } from "./types";
+import type { Artist, Image, PlayHistory, Playlist, SavedAlbum, User } from "./types";
 
 export const UserContext = createContext<User | null>(null);
 export const MessageContext = createContext<(message: string) => void>(() => {});
 export const PlayContext = createContext<() => void>(() => {});
 export const SongContext = createContext<{ song: number; setSong: (song: number) => void }>({ song: 0, setSong: () => {} });
 
+// The track the player has loaded. Local files and podcast episodes have no id, and no album or artist ids.
+export type PlayingTrack = {
+  id: string | null;
+  uri: string;
+  name: string;
+  artists: { id: string | null; name: string }[];
+  album: { id: string | null; name: string; images: Image[] };
+  duration_ms: number;
+};
+
 // What the player has loaded, so track lists and play buttons can show it.
-// deviceId is this browser's Web Playback SDK player, once it's ready.
-export type NowPlaying = { trackUri: string | null; contextUri: string | null; playing: boolean; deviceId: string | null };
-export const NowPlayingContext = createContext<NowPlaying>({ trackUri: null, contextUri: null, playing: false, deviceId: null });
+// deviceId is this browser's Web Playback SDK player, once it's ready; device is the active one, wherever it is.
+export type NowPlaying = {
+  trackUri: string | null;
+  contextUri: string | null;
+  playing: boolean;
+  deviceId: string | null;
+  track: PlayingTrack | null;
+  device: { id: string | null; name: string } | null;
+};
+export const NowPlayingContext = createContext<NowPlaying>({ trackUri: null, contextUri: null, playing: false, deviceId: null, track: null, device: null });
+
+// Which view the right panel shows, or null when it's closed. App keeps it, remembered per browser.
+export type RightPanel = "now-playing" | "queue" | "friends" | null;
+export const LayoutContext = createContext<{ rightPanel: RightPanel; setRightPanel: (panel: RightPanel) => void }>({
+  rightPanel: null,
+  setRightPanel: () => {},
+});
+
+// Your Library, loaded once by App: every playlist, saved album and followed artist, and the last 50 plays.
+// refresh() loads it all again after a change.
+export type Library = { playlists: Playlist[]; albums: SavedAlbum[]; artists: Artist[]; recentlyPlayed: PlayHistory[]; refresh: () => void };
+export const LibraryContext = createContext<Library>({ playlists: [], albums: [], artists: [], recentlyPlayed: [], refresh: () => {} });

@@ -9,7 +9,7 @@ import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
 import LoadError from '../featured-components/LoadError'
 
-import {MessageContext, UserContext} from '../../utilities/context'
+import {LibraryContext, MessageContext, UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import useLibrary from '../../utilities/hooks/useLibrary'
 import { spotify } from '../../utilities/spotify'
@@ -21,18 +21,19 @@ type PlaylistEntry = {item: Track | {type: 'episode'} | null}
 const toTrack = (entry: PlaylistEntry) => entry.item?.type === 'track' && entry.item.id ? entry.item : null
 const emptyBanner: BannerInfo = {name: '', user: [], primary_color: '#262626'}
 
-export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => void}) {
+export default function PlayListPage() {
     const { id = '' } = useParams()
     const setMessage = useContext(MessageContext)
     const user = useContext(UserContext)
     const navigate = useNavigate()
+    const {refresh} = useContext(LibraryContext)
 
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
 
     const [bannerInfo, setbannerInfo] = useState(emptyBanner)
     const [tracks, setTracks] = useState<Track[]>([])
-    const [like, followPlaylist] = useLibrary(`spotify:playlist:${id}`, 'Your Library', () => setTimeout(() => refreshPlaylist(), 1000))
+    const [like, followPlaylist] = useLibrary(`spotify:playlist:${id}`)
     const [setNext, lastRef] = useInfiniteScroll(setTracks, toTrack)
     const [uri, setUri] = useState('')
     const [listed, setListed] = useState(true)
@@ -79,7 +80,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
                 setbannerInfo((banner) => ({...banner, ...text}))
                 if (shared !== undefined) setIsPublic(shared)
                 setMessage(done)
-                refreshPlaylist()
+                refresh()
             })
             .catch(error => setMessage(`ERROR: ${error.message}`))
     }
@@ -90,7 +91,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
         spotify(`/me/library?uris=${encodeURIComponent(uri)}`, {method: 'DELETE'})
             .then(() => {
                 setMessage('Removed from Your Library')
-                refreshPlaylist()
+                refresh()
                 navigate('/')
             })
             .catch(error => setMessage(`ERROR: ${error.message}`))

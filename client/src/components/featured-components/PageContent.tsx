@@ -15,21 +15,13 @@ import SocialPage from "../pages-components/SocialPage";
 
 import AnnotationsPage from '../pages-components/AnnotationsPage'
 import CommentPage from "../pages-components/CommentPage";
-import type { Playlist } from "../../utilities/types";
 
 export type PageContentProps = {
-  playlists: Playlist[];
-  refreshPlaylist: () => void;
   message: string;
   status: boolean;
 };
 
-export default function PageContent({
-  playlists,
-  refreshPlaylist,
-  message,
-  status,
-}: PageContentProps) {
+export default function PageContent({ message, status }: PageContentProps) {
   const location = useLocation();
   return (
     <>
@@ -37,12 +29,12 @@ export default function PageContent({
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/playlist/:id" element={<PlayListPage refreshPlaylist={refreshPlaylist} />} />
+        <Route path="/playlist/:id" element={<PlayListPage />} />
         <Route path="/album/:id" element={<AlbumPage />} />
         <Route path="/user/:id" element={<UserPage />} />
         <Route path="/artist/:id" element={<ArtistPage />} />
         <Route path="/social" element={<div className="social-page-content"><SocialPage /></div>} />
-        <Route path="/collection/*" element={<CollectionPage playlists={playlists} />} />
+        <Route path="/collection/*" element={<CollectionPage />} />
         <Route path="/tracks" element={<LikePage />} />
         <Route path="/annotations" element={<AnnotationsPage />} />
         <Route path="/comments/:id" element={<CommentPage />} />

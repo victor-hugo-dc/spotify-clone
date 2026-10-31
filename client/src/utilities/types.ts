@@ -42,6 +42,12 @@ export type Playlist = {
 
 export type Paging<T> = { items: T[]; next: string | null; total?: number };
 
+// An album in Your Library (/me/albums).
+export type SavedAlbum = { added_at: string; album: Album };
+
+// A play from /me/player/recently-played: `context` is the playlist, album or artist it was played from, if any.
+export type PlayHistory = { track: Track; played_at: string; context: { type: string; uri: string } | null };
+
 // A card that only links somewhere in the app, like Liked Songs on the home page.
 export type LinkCard = { type: "link"; id: string; name: string; description: string; images: Image[]; to: string };
 

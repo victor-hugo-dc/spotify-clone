@@ -35,7 +35,8 @@ export default function SearchBar() {
                     value={text}
                     onChange={e => {
                         setText(e.target.value)
-                        navigate(e.target.value ? `/search?${new URLSearchParams({q: e.target.value})}` : '/search', {replace: onSearch})
+                        // The live URL, not this render's: a fast second keystroke can come before the first one's page renders.
+                        navigate(e.target.value ? `/search?${new URLSearchParams({q: e.target.value})}` : '/search', {replace: window.location.pathname === '/search'})
                     }}/>
             <Link to='/search' className='SearchBrowse no-outline' aria-label='Browse' title='Browse'>
                 <Icon name='Browse' />

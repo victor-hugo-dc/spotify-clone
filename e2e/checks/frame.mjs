@@ -42,9 +42,9 @@ export const checks = [
     await until(p, () => !document.querySelector(".top-bar-home").hasAttribute("aria-current"), "home button still current on /search");
     await p.getByRole("link", { name: "What's New" }).click();
     await p.waitForURL("**/social");
-    // Typing on any page searches; Back returns to that page, with the box emptied.
+    // Typing on any page searches (fast typing too: one history entry); Back returns to that page, with the box emptied.
     const search = p.getByPlaceholder("What do you want to play?");
-    await search.pressSequentially("track", { delay: 30 });
+    await search.pressSequentially("track");
     await p.waitForURL((url) => url.pathname === "/search" && url.searchParams.get("q") === "track");
     await p.getByRole("button", { name: "Go back" }).click();
     await p.waitForURL("**/social");

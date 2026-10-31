@@ -1,112 +1,199 @@
-  /* The library page's tabs and Shoutify's own pages: the comment feed, a song's comments, annotations, lyrics. */
+  /* Your Library's page, and Shoutify's own pages: What's New (the comment feed), a song's comments and annotations,
+     with the page title they and the error pages share. */
 
-  .cNavWrapper {
+  .page-title {
+    color: #fff;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.04em;
+    overflow-wrap: anywhere;
+  }
+
+  .page-subtitle {
+    margin-top: 8px;
+    color: var(--main-text);
+    font-size: 14px;
+  }
+
+  /* LoadError; and the not-found page's way home. */
+  .page-message {
+    padding-top: 24px;
+  }
+
+  .page-title + .empty-state a {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  /* Spotify's outlined pill, as on its Follow button. */
+  .page-pill {
+    height: 32px;
+    padding: 0 15px;
+    border: 1px solid #7c7c7c;
+    border-radius: 500px;
+    background: transparent;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
     white-space: nowrap;
+    cursor: pointer;
+    transition: transform 33ms cubic-bezier(0.3, 0, 0, 1);
+  }
+
+  .page-pill:hover {
+    border-color: #fff;
+    transform: scale(1.04);
+  }
+
+  /* Your Library's page: the title and chips stay at the top while the cards scroll under them. */
+  .collection-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 0 -24px 8px;
+    padding: 16px 24px 12px;
+    background: var(--background-base);
+  }
+
+  .collection-title {
     margin-bottom: 16px;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
   }
 
   .cNavList {
-    text-align: left;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     list-style: none;
-    display: flex;
   }
 
-  .cNavList > li > a {
-    margin: 0 8px 0 0;
+  .cNavList a {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 500px;
+    background: hsla(0, 0%, 100%, 0.07);
     color: #fff;
-    position: relative;
-    display: inline-block;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 4px;
     font-size: 14px;
-    font-weight: 700;
-    line-height: 16px;
-    letter-spacing: normal;
-    text-transform: none;
+    text-decoration: none;
+    white-space: nowrap;
   }
 
-  .annotation-page-content {
-    display: flex;
+  .cNavList a:hover {
+    background: hsla(0, 0%, 100%, 0.1);
   }
 
-  .socialPage {
-    display: inline-block;
-    padding: 1rem 1rem;
-    vertical-align: middle;
-    width: 100%;
-    /* background: #1db954; */
+  .cNavList a[aria-current="page"] {
+    background: #fff;
+    color: #000;
   }
 
+  /* Keeps the cards' play buttons under the sticky header. */
+  .collection-grid {
+    isolation: isolate;
+    padding-bottom: 32px;
+  }
+
+  /* What's New */
   .social-page-content {
-    padding: 0 16px;
-    max-width: 960px;
-    margin: 1rem;
+    padding: 24px 24px 32px;
+  }
+
+  .socialGrid,
+  .comment-list,
+  .annotations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
   }
 
   .socialGrid {
-    margin: 16px 0;
+    margin-top: 24px;
   }
 
-  /* SOCIAL PAGE */
+  /* A comment or annotation. */
   .spotify-tweet-box {
     display: flex;
     gap: 16px;
-    margin-bottom: 16px;
+    padding: 16px;
+    border-radius: 8px;
     background-color: #181818;
     color: #fff;
-    border-radius: 8px;
-    padding: 16px;
   }
 
-  .avatar {
+  .spotify-tweet-box .avatar {
     flex: none;
-    position: relative;
   }
 
-  .avatar img {
+  .spotify-tweet-box .avatar img {
     display: block;
     width: 48px;
     height: 48px;
     object-fit: cover;
   }
 
-  .content {
+  .spotify-tweet-box .timestamp {
+    border-radius: 50%;
+  }
+
+  .spotify-tweet-box .content {
     flex: 1;
     min-width: 0;
   }
 
-  .header {
+  .spotify-tweet-box .header {
     display: flex;
     align-items: baseline;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 
-  .username {
+  .spotify-tweet-box .username {
     font-weight: 700;
-    color: #fff;
   }
 
-  .time {
+  .spotify-tweet-box .time {
     color: var(--main-text);
     font-size: 12px;
     font-variant-numeric: tabular-nums;
   }
 
-  .message {
-    margin-bottom: 12px;
+  .spotify-tweet-box .message {
+    font-size: 16px;
+    line-height: 24px;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
 
+  .spotify-tweet-box .spotify-track {
+    margin-top: 8px;
+  }
+
+  .annotated-line {
+    margin: 4px 0 8px;
+    padding-left: 12px;
+    border-left: 3px solid var(--spotify-green);
+    color: var(--main-text);
+    font-style: italic;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  /* The song a comment is about: a row like Spotify's lists, its cover 40px. */
   .spotify-track {
     display: flex;
     align-items: center;
     gap: 12px;
-    background-color: hsla(0, 0%, 100%, 0.07);
+    margin: 0 -8px;
     padding: 8px;
-    border-radius: 6px;
+    border-radius: 4px;
     color: inherit;
     text-decoration: none;
   }
@@ -116,69 +203,117 @@
   }
 
   .spotify-track .player-cover {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
   }
 
-  .track-details {
+  .spotify-track .track-details {
     display: flex;
     flex-direction: column;
     min-width: 0;
   }
 
-  .track-name {
+  .spotify-track .track-name,
+  .spotify-track .artist-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .spotify-track .track-name {
+    color: #fff;
     font-size: 16px;
-    font-weight: 700;
+    line-height: 22px;
+  }
+
+  .spotify-track .artist-name {
+    color: var(--main-text);
+    font-size: 14px;
+  }
+
+  /* A song's comments, under its banner. */
+  .comments-content {
+    padding: 0 24px;
+  }
+
+  .comments-actions {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 24px 0;
+  }
+
+  .comments-play {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--spotify-green);
+    color: #000;
+    cursor: pointer;
+    transition: transform 33ms cubic-bezier(0.3, 0, 0, 1);
+  }
+
+  .comments-play:hover {
+    background: var(--spotify-green-bright);
+    transform: scale(1.04);
+  }
+
+  /* Annotations: the song, then the line to annotate on a card in the song's colour beside what people noted. */
+  .annotations-page {
+    padding: 24px 24px 32px;
+  }
+
+  .annotations-page > .spotify-track {
+    margin-top: 16px;
+  }
+
+  .annotations-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    align-items: start;
+    gap: 24px;
+    margin-top: 24px;
+  }
+
+  .lyrics-card {
+    padding: 16px;
+    border-radius: 8px;
+    background: var(--background-elevated);
     color: #fff;
   }
 
-  .artist-name {
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--main-text);
+  .lyric-container-title {
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: 700;
   }
 
-  /* img {
-    width: 100px;
-    height: 100px;
-  } */
-
-  .timestamp {
-    border-radius: 50%;
-    font-variant-numeric: tabular-nums;
+  .lyric-container-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 
-.lyric-container-body{
-  position: relative;
-  height: 100%;
-  width: 80%;
-  left: 15px;
-  top: 10px;
-  line-height: 230%;
-  white-space: pre-line;
-  color: white;
+  .lyric-container-body p {
+    color: hsla(0, 0%, 100%, 0.7);
+  }
 
-}
+  .lyrics-card .textareacomment {
+    width: 100%;
+    height: auto;
+    padding: 12px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    font-family: inherit;
+    font-size: 16px;
+  }
 
-.lyric-container-body ::selection {
-  background: var(--highlight-color);
-}
-
-.lyric-container-title{
-  position: relative;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  /* height: 8%; */
-  height: 3em;
-  width: 60%;
-  left: 15px;
-  top: 10px;
-  line-height: 150%;
-  color: white;
-
-}
-
-.lyrics-container {
-  width: 50%;
-}
+  .annotations-list > .empty-state {
+    padding-top: 0;
+  }

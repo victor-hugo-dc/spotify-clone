@@ -1,1 +1,402 @@
-  /* The search page's own rules. Its results use the shared rows in index.css and the cards in cards.css. */
+  /* The search page: Browse all, then the results: chips, Top result beside Songs, and shelves of cards (the cards
+     themselves are cards.css's). */
+
+  .search-heading {
+    margin-bottom: 16px;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+  }
+
+  /* Browse all: a coloured tile per genre. */
+  .browse-all {
+    padding-top: 16px;
+    padding-bottom: 32px;
+  }
+
+  .browse-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 24px;
+    list-style: none;
+  }
+
+  .browse-tile {
+    position: relative;
+    isolation: isolate;
+    display: block;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    padding: 16px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+  }
+
+  /* Where Spotify tilts a cover into the corner, a tilted tint of the tile's colour. */
+  .browse-tile::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    right: -8%;
+    bottom: -12%;
+    width: 42%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    background: linear-gradient(135deg, hsla(0, 0%, 100%, 0.3), rgba(0, 0, 0, 0.25));
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: rotate(25deg);
+  }
+
+  /* Results */
+  .search-page {
+    container: search / inline-size;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-bottom: 32px;
+  }
+
+  /* The chips stay at the top of the page as it scrolls, as on Spotify. */
+  .search-chips {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 -24px;
+    padding: 12px 24px;
+    background: var(--background-base);
+  }
+
+  .search-chip {
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 500px;
+    background: hsla(0, 0%, 100%, 0.07);
+    color: #fff;
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .search-chip:hover {
+    background: hsla(0, 0%, 100%, 0.1);
+  }
+
+  .search-chip[aria-pressed="true"] {
+    background: #fff;
+    color: #000;
+  }
+
+  .search-top {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 24px;
+  }
+
+  @container search (width < 640px) {
+    .search-top {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .search-top-result {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top-result {
+    position: relative;
+    flex: 1;
+  }
+
+  .top-result-link {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    height: 100%;
+    padding: 20px;
+    border-radius: 8px;
+    background: #181818;
+    color: #fff;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+  }
+
+  .top-result:hover .top-result-link {
+    background: #282828;
+  }
+
+  .top-result-cover {
+    flex: none;
+    width: 92px;
+    height: 92px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    object-fit: cover;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .top-result-cover.artist {
+    border-radius: 50%;
+  }
+
+  .top-result-cover.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-elevated);
+    color: #7f7f7f;
+  }
+
+  .top-result-cover.placeholder > svg {
+    width: 40%;
+    height: 40%;
+  }
+
+  .top-result-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 40px;
+    letter-spacing: -0.04em;
+  }
+
+  .top-result-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    margin-top: 4px;
+    /* Room for the play button. */
+    padding-right: 64px;
+    color: var(--main-text);
+    font-size: 14px;
+  }
+
+  .top-result-by {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .top-result-kind {
+    flex: none;
+    padding: 4px 12px;
+    border-radius: 500px;
+    background: #121212;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .top-result-play {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--spotify-green);
+    color: #000;
+    box-shadow: 0 8px 8px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+  }
+
+  /* Rises on hover and on keyboard focus, and stays while it's playing. */
+  .top-result:hover .top-result-play,
+  .top-result:focus-within .top-result-play,
+  .top-result-play.playing {
+    opacity: 1;
+    transform: none;
+  }
+
+  .top-result .top-result-play:hover {
+    background: var(--spotify-green-bright);
+    transform: scale(1.04);
+  }
+
+  /* Songs: rows like Spotify's lists, the cover turning into a play button. */
+  .search-songs {
+    list-style: none;
+  }
+
+  .search-song {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    height: 56px;
+    padding: 0 16px 0 8px;
+    border-radius: 4px;
+  }
+
+  .search-song.with-album {
+    grid-template-columns: 40px minmax(0, 3fr) minmax(0, 2fr) auto;
+  }
+
+  .search-song:hover,
+  .search-song:focus-within {
+    background: hsla(0, 0%, 100%, 0.1);
+  }
+
+  .search-song-cover {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--background-elevated);
+  }
+
+  .search-song-cover > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Hidden by opacity, never display: none, so Tab and screen readers still reach it. */
+  .search-song-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .search-song:hover .search-song-play,
+  .search-song-play:focus-visible {
+    opacity: 1;
+  }
+
+  .search-song-play:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .search-song-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .search-song-title,
+  .search-song-artists,
+  .search-song-album {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search-song-title {
+    color: #fff;
+    font-size: 16px;
+    line-height: 22px;
+    text-decoration: none;
+  }
+
+  .search-song.current .search-song-title {
+    color: var(--spotify-green);
+  }
+
+  .search-song-artists,
+  .search-song-album,
+  .search-song-duration {
+    color: var(--main-text);
+    font-size: 14px;
+  }
+
+  .search-song-artists a,
+  .search-song-album {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .search-song:hover .search-song-artists,
+  .search-song:hover .search-song-album {
+    color: #fff;
+  }
+
+  .search-song-title:hover,
+  .search-song-artists a:hover,
+  .search-song-album:hover {
+    text-decoration: underline;
+  }
+
+  .search-song-duration {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .search-explicit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    border-radius: 2px;
+    background: hsla(0, 0%, 100%, 0.6);
+    color: #121212;
+    font-size: 10.5px;
+    font-weight: 700;
+    vertical-align: 1px;
+  }
+
+  /* Shelves of cards. The isolation keeps the cards' play buttons under the chips as the page scrolls. */
+  .search-shelf {
+    container: search-shelf / inline-size;
+  }
+
+  .search-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    margin: 0 -12px;
+    isolation: isolate;
+  }
+
+  /* One row per shelf: the grid has floor((shelf width + 24px) / 180px) columns, and the cards past them are hidden
+     (display: none, so Tab doesn't land on cards nobody can see). Spotify sends at most 10. */
+  @container search-shelf (width < 336px) { .search-cards:not(.wrap) > :nth-child(n + 2) { display: none; } }
+  @container search-shelf (336px <= width < 516px) { .search-cards:not(.wrap) > :nth-child(n + 3) { display: none; } }
+  @container search-shelf (516px <= width < 696px) { .search-cards:not(.wrap) > :nth-child(n + 4) { display: none; } }
+  @container search-shelf (696px <= width < 876px) { .search-cards:not(.wrap) > :nth-child(n + 5) { display: none; } }
+  @container search-shelf (876px <= width < 1056px) { .search-cards:not(.wrap) > :nth-child(n + 6) { display: none; } }
+  @container search-shelf (1056px <= width < 1236px) { .search-cards:not(.wrap) > :nth-child(n + 7) { display: none; } }
+  @container search-shelf (1236px <= width < 1416px) { .search-cards:not(.wrap) > :nth-child(n + 8) { display: none; } }
+  @container search-shelf (1416px <= width < 1596px) { .search-cards:not(.wrap) > :nth-child(n + 9) { display: none; } }
+  @container search-shelf (1596px <= width < 1776px) { .search-cards:not(.wrap) > :nth-child(n + 10) { display: none; } }
+
+  .search-none {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 80px;
+    color: #fff;
+    font-size: 16px;
+    text-align: center;
+  }

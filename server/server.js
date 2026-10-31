@@ -5,7 +5,6 @@ if (process.env.NODE_ENV !== "production") {
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
 const db_uri = process.env.MY_MONGO_URI;
-const musixmatch = process.env.MUSIXMATCH;
 
 const { client_auth, authed_header } = require("./utils/client-auth");
 const random_string = require("./utils/random");
@@ -216,34 +215,6 @@ app.get("/refresh_token", async (req, res) => {
 app.get("/logout", (req, res) => {
 	res.clearCookie(refreshKey, cookieOption);
 	res.status(200).send("logged out");
-});
-
-// Handles proxy requests for tracks. 
-app.get("/api/track-search", async (req, res) => {
-  const { track, artist } = req.query;
-
-  try {
-    const response = await axios.get(
-      `https://api.musixmatch.com/ws/1.1/track.search?q_artist=${artist}&q_track=${track}&apikey=${musixmatch}`
-    );
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Handles proxy requests for lyrics. 
-app.get("/api/lyrics-search", async (req, res) => {
-  const { track_id } = req.query;
-
-  try {
-    const response = await axios.get(
-      `https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${track_id}&apikey=${musixmatch}`
-    );
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 });
 
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));

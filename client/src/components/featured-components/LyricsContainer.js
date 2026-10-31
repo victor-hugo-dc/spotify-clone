@@ -1,21 +1,17 @@
-import React from 'react'
+import React, { useState } from 'react'
+import PromptButton from './PromptButton'
 
+// Lyrics are switched off for now (Spotify's Web API has no lyrics endpoint),
+// so the line to annotate is typed in instead of selected from the lyrics.
+const LyricsContainer = ({selectionCallback, openTip}) => {
+    const [line, setLine] = useState('')
 
-
-// Lyrics container component. The component displays the lyrics provided to it.
-const LyricsContainer = ({lyrics, selectionCallback, openTip}) => {
-    const onMouseUpCallback = () => {
-        const selectionObject = window.getSelection();
-
-        // const selectionRange = selectionObject.getRangeAt(0);
-        // console.log(selectionRange);
-        const selectedText = selectionObject.toString();
-        // console.log(`Text selected: ${selectedText}`);
-        selectionCallback(selectedText);
-        if (selectedText === '') {
+    const annotate = () => {
+        if (line.trim() === '') {
             return
         }
-        openTip();
+        selectionCallback(line.trim())
+        openTip()
     }
 
     return (
@@ -26,14 +22,11 @@ const LyricsContainer = ({lyrics, selectionCallback, openTip}) => {
                 </h1>
             </div>
             <div className='lyric-container-body'>
-                <span className='lyrics-container-body-wrapper' onMouseUp={onMouseUpCallback}>
-                    <h1>
-                        {lyrics}
-                    </h1>
-                </span>
+                <p>Lyrics are switched off for now. Type the line you want to annotate.</p>
+                <textarea className='textareacomment' rows='3' value={line} onChange={e => setLine(e.target.value)}></textarea>
+                <PromptButton name='Annotate' styleName='light' onClick={annotate}/>
             </div>
         </div>
-        
     )
 }
 

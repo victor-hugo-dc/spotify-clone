@@ -33,6 +33,9 @@ test("stores comments and lists them per song and in the feed", async () => {
 test("rejects comments and annotations with missing or bad fields", async () => {
   assert.equal((await post("/comments/add", { songID: "s1", commentBody: "  ", timestamp: 0 })).status, 400);
   assert.equal((await post("/comments/add", { songID: "s1", commentBody: "hi", timestamp: -5 })).status, 400);
+  // SQLite would store this, but reading it back throws, which would break every listing that includes it.
+  assert.equal((await post("/comments/add", { songID: "s1", commentBody: "hi", timestamp: 2 ** 60 })).status, 400);
+  assert.equal((await post("/annotations/add", { songID: "s1", annotatedText: "a", noteBody: "b", timestamp: 24 * 60 * 60 * 1000 + 1 })).status, 400);
   assert.equal((await post("/annotations/add", { songID: "s1", noteBody: "no line" })).status, 400);
 });
 

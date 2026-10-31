@@ -35,5 +35,6 @@ db.exec(`
 export const isText = (value: unknown, max: number): value is string =>
   typeof value === "string" && value.trim() !== "" && value.length <= max;
 
-// Song positions in milliseconds.
-export const isPosition = (value: unknown): value is number => Number.isInteger(value) && (value as number) >= 0;
+// Song positions in milliseconds, up to a day. Integers past 2^53 would be stored but couldn't be read back.
+export const isPosition = (value: unknown): value is number =>
+  Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 24 * 60 * 60 * 1000;

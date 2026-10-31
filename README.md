@@ -51,7 +51,10 @@ npm run dev:client      # app on http://127.0.0.1:5173, which proxies /api to :4
 ```
 
 Open <http://127.0.0.1:5173>. Use that address, not `localhost`, so the
-redirect URI matches. `npm run typecheck` and `npm test` check everything.
+redirect URI matches. `npm run typecheck` and `npm test` check the code;
+`sh e2e/run.sh` (needs Docker) builds the app, signs in with a fake Spotify
+account and clicks through it in headless Chromium, saving screenshots to
+`e2e/shots/`.
 
 ## Self-host it
 

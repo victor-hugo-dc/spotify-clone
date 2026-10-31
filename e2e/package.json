@@ -1,0 +1,9 @@
+{
+  "name": "shoutify-e2e",
+  "private": true,
+  "description": "Browser smoke test for Shoutify: real server, fake Spotify. Run with sh e2e/run.sh",
+  "type": "module",
+  "dependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}

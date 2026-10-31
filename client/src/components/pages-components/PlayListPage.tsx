@@ -9,6 +9,7 @@ import Loading from '../featured-components/Loading'
 import {TokenContext, MessageContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import { spotify } from '../../utilities/spotify'
+import { plainText } from '../../utilities/html'
 import type { Paging, Playlist, Track } from '../../utilities/types'
 
 type PlaylistEntry = {item: Track | {type: 'episode'} | null}
@@ -40,7 +41,7 @@ export default function PlayListPage({playlists, refreshPlaylist}: {playlists: P
         // `items` only comes back for playlists the user owns or collaborates on.
         spotify<Playlist & {items?: Paging<PlaylistEntry>}>(`/playlists/${id}`, token, {signal: controller.signal})
             .then(({name, description, owner, followers, primary_color, items, images, uri}) => {
-                setbannerInfo({name, description, user: [owner], followers, primary_color: primary_color ?? emptyBanner.primary_color, images})
+                setbannerInfo({name, description: plainText(description), user: [owner], followers, primary_color: primary_color ?? emptyBanner.primary_color, images})
                 setTracks(items?.items.map(toTrack).filter((track) => track !== null) ?? [])
                 setNext(items?.next ?? null)
                 setListed(items !== undefined)

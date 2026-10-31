@@ -6,6 +6,7 @@ import CardDisplay from './CardDisplay'
 import Icon from '../icons'
 
 import usePlayback from '../../utilities/hooks/usePlayback'
+import { plainText } from '../../utilities/html'
 import type { CardItem } from '../../utilities/types'
 
 export default function PlayCard({info, ref}: {info: CardItem, ref?: Ref<HTMLDivElement>}) {
@@ -45,7 +46,7 @@ export default function PlayCard({info, ref}: {info: CardItem, ref?: Ref<HTMLDiv
 function returnDescription(info: CardItem){
     switch (info.type){
         case 'playlist':
-           return info.description || `By ${info.owner.display_name}`
+           return plainText(info.description) || `By ${info.owner.display_name}`
         case 'album':
         case 'track':
             return info.artists.map((object) => object.name).join(', ')

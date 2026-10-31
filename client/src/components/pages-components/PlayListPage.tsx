@@ -5,22 +5,24 @@ import PageBanner, { type BannerInfo } from '../featured-components/PageBanner'
 import PlayListFunctions from '../featured-components/PlayListFunctions'
 import { shareItems, type MenuItem } from '../featured-components/MoreMenu'
 import EditDetails from '../featured-components/EditDetails'
-import TrackList from '../featured-components/TrackList'
+import TrackList, { type Listed } from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
 import LoadError from '../featured-components/LoadError'
 
 import {LibraryContext, MessageContext, UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import useLibrary from '../../utilities/hooks/useLibrary'
+import useListView from '../../utilities/hooks/useListView'
 import { spotify } from '../../utilities/spotify'
 import { plainText } from '../../utilities/html'
+import { songStats } from '../../utilities/lists'
 import type { Paging, Playlist, Track } from '../../utilities/types'
 import '../../styles/lists.css'
 
-type PlaylistEntry = {item: Track | {type: 'episode'} | null}
+type PlaylistEntry = {added_at?: string, item: Track | {type: 'episode'} | null}
 // Playlists can hold podcast episodes and local files too; only Spotify tracks are listed (local files have no id).
-const toTrack = (entry: PlaylistEntry) => entry.item?.type === 'track' && entry.item.id ? entry.item : null
-const emptyBanner: BannerInfo = {name: '', user: [], primary_color: '#262626'}
+const toTrack = (entry: PlaylistEntry): Listed | null => entry.item?.type === 'track' && entry.item.id ? {...entry.item, added_at: entry.added_at} : null
+const emptyBanner: BannerInfo = {name: '', user: []}
 
 export default function PlayListPage() {
     const { id = '' } = useParams()
@@ -33,7 +35,10 @@ export default function PlayListPage() {
     const [error, setError] = useState('')
 
     const [bannerInfo, setbannerInfo] = useState(emptyBanner)
-    const [tracks, setTracks] = useState<Track[]>([])
+    const [tracks, setTracks] = useState<Listed[]>([])
+    // How many items the playlist has, local files and episodes included; unknown for others' playlists.
+    const [total, setTotal] = useState<number>()
+    const [view, setView] = useListView()
     const [like, followPlaylist] = useLibrary(`spotify:playlist:${id}`)
     const [setNext, lastRef] = useInfiniteScroll(setTracks, toTrack)
     const [uri, setUri] = useState('')
@@ -49,6 +54,7 @@ export default function PlayListPage() {
         setUri('')
         setbannerInfo(emptyBanner)
         setTracks([])
+        setTotal(undefined)
         setNext(null)
         setLoading(true)
         setError('')
@@ -57,11 +63,12 @@ export default function PlayListPage() {
         const controller = new AbortController()
         // `items` only comes back for playlists the user owns or collaborates on.
         spotify<Playlist & {items?: Paging<PlaylistEntry>}>(`/playlists/${id}`, {signal: controller.signal})
-            .then(({name, description, owner, followers, primary_color, items, images, uri, public: shared}) => {
+            .then(({name, description, owner, items, images, uri, public: shared}) => {
                 setOwnerId(owner.id)
                 setIsPublic(shared === true)
-                setbannerInfo({name, description: plainText(description), user: [owner], followers, primary_color: primary_color ?? emptyBanner.primary_color, images})
+                setbannerInfo({name, description: plainText(description), user: [owner], images})
                 setTracks(items?.items.map(toTrack).filter((track) => track !== null) ?? [])
+                setTotal(items?.total)
                 setNext(items?.next ?? null)
                 setListed(items !== undefined)
                 setUri(uri)
@@ -128,15 +135,14 @@ export default function PlayListPage() {
         error ?
         <LoadError what='playlist' error={error}/>
         :
-        <div className='listPage'>
-            <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
+        <div className='listPage lists'>
+            <PageBanner pageTitle='playlist' bannerInfo={{...bannerInfo, stats: songStats(total, tracks)}}/>
             <div className="playListContent">
-                <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
-                {/* No heart on your own playlist: un-saving it deletes it, so that's the menu's Delete, which asks first. */}
-                <PlayListFunctions onFollow={theirs ? followPlaylist : undefined} follow={like} uri={uri} menu={menu} label={bannerInfo.name}/>
+                {/* No save button on your own playlist: un-saving it deletes it, so that's the menu's Delete, which asks first. */}
+                <PlayListFunctions onFollow={theirs ? followPlaylist : undefined} follow={like} uri={uri} menu={menu} label={bannerInfo.name} view={view} onView={tracks.length > 0 ? setView : undefined}/>
                 <div className="page-content">
                     {listed ?
-                        <TrackList ref={lastRef} tracks={tracks} contextUri={uri}/> :
+                        <TrackList ref={lastRef} tracks={tracks} contextUri={uri} compact={view === 'compact'}/> :
                         <p style={{color: '#fff', padding: '16px 0'}}>Spotify only shows apps the tracks of playlists you own or collaborate on. Press play to listen to this one.</p>
                     }
                     {/* Paging starts from the last row, so when the first page had none to list (local files, episodes), from here. */}

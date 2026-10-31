@@ -14,7 +14,7 @@ import { spotify } from '../../utilities/spotify'
 import type { Paging, Playlist } from '../../utilities/types'
 import '../../styles/lists.css'
 
-const emptyBanner: BannerInfo = {name: '', user: [], primary_color: 'rgb(83, 83, 83)'}
+const emptyBanner: BannerInfo = {name: '', user: []}
 
 // Since 2026 Spotify only shares the logged-in user's own profile and playlists with Development Mode apps.
 export default function UserPage() {
@@ -35,7 +35,7 @@ export default function UserPage() {
         const controller = new AbortController()
         spotify<Paging<Playlist>>('/me/playlists', {signal: controller.signal})
             .then(({items, total, next}) => {
-                setbannerInfo({...emptyBanner, name: user.display_name ?? user.id, images: user.images, total})
+                setbannerInfo({...emptyBanner, name: user.display_name ?? user.id, images: user.images, stats: total === undefined ? undefined : `${total} Playlist${total === 1 ? '' : 's'}`})
                 setplayLists(items)
                 setNext(next)
                 setLoading(false)
@@ -62,12 +62,11 @@ export default function UserPage() {
         loading? 
         <Loading /> 
         :
-        <div className='listPage'>
+        <div className='listPage lists'>
             <PageBanner pageTitle='profile' bannerInfo={bannerInfo}/>
             <div className="playListContent">
-                <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
                 <PlayListFunctions type='none' label={bannerInfo.name} menu={shareItems(`spotify:user:${id}`, 'profile', setStatusMessage)}/>
-                <div className="page-content" style={{marginTop: '40px'}}>
+                <div className="page-content">
                     <CollectionRow ref={lastRef} name='Playlists' playlists={playLists}/>
                 </div>
             </div>

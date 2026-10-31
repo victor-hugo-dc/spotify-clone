@@ -29,4 +29,30 @@ export const checks = [
     await p.waitForTimeout(300);
     if (await p.getByRole("dialog").count()) throw new Error("Edit details opened again on the other playlist");
   }],
+  // A failed save keeps the dialog and what was typed; a name of only spaces isn't saved.
+  ["edit-details-save-fails", "/playlist/p1", async (p, t) => {
+    await p.getByRole("button", { name: "More options for Mix" }).click();
+    await p.getByRole("menuitem", { name: "Edit details" }).click();
+    const dialog = p.getByRole("dialog", { name: "Edit details" });
+    const name = dialog.getByLabel("Name"), description = dialog.getByLabel("Description"), save = dialog.getByRole("button", { name: "Save" });
+    t.sent.length = 0;
+    await name.fill("   ");
+    await save.click();
+    await p.waitForTimeout(300);
+    if (t.sent.some((c) => c.startsWith("PUT /v1/playlists/"))) throw new Error("saved a name of only spaces");
+    await name.fill("Kept Name");
+    await description.fill("kept description");
+    // The connection drops, faked as a rejected fetch: an error status would also log a console error, failing the check.
+    await p.evaluate(() => {
+      const real = window.fetch;
+      window.fetch = (input, init) => init?.method === "PUT" ? ((window.fetch = real), Promise.reject(new TypeError("Failed to fetch"))) : real(input, init);
+    });
+    await save.click();
+    await p.getByText("ERROR: Failed to fetch").waitFor({ timeout: 3000 });
+    if (!(await dialog.isVisible())) throw new Error("dialog closed after a failed save");
+    if ((await name.inputValue()) !== "Kept Name" || (await description.inputValue()) !== "kept description") throw new Error("typed details lost after a failed save");
+    await save.click();
+    await p.getByRole("heading", { name: "Kept Name" }).waitFor({ timeout: 3000 });
+    if (await dialog.isVisible()) throw new Error("dialog stayed open after saving");
+  }],
 ];

@@ -7,7 +7,7 @@ import TrackList from '../featured-components/TrackList'
 import Loading from '../featured-components/Loading'
 import LoadError from '../featured-components/LoadError'
 
-import {UserContext} from '../../utilities/context'
+import {NowPlayingContext, UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
 import { spotify } from '../../utilities/spotify'
 import type { Paging, Track } from '../../utilities/types'
@@ -16,6 +16,7 @@ const toTrack = (saved: {track: Track}) => saved.track
 
 const LikePage = () => {
     const user = useContext(UserContext);
+    const nowPlaying = useContext(NowPlayingContext);
 
 
     const bannerInfo: BannerInfo = {
@@ -45,6 +46,9 @@ const LikePage = () => {
     if (error) return <LoadError what='list' error={error}/>
     if (!loaded) return <Loading/>
 
+    // With no context URI (see below), Liked Songs counts as loaded while a queue with no context is on one of its songs.
+    const current = nowPlaying.contextUri ? undefined : tracks.find((track) => track.uri === nowPlaying.trackUri)
+
     return (
         <div className='listPage'>
             <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
@@ -52,7 +56,7 @@ const LikePage = () => {
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
                 {/* shortcut: Liked Songs has no context URI to play, so the queue is the tracks loaded so far (50 per page
                     scrolled); switch to a context if Spotify ever offers one for Development Mode apps. */}
-                {tracks.length > 0 && <PlayListFunctions type='playOnly' start={{uris: tracks.map(track => track.uri)}}/>}
+                {tracks.length > 0 && <PlayListFunctions type='playOnly' uri={current?.uri} start={{uris: tracks.map(track => track.uri)}}/>}
                 <div className="page-content">
                     {tracks.length === 0 ?
                         <p className='empty-state'>Songs you like will appear here. Save songs by tapping the heart icon.</p> :

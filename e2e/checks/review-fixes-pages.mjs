@@ -1,5 +1,5 @@
 // Playlist page, Liked Songs and "• • •" menu checks from the pages review.
-import { me, playlist, track2 } from "../data.mjs";
+import { me, playlist, track, track2 } from "../data.mjs";
 
 // How Spotify lists a local file in a playlist: no id, so the app leaves it out.
 const local = (n) => ({ item: { id: null, uri: `spotify:local:Me:Tape:Song+${n}:180`, name: `Local Song ${n}`, type: "track", is_local: true, duration_ms: 180000, explicit: false, album: { uri: null, name: "Tape", images: [] }, artists: [{ uri: null, name: "Me" }] } });
@@ -113,5 +113,24 @@ export const checks = [
     await p.keyboard.press("Enter");
     await p.getByText("Playlist is now public").waitFor({ timeout: 3000 });
     if (!(await focused(more))) throw new Error("choosing an item didn't put focus back on the button");
+  }],
+  // Liked Songs plays as a queue of its tracks with no context; while it does, the big button pauses instead of starting over.
+  ["liked-songs-pause", "/tracks", async (p, t) => {
+    const saved = t.fixtures["/v1/me/player"];
+    t.fixtures["/v1/me/player"] = { ...saved, item: track, context: null };
+    try {
+      await p.reload({ waitUntil: "networkidle" });
+      // The player's Pause button shows once its state is in; the page's big one, earlier in the page, should follow suit.
+      const pause = p.getByRole("button", { name: "Pause", exact: true }).first();
+      await pause.waitFor({ timeout: 3000 });
+      await p.getByRole("button", { name: "Play", exact: true }).waitFor({ state: "detached", timeout: 3000 })
+        .catch(() => { throw new Error("big button isn't Pause while Liked Songs plays"); });
+      t.sent.length = 0;
+      await pause.click();
+      await p.waitForTimeout(300);
+      if (!t.sent.includes("PUT /v1/me/player/pause") || t.sent.some((c) => c.startsWith("PUT /v1/me/player/play"))) throw new Error(`big button sent ${JSON.stringify(t.sent)}`);
+    } finally {
+      t.fixtures["/v1/me/player"] = saved;
+    }
   }],
 ];

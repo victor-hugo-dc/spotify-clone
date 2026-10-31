@@ -152,7 +152,8 @@ function App() {
                   <NowPlayingContext.Provider value={nowPlaying}>
                     <TopBar />
                     <YourLibrary />
-                    <main className='featured'>
+                    {/* Focusable, for focus to land on when the right panel closes. */}
+                    <main className='featured' tabIndex={-1}>
                       <PageContent message={message} status={status} />
                     </main>
                     <RightSidebar />

@@ -20,7 +20,6 @@ import { playerCommand, spotify } from "../../utilities/spotify";
 import { accessToken } from "../../utilities/session";
 import formatTime from "../../utilities/time";
 import { MessageContext, type NowPlaying as NowPlayingState, type PlayingTrack } from "../../utilities/context";
-import type { Album, Track } from "../../utilities/types";
 import "../../styles/player.css";
 
 export type PlayerHandle = { updateState: () => void };
@@ -31,7 +30,7 @@ type PlaybackResponse = {
 	is_playing: boolean;
 	progress_ms: number | null;
 	context: { uri: string } | null;
-	item: (Track & { album: Album }) | null;
+	item: (PlayInfo & { duration_ms: number }) | null;
 	device: { id: string | null; name: string; volume_percent: number | null };
 };
 
@@ -40,8 +39,8 @@ type PlaybackState = { play: boolean; shuffle: boolean; repeat: Repeat; progress
 
 // Spotify's repeat button cycles off -> whole playlist/album -> this track -> off.
 const nextRepeat: Record<Repeat, Repeat> = { off: "context", context: "track", track: "off" };
-// The SDK numbers them: 0 off, 1 repeat this track, 2 repeat the context.
-const sdkRepeat: Repeat[] = ["off", "track", "context"];
+// The SDK numbers them: 0 off, 1 repeat the context, 2 repeat this track (the @types comment has 1 and 2 swapped).
+const sdkRepeat: Repeat[] = ["off", "context", "track"];
 
 // Where playback is at `now`: the position measured at `at`, plus the time since while playing, never past the end.
 // Counting time rather than timer ticks keeps it right in background tabs, whose timers browsers slow down.
@@ -111,6 +110,9 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const player = useRef<Spotify.Player | null>(null);
 	// The volume to go back to when unmuting.
 	const unmuted = useRef(0.5);
+	// Answers to reads sent before the latest bump are dropped, as they can describe playback from before a command or
+	// handoff. refreshSoon bumps it (polls too: the newer read wins), and so do volume changes and the SDK's null state.
+	const reads = useRef(0);
 
 	useEffect(() => {
 		loadScript();
@@ -127,9 +129,10 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	// The SDK only reports playback on this browser's own device. While another device (or none) is active, ask Spotify
 	// every few seconds, and only while the tab is visible: the request quota is shared by the whole developer account.
+	// A poll goes through refreshSoon, so one that lands just after a command can't cancel its re-read and read the old state.
 	useEffect(() => {
 		if (deviceId !== null && activeDevice?.id === deviceId) return;
-		const poll = () => document.visibilityState === "visible" && apiUpdate();
+		const poll = () => document.visibilityState === "visible" && refreshSoon();
 		const timer = setInterval(poll, 5000);
 		document.addEventListener("visibilitychange", poll);
 		return () => {
@@ -181,9 +184,12 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		// Browsers only let audio start after the page has been clicked; this unlocks the player on the first click.
 		document.addEventListener("click", () => sdkPlayer.activateElement(), { once: true });
 
-		// Playback status updates; the state is null once playback moves to another device.
+		// Playback status updates; the state is null once playback moves to another device, which polling then follows.
 		sdkPlayer.addListener("player_state_changed", (state: Spotify.PlaybackState | null) => {
-			if (!state) return;
+			if (!state) {
+				reads.current++;
+				return setActiveDevice(null);
+			}
 			const { duration, position, paused, shuffle, repeat_mode, track_window, context } = state;
 			const { current_track } = track_window;
 
@@ -227,9 +233,12 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	// Asks the Web API rather than the SDK, which only reports playback on this browser's own device.
 	const apiUpdate = () => {
 		clearTimeout(timerRef.current);
+		const read = reads.current;
 
-		spotify<PlaybackResponse | undefined>("/me/player")
+		// Unless asked for episodes, Spotify sends a podcast episode as `item: null`, and the last song would seem to play on.
+		spotify<PlaybackResponse | undefined>("/me/player?additional_types=episode")
 			.then((state) => {
+				if (read !== reads.current) return;
 				// 204: no device is active (the in-browser player takes over once it's ready), so nothing is playing.
 				if (!state) {
 					setActiveDevice(null);
@@ -266,6 +275,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	// Spotify applies a command a moment after accepting it; reading its state at once would undo what we just showed.
 	const refreshSoon = () => {
+		reads.current++;
 		clearTimeout(timerRef.current);
 		timerRef.current = setTimeout(() => apiUpdate(), 500);
 	};
@@ -273,7 +283,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	// Player commands fail with Spotify's reason, e.g. no active device or no Premium. `show` sets the state the command
 	// asked for (never a toggle of whatever is there now, so quick double clicks can't invert it); the re-read confirms it.
 	const command = (path: string, method: "PUT" | "POST", show: (state: PlaybackState) => PlaybackState = (state) => state) => {
-		playerCommand(path, deviceId, { method })
+		return playerCommand(path, deviceId, { method })
 			.then(() => {
 				setPlaybackState(show);
 				refreshSoon();
@@ -302,9 +312,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 
 	const seekPlayback = (ratio: number) => {
 		const time = Math.round(ratio * playbackState.total_time);
-		command(`/me/player/seek?position_ms=${time}`, "PUT", (state) => ({ ...state, progress: time, at: Date.now() }));
-
 		setScrubPb(null);
+		return command(`/me/player/seek?position_ms=${time}`, "PUT", (state) => ({ ...state, progress: time, at: Date.now() }));
 	};
 
 	const position = positionAt(playbackState, now);
@@ -312,8 +321,11 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 	const scrubPlayback = (ratio: number | null) => setScrubPb(ratio === null ? null : ratio * playbackState.total_time);
 
 	const seekVolume = (ratio: number) => {
-		playerCommand(`/me/player/volume?volume_percent=${Math.round(ratio * 100)}`, deviceId, { method: "PUT" })
-			.then(() => setVolume(ratio))
+		return playerCommand(`/me/player/volume?volume_percent=${Math.round(ratio * 100)}`, deviceId, { method: "PUT" })
+			.then(() => {
+				reads.current++;
+				setVolume(ratio);
+			})
 			.catch((error) => setMessage(`ERROR: ${error.message}`));
 	};
 
@@ -323,7 +335,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		seekVolume(volume > 0 ? 0 : unmuted.current);
 	};
 
-	// The Annotations button opens the annotations page, or leaves it when you're already there.
+	// The Annotations button opens the annotations page, or leaves it when you're already there, whatever is playing.
 	const navigate = useNavigate();
 	const onAnnotations = useMatch("/annotations") !== null;
 	const toggleAnnotations = () => {
@@ -332,6 +344,8 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		else navigate("/");
 	};
 	const loaded = playInfo.name !== "";
+	// Comment and annotation pages look the song up as a Spotify track, which episodes and local files aren't.
+	const isTrack = playInfo.uri.startsWith("spotify:track:");
 
 	return (
 		<>
@@ -383,6 +397,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 						<ProgressBar
 							label="Seek"
 							extraClass="playback"
+							steps={playbackState.total_time / 1000}
 							value={playbackState.total_time ? position / playbackState.total_time : 0}
 							setValue={seekPlayback}
 							scrubFunction={scrubPlayback}
@@ -405,20 +420,20 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 									/>
 								)}
 								<ControlButton
-									title={!loaded ? "Play a song to comment on it" : playInfo.id ? "Comment" : "Local files can't be commented on"}
+									title={isTrack ? "Comment" : loaded ? "Podcasts and local files can't be commented on" : "Play a song to comment on it"}
 									icon="Comment"
 									size="x-larger"
-									disabled={!loaded || !playInfo.id}
+									disabled={!isTrack}
 									onClick={() => setCommentTip(!commentTip)}
 								/>
 							</span>
 							<span className="annotation-wrapper">
 								<ControlButton
-									title={loaded ? "Annotations" : "Play a song to annotate it"}
+									title={isTrack || onAnnotations ? "Annotations" : loaded ? "Podcasts and local files can't be annotated" : "Play a song to annotate it"}
 									icon="Annotation"
 									size="x-larger"
 									active={onAnnotations}
-									disabled={!loaded}
+									disabled={!isTrack && !onAnnotations}
 									onClick={toggleAnnotations}
 								/>
 							</span>
@@ -429,6 +444,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 							{connectTip && (
 								<ConnectDevices
 									closeTip={() => setConnectTip(false)}
+									onSwitch={refreshSoon}
 								/>
 							)}
 							<ControlButton
@@ -437,6 +453,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 								size="x-larger"
 								onClick={() => setConnectTip(!connectTip)}
 								active={playbackState.play}
+								expanded={connectTip}
 							/>
 						</span>
 
@@ -453,6 +470,7 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 								<ProgressBar
 									label="Volume"
 									extraClass="volume"
+									steps={100}
 									value={volume}
 									setValue={seekVolume}
 									valueText={(ratio) => `${Math.round(ratio * 100)}%`}

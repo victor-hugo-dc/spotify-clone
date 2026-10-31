@@ -9,6 +9,7 @@ import LoadError from '../featured-components/LoadError'
 
 import {UserContext} from '../../utilities/context'
 import useInfiniteScroll from '../../utilities/hooks/useInfiniteScroll'
+import usePlayback from '../../utilities/hooks/usePlayback'
 import { spotify } from '../../utilities/spotify'
 import type { Paging, Track } from '../../utilities/types'
 import '../../styles/lists.css'
@@ -17,6 +18,7 @@ const toTrack = (saved: {track: Track}) => saved.track
 
 const LikePage = () => {
     const user = useContext(UserContext);
+    const {nowPlaying, isStarted} = usePlayback();
 
 
     const bannerInfo: BannerInfo = {
@@ -46,6 +48,12 @@ const LikePage = () => {
     if (error) return <LoadError what='list' error={error}/>
     if (!loaded) return <Loading/>
 
+    const uris = tracks.map((track) => track.uri)
+    // Liked Songs has no context to play (see below), so the big button goes by the track playing while the list Shoutify
+    // started from here plays, and otherwise by the context Spotify's own apps play it with: your collection.
+    const collection = user ? `spotify:user:${user.id}:collection` : ''
+    const uri = isStarted(uris) ? nowPlaying.trackUri ?? '' : collection
+
     return (
         <div className='listPage'>
             <PageBanner pageTitle='playlist' bannerInfo={bannerInfo}/>
@@ -53,7 +61,7 @@ const LikePage = () => {
                 <div className="playListOverlay" style={{backgroundColor: `${bannerInfo.primary_color}`}}></div>
                 {/* shortcut: Liked Songs has no context URI to play, so the queue is the tracks loaded so far (50 per page
                     scrolled); switch to a context if Spotify ever offers one for Development Mode apps. */}
-                {tracks.length > 0 && <PlayListFunctions type='playOnly' start={{uris: tracks.map(track => track.uri)}}/>}
+                {tracks.length > 0 && <PlayListFunctions type='playOnly' uri={uri} start={{uris}}/>}
                 <div className="page-content">
                     {tracks.length === 0 ?
                         <p className='empty-state'>Songs you like will appear here. Save songs by tapping the heart icon.</p> :

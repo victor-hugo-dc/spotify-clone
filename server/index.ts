@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 // Secure cookies need HTTPS; local development runs on http://127.0.0.1. Over HTTPS the __Host- prefix also stops
-// sibling *.torta-server.duckdns.org sites from planting these cookies.
+// sites on sibling subdomains from planting these cookies.
 const secure = RE_URI.startsWith("https://");
 const cookieName = (name: string) => (secure ? `__Host-${name}` : name);
 const stateKey = cookieName("spotify_auth_state");
@@ -111,6 +111,7 @@ app.get("/api/callback", async (req, res) => {
     }
     res.cookie(refreshKey, refresh_token, { ...cookieOption, maxAge: year });
     res.cookie(authorKey, authorCookie(author), { ...cookieOption, maxAge: authorMaxAge });
+    clearOldRefreshCookie(res);
     res.redirect("/");
   } catch (error) {
     console.log(error);
@@ -127,6 +128,8 @@ app.get("/api/token", async (req, res) => {
   res.set("Cache-Control", "no-store");
   try {
     const { access_token, expires_in, refresh_token: rotated } = await requestToken({ grant_type: "refresh_token", refresh_token });
+    // Saved before /v1/me can fail: Spotify may have revoked the old one. A sign-out below still wins, as it comes later.
+    if (rotated) res.cookie(refreshKey, rotated, { ...cookieOption, maxAge: year });
     // Re-checked every hour, so someone taken off the allowlist loses access within one.
     const author = await whoIs(access_token);
     if (!author) {
@@ -134,7 +137,6 @@ app.get("/api/token", async (req, res) => {
       res.sendStatus(401);
       return;
     }
-    if (rotated) res.cookie(refreshKey, rotated, { ...cookieOption, maxAge: year });
     res.cookie(authorKey, authorCookie(author), { ...cookieOption, maxAge: authorMaxAge });
     res.send({ access_token, expires_in });
   } catch (error) {
@@ -152,6 +154,12 @@ app.get("/api/token", async (req, res) => {
 function logout(res: express.Response) {
   res.clearCookie(refreshKey, cookieOption);
   res.clearCookie(authorKey, cookieOption);
+  clearOldRefreshCookie(res);
+}
+
+// The refresh token used to live in refresh_key at Path=/api: over http that cookie shadows ours, over https it lingers.
+function clearOldRefreshCookie(res: express.Response) {
+  res.clearCookie("refresh_key", { ...cookieOption, path: "/api" });
 }
 
 app.post("/api/logout", (_req, res) => {

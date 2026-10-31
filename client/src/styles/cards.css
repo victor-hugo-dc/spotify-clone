@@ -1,4 +1,5 @@
-  /* The cards (PlayCard, CardDisplay, CardInfo) wherever they show; their rows and grid are shared, in index.css. */
+  /* The cards (PlayCard, CardDisplay, CardInfo) wherever they show, the row titles (RowTitle) and Home's one-row shelves
+     (CollectionRow oneRow). The rows and their grid are shared, in index.css; the rules here only refine them. */
 
   .PlayCard {
     width: 100%;
@@ -6,6 +7,8 @@
     position: relative;
   }
 
+  /* Spotify's green play button, at the bottom right of the cover: it rises into place on hover or keyboard focus, and
+     stays while its card plays. Never display: none, so the keyboard can reach it. */
   .smallButton {
     display: flex;
     align-items: center;
@@ -17,9 +20,9 @@
     position: absolute;
     width: 48px;
     height: 48px;
-    /* Bottom right of the artwork: 12px padding + 66px card text + 8px gap + 8px. */
+    /* 8px inside the cover's bottom right corner; the cover is 100cqw square, 12px in from the card's edges. */
+    top: calc(100cqw - 44px);
     right: 20px;
-    bottom: 94px;
     z-index: 3;
     box-shadow: 0 8px 8px rgba(0, 0, 0, 0.3);
     opacity: 0;
@@ -37,7 +40,10 @@
     transform: scale(1);
   }
 
+  /* A container, so the play button can be placed by the cover's width (100cqw): its width comes from its parent (a
+     grid column), never from its content. */
   .pcWrapper {
+    container-type: inline-size;
     position: relative;
     padding: 12px;
     border-radius: 6px;
@@ -47,6 +53,12 @@
 
   .pcWrapper:hover {
     background-color: #1a1a1a;
+  }
+
+  .pcWrapper > a {
+    display: block;
+    color: var(--main-text);
+    text-decoration: none;
   }
 
   .pcWrapper:hover .smallButton,
@@ -66,6 +78,11 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   }
 
+  /* Artists' pictures are round. */
+  .CardDisplay.round {
+    border-radius: 50%;
+  }
+
   .previewImg {
     position: absolute;
     display: block;
@@ -77,11 +94,10 @@
   }
 
   .CardInfo {
-    height: 66px;
     min-width: 0;
   }
 
-  .CardInfo h2 {
+  .CardInfo h3 {
     font-size: 16px;
     font-weight: 700;
     line-height: 24px;
@@ -114,4 +130,85 @@
   .card-placeholder > svg {
     width: 40%;
     height: 40%;
+  }
+
+  /* A row's title, 24px bold; linked, with a "Show all" at the right, when a page has everything in the row. */
+  .RowTitle h2 {
+    font-size: 24px;
+    line-height: 28px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .RowTitle a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .RowTitle a:hover {
+    text-decoration: underline;
+  }
+
+  .RowTitle .show-all {
+    flex: none;
+    margin-left: 16px;
+    color: var(--main-text);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* A shelf: one row of as many 180px-or-wider cards as fit, 10 at most. The cards that don't fit are hidden, not
+     wrapped. The grid is 24px wider than the shelf (index.css gives it -12px margins), so n cards fit from 180n - 24px. */
+  .shelf {
+    container: shelf / inline-size;
+    gap: 8px;
+  }
+
+  .shelf .RowGrid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+
+  @container shelf (width < 1776px) {
+    .shelf .RowGrid { grid-template-columns: repeat(9, minmax(0, 1fr)); }
+    .shelf .RowGrid > :nth-child(n + 10) { display: none; }
+  }
+
+  @container shelf (width < 1596px) {
+    .shelf .RowGrid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    .shelf .RowGrid > :nth-child(n + 9) { display: none; }
+  }
+
+  @container shelf (width < 1416px) {
+    .shelf .RowGrid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .shelf .RowGrid > :nth-child(n + 8) { display: none; }
+  }
+
+  @container shelf (width < 1236px) {
+    .shelf .RowGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .shelf .RowGrid > :nth-child(n + 7) { display: none; }
+  }
+
+  @container shelf (width < 1056px) {
+    .shelf .RowGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .shelf .RowGrid > :nth-child(n + 6) { display: none; }
+  }
+
+  @container shelf (width < 876px) {
+    .shelf .RowGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .shelf .RowGrid > :nth-child(n + 5) { display: none; }
+  }
+
+  @container shelf (width < 696px) {
+    .shelf .RowGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .shelf .RowGrid > :nth-child(n + 4) { display: none; }
+  }
+
+  @container shelf (width < 516px) {
+    .shelf .RowGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .shelf .RowGrid > :nth-child(n + 3) { display: none; }
+  }
+
+  @container shelf (width < 336px) {
+    .shelf .RowGrid { grid-template-columns: minmax(0, 1fr); }
+    .shelf .RowGrid > :nth-child(n + 2) { display: none; }
   }

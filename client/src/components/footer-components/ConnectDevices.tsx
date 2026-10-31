@@ -6,7 +6,7 @@ import { spotify } from "../../utilities/spotify";
 
 type Device = { id: string | null; name: string; is_active: boolean };
 
-const ConnectDevices = ({ closeTip }: { closeTip: () => void }) => {
+const ConnectDevices = ({ closeTip, onSwitch }: { closeTip: () => void; onSwitch: () => void }) => {
 	const [devices, setDevices] = useState<Device[] | null>(null);
 	const [error, setError] = useState("");
 
@@ -36,7 +36,10 @@ const ConnectDevices = ({ closeTip }: { closeTip: () => void }) => {
 	const switchDevice = (e: MouseEvent<HTMLButtonElement>) => {
 		const id = e.currentTarget.dataset.id;
 		spotify("/me/player", { method: "PUT", body: { device_ids: [id] } })
-			.then(() => closeTip())
+			.then(() => {
+				onSwitch();
+				closeTip();
+			})
 			.catch((error) => setError(`Couldn't switch device: ${error.message}`));
 	};
 

@@ -72,7 +72,7 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
     // eslint-disable-next-line
     }, [id])
 
-    // PUT /playlists/{id} changes the name, description or visibility; only the owner may. Resolves to whether it worked.
+    // PUT /playlists/{id} changes the name, description or visibility; only the owner may. Resolves to the error, if any.
     const changeDetails = (details: {name?: string, description?: string, public?: boolean}, done: string) =>
         spotify(`/playlists/${id}`, {method: 'PUT', body: details})
             .then(() => {
@@ -81,11 +81,11 @@ export default function PlayListPage({refreshPlaylist}: {refreshPlaylist: () => 
                 if (shared !== undefined) setIsPublic(shared)
                 setMessage(done)
                 refreshPlaylist()
-                return true
+                return null
             })
-            .catch((error) => {
+            .catch((error: Error) => {
                 setMessage(`ERROR: ${error.message}`)
-                return false
+                return error
             })
 
     // Deleting your own playlist means removing it from your library, as Spotify's apps do.

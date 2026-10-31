@@ -10,8 +10,9 @@ import PromptButton from './components/featured-components/PromptButton'
 import Player, { type PlayerHandle } from './components/footer-components/Player'
 import PageContent from './components/featured-components/PageContent'
 import Loading from './components/featured-components/Loading'
-import {UserContext, MessageContext, PlayContext, NowPlayingContext, LibraryContext, LayoutContext, type NowPlaying, type RightPanel} from './utilities/context'
+import {UserContext, MessageContext, PlayContext, NowPlayingContext, LibraryContext, LayoutContext, type Library, type LibraryKind, type NowPlaying, type RightPanel} from './utilities/context'
 import { allPages, spotify } from './utilities/spotify'
+import { retried } from './utilities/retry'
 import { refreshSession } from './utilities/session'
 import type { Artist, Paging, PlayHistory, Playlist, SavedAlbum, User } from './utilities/types'
 
@@ -29,15 +30,21 @@ function storedPanel(): RightPanel {
   return 'now-playing'
 }
 
+// Your Library's lists, each loaded on its own: every page (not just Spotify's first 20); recently played has no more
+// than 50 to page through. `name` is for the toast when one can't be loaded.
+const libraryLists: Record<LibraryKind, {name: string, load: () => Promise<Partial<Library>>}> = {
+  playlists: {name: 'playlists', load: () => allPages<Playlist>('/me/playlists?limit=50').then((playlists) => ({playlists}))},
+  albums: {name: 'albums', load: () => allPages<SavedAlbum>('/me/albums?limit=50').then((albums) => ({albums}))},
+  artists: {name: 'artists', load: () => allPages<Artist>('/me/following?type=artist&limit=50', (data) => data.artists).then((artists) => ({artists}))},
+  recent: {name: 'recently played songs', load: () => spotify<Paging<PlayHistory>>('/me/player/recently-played?limit=50').then((page) => ({recentlyPlayed: page.items}))},
+}
+
 function App() {
   const [loading, setLoading] = useState(true)
   const [loggedIn, setLoggedIn] = useState(false)
   const [loginError] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('error'))
   const [userInfo, setuserInfo] = useState<User | null>(null)
-  const [playlists, setPlaylists] = useState<Playlist[]>([])
-  const [albums, setAlbums] = useState<SavedAlbum[]>([])
-  const [artists, setArtists] = useState<Artist[]>([])
-  const [recentlyPlayed, setRecentlyPlayed] = useState<PlayHistory[]>([])
+  const [libraryData, setLibraryData] = useState<Omit<Library, 'refresh'>>({playlists: [], albums: [], artists: [], recentlyPlayed: []})
   const [nowPlaying, setNowPlaying] = useState<NowPlaying>({trackUri: null, contextUri: null, playing: false, deviceId: null, track: null, device: null})
   const [rightPanel, setRightPanelState] = useState(storedPanel)
 
@@ -45,6 +52,16 @@ function App() {
   const [message, setMessage] = useState('')
 
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  // Context values keep their identity across renders, so a toast doesn't re-run the effects and callbacks that use them.
+  const setStatusMessage = useCallback((message: string) => {
+      clearTimeout(timerRef.current)
+      setStatus(true)
+      setMessage(message)
+      timerRef.current = setTimeout(() => {
+          setStatus(false)
+      }, 3000)
+  }, [])
 
   // Logged in if the server can trade its refresh cookie for a token. A server or network hiccup isn't a logout: keep
   // showing the loading screen and try again.
@@ -77,16 +94,23 @@ function App() {
   // eslint-disable-next-line
   }, [loggedIn])
 
-  // Your Library, every page of it (not just Spotify's first 20). Recently played has no more than 50 to page through.
+  // A list that fails is asked for again (Spotify may be busy), and named in a toast if it still fails. Loads are
+  // numbered, so a slower older one can't overwrite a newer one that has landed.
+  const loads = useRef({started: 0, landed: {} as Partial<Record<LibraryKind, number>>})
   const refreshLibrary = useCallback(() => {
-    const log = (error: Error) => console.log(error)
-    allPages<Playlist>('/me/playlists?limit=50').then(setPlaylists).catch(log)
-    allPages<SavedAlbum>('/me/albums?limit=50').then(setAlbums).catch(log)
-    allPages<Artist>('/me/following?type=artist&limit=50', (data) => data.artists).then(setArtists).catch(log)
-    spotify<Paging<PlayHistory>>('/me/player/recently-played?limit=50').then((page) => setRecentlyPlayed(page.items)).catch(log)
-  }, [])
-  const library = useMemo(() => ({playlists, albums, artists, recentlyPlayed, refresh: refreshLibrary}),
-    [playlists, albums, artists, recentlyPlayed, refreshLibrary])
+    for (const list of Object.keys(libraryLists) as LibraryKind[]) {
+      const load = ++loads.current.started
+      const newest = () => load > (loads.current.landed[list] ?? 0)
+      retried(libraryLists[list].load).then((loaded) => {
+        if (!newest()) return
+        loads.current.landed[list] = load
+        setLibraryData((data) => ({...data, ...loaded}))
+      }, (error) => {
+        if (newest()) setStatusMessage(`Couldn't load your ${libraryLists[list].name}: ${error.message}`)
+      })
+    }
+  }, [setStatusMessage])
+  const library = useMemo(() => ({...libraryData, refresh: refreshLibrary}), [libraryData, refreshLibrary])
 
   const setRightPanel = useCallback((panel: RightPanel) => {
     setRightPanelState(panel)
@@ -97,16 +121,6 @@ function App() {
     }
   }, [])
   const layout = useMemo(() => ({rightPanel, setRightPanel}), [rightPanel, setRightPanel])
-
-  // Context values keep their identity across renders, so a toast doesn't re-run the effects and callbacks that use them.
-  const setStatusMessage = useCallback((message: string) => {
-      clearTimeout(timerRef.current)
-      setStatus(true)
-      setMessage(message)
-      timerRef.current = setTimeout(() => {
-          setStatus(false)
-      }, 3000)
-  }, [])
 
 
   const playerRef = useRef<PlayerHandle>(null)

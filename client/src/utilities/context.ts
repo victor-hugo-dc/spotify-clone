@@ -37,5 +37,6 @@ export const LayoutContext = createContext<{ rightPanel: RightPanel; setRightPan
 
 // Your Library, loaded once by App: every playlist, saved album and followed artist, and the last 50 plays.
 // refresh() loads it all again after a change.
+export type LibraryKind = "playlists" | "albums" | "artists" | "recent";
 export type Library = { playlists: Playlist[]; albums: SavedAlbum[]; artists: Artist[]; recentlyPlayed: PlayHistory[]; refresh: () => void };
 export const LibraryContext = createContext<Library>({ playlists: [], albums: [], artists: [], recentlyPlayed: [], refresh: () => {} });

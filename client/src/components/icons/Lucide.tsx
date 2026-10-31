@@ -22,7 +22,7 @@ export const Friends = lucide(<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4
 // Create
 export const Plus = lucide(<><path d="M5 12h14" /><path d="M12 5v14" /></>)
 // expand Your Library
-export const Expand = lucide(<><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /><line  /><line  /></>)
+export const Expand = lucide(<><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /><line x1="21" x2="14" y1="3" y2="10" /><line x1="3" x2="10" y1="21" y2="14" /></>)
 // scroll chips
 export const ChevronLeft = lucide(<path d="m15 18-6-6 6-6" />)
 // scroll chips

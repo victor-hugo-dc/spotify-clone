@@ -1,4 +1,6 @@
 import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
+// Before the components, so each area's own stylesheet (imported by its component) comes after the frame's.
+import './styles/layout.css'
 
 import TopBar from './components/top-bar/TopBar'
 import YourLibrary from './components/sidebar-components/YourLibrary'
@@ -12,7 +14,6 @@ import {UserContext, MessageContext, PlayContext, NowPlayingContext, LibraryCont
 import { allPages, spotify } from './utilities/spotify'
 import { refreshSession } from './utilities/session'
 import type { Artist, Paging, PlayHistory, Playlist, SavedAlbum, User } from './utilities/types'
-import './styles/layout.css'
 
 // Each viewer's right panel (or none) is remembered in their browser. Storage can be blocked or cleared (private
 // windows); then it's the Now playing view, as on Spotify.

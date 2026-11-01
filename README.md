@@ -81,8 +81,10 @@ Spotify's Web API has no lyrics endpoint; the lyrics in Spotify's own apps
 come from an internal Musixmatch-backed service that needs a web-player session
 cookie and is off-limits under the Developer Terms.
 
-For now, you annotate a lyric by typing the line. [LRCLIB](https://lrclib.net)
-(free, no API key) could bring lyrics back later.
+Annotations wait for lyrics, so the player bar has no Annotations button for
+now. The page still works at `/annotations`, where you annotate a lyric by
+typing the line. [LRCLIB](https://lrclib.net) (free, no API key) could bring
+lyrics back later.
 
 ## What Spotify took away
 

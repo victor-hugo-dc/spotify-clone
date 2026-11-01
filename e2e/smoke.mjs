@@ -11,7 +11,7 @@ let failures = 0;
 // Console errors a check provokes on purpose (requests it makes fail, 401 before login, React logging an error a boundary
 // caught). Matched against the console text.
 const expectedConsole = {
-  "login": /401/, "login-error": /401/, "autoconnect": /404/, "album-error": /404/, "comment-save-fails": /502/,
+  "login": /401/, "login-error": /401/, "autoconnect": /404/, "album-error": /404/, "comment-save-fails": /502/, "composer-save-fails": /502/,
   "scroll-error-once": /500/, "scroll-race": /ERR_ABORTED/,
 };
 

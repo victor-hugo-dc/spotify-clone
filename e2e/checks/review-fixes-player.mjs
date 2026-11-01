@@ -14,7 +14,7 @@ setTimeout(() => window.onSpotifyWebPlaybackSDKReady(), 0);`;
 const isRead = (r) => r.method() === "GET" && new URL(r.url()).pathname === "/v1/me/player";
 
 // Reloads with this browser ("dev-1") as the active device, so the player goes by SDK events and stops polling.
-async function inBrowser(p, t) {
+export async function inBrowser(p, t) {
   await p.route("https://sdk.scdn.co/**", (r) => r.fulfill({ contentType: "text/javascript", body: sdk }));
   await p.route((url) => url.pathname === "/v1/me/player", (r) => r.request().method() === "GET"
     ? r.fulfill({ json: { ...t.fixtures["/v1/me/player"], device: { id: "dev-1", volume_percent: 50 } } })
@@ -23,7 +23,7 @@ async function inBrowser(p, t) {
 }
 
 // The SDK's player_state_changed while `track` plays here; null once playback has moved to another device.
-const sdkState = (p, track, extra = {}) => p.evaluate((state) => window.sdkPlayer.listeners.player_state_changed(state), track && {
+export const sdkState = (p, track, extra = {}) => p.evaluate((state) => window.sdkPlayer.listeners.player_state_changed(state), track && {
   paused: false, shuffle: false, repeat_mode: 0, position: 1000, duration: track.duration_ms, context: null,
   track_window: { current_track: { ...track, linked_from: { uri: null } } }, ...extra,
 });

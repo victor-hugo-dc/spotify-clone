@@ -16,6 +16,7 @@ import Icon from "../icons";
 
 import { playerCommand, spotify } from "../../utilities/spotify";
 import { accessToken } from "../../utilities/session";
+import { reportPlay } from "../../utilities/activity";
 import formatTime, { positionAt } from "../../utilities/time";
 import useWriteComment from "../../utilities/hooks/useWriteComment";
 import { LayoutContext, MessageContext, setPlaybackClock, type NowPlaying as NowPlayingState, type PlayingTrack } from "../../utilities/context";
@@ -107,6 +108,12 @@ const Player = ({ onNowPlaying, ref }: Props) => {
 		setPlaybackClock({ uri: playInfo.uri || null, play, progress, at, total_time });
 		// eslint-disable-next-line
 	}, [playInfo.uri, playbackState.play, playbackState.progress, playbackState.at, playbackState.total_time]);
+
+	// Your friends see what you play: told once per song, and on each play and pause.
+	useEffect(() => {
+		if (track) reportPlay(track, playbackState.play, positionAt(playbackState, Date.now()));
+		// eslint-disable-next-line
+	}, [track, playbackState.play]);
 
 	// Like Spotify's tab title: what's playing, while it plays.
 	useEffect(() => {

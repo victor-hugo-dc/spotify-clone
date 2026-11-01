@@ -14,6 +14,7 @@ import {UserContext, MessageContext, PlayContext, NowPlayingContext, SeekContext
 import { allPages, spotify } from './utilities/spotify'
 import { retried } from './utilities/retry'
 import { refreshSession } from './utilities/session'
+import { reportPlay } from './utilities/activity'
 import type { Artist, Paging, PlayHistory, Playlist, SavedAlbum, User } from './utilities/types'
 
 // Each viewer's right panel (or none) is remembered in their browser. Storage can be blocked or cleared (private
@@ -43,7 +44,12 @@ const libraryLists: Record<LibraryKind, {name: string, load: () => Promise<Parti
   playlists: {name: 'playlists', load: () => allPages<Playlist>('/me/playlists?limit=50').then((playlists) => ({playlists}))},
   albums: {name: 'albums', load: () => allPages<SavedAlbum>('/me/albums?limit=50').then((albums) => ({albums}))},
   artists: {name: 'artists', load: () => allPages<Artist>('/me/following?type=artist&limit=50', (data) => data.artists).then((artists) => ({artists}))},
-  recent: {name: 'recently played songs', load: () => spotify<Paging<PlayHistory>>('/me/player/recently-played?limit=50').then((page) => ({recentlyPlayed: page.items}))},
+  // The newest play goes to your friends too, as when you played it: the server keeps it only if it's newer than its own.
+  recent: {name: 'recently played songs', load: () => spotify<Paging<PlayHistory>>('/me/player/recently-played?limit=50').then((page) => {
+    const [last] = page.items
+    if (last) reportPlay(last.track, false, 0, Date.parse(last.played_at))
+    return {recentlyPlayed: page.items}
+  })},
   liked: {name: 'Liked Songs', load: () => spotify<Paging<unknown>>('/me/tracks?limit=1').then((page) => ({likedTotal: page.total ?? null}))},
 }
 

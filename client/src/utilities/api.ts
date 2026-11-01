@@ -12,5 +12,6 @@ export async function api<T>(path: string, body?: object): Promise<T> {
   // The author cookie lasts two hours; a token refresh renews it.
   if (response.status === 401 && (await refreshSession())) response = await send();
   if (!response.ok) throw new Error(`Shoutify answered ${response.status}`);
-  return response.json();
+  // 204: saved, nothing to read back.
+  return response.status === 204 ? (undefined as T) : response.json();
 }

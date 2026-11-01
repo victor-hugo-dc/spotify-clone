@@ -5,13 +5,13 @@ import Icon from '../icons'
 import { Avatar } from './FriendActivity'
 import { QueueRow } from './QueueView'
 import useQueue from './useQueue'
-import { openAddComment } from '../footer-components/Player'
 import { api } from '../../utilities/api'
 import { spotify } from '../../utilities/spotify'
 import formatTime from '../../utilities/time'
 import useCoverColor from '../../utilities/hooks/useCoverColor'
 import useCommentsLoader from '../../utilities/hooks/useCommentsLoader'
 import useLiked from '../../utilities/hooks/useLiked'
+import useWriteComment from '../../utilities/hooks/useWriteComment'
 import { LayoutContext, type PlayingTrack } from '../../utilities/context'
 import type { Artist, SongComment } from '../../utilities/types'
 
@@ -28,6 +28,7 @@ export default function NowPlayingView({ track }: { track: PlayingTrack }) {
     const artistId = track.artists[0]?.id ?? null
     const [artist, setArtist] = useState<Artist | null>(null)
     const next = useQueue(track.uri)?.queue[0]
+    const writeComment = useWriteComment()
 
     // Tagged with the song they're on, so a slow answer about the last song can't show on this one.
     const [loaded, setLoaded] = useState<{ id: string; comments: SongComment[] | null }>()
@@ -79,7 +80,7 @@ export default function NowPlayingView({ track }: { track: PlayingTrack }) {
                     {comments === null ? <p className='npv-comments-note' role='alert'>Couldn't load the comments.</p> :
                         comments.length === 0 ? <div className='npv-comments-empty'>
                             <p className='npv-comment-body'>No one's commented thus far. Be the first!</p>
-                            <button className='npv-pill no-outline' onClick={openAddComment}>Add a comment</button>
+                            <button className='npv-pill no-outline' onClick={() => writeComment(songId)}>Add a comment</button>
                         </div> :
                         <ul className='npv-comment-list'>
                             {/* The newest three. */}

@@ -10,7 +10,6 @@ const AddAnnotation = ({ closeTip, annotatedText, song }: Props) => {
       <AddComment
         closeTip={closeTip}
         song={song}
-        annotation={true}
         text={annotatedText}
       />
     </div>

@@ -6,9 +6,10 @@ import { commentsChanged } from "../../utilities/hooks/useCommentsLoader";
 import formatTime from "../../utilities/time";
 import type { CommentSong } from "../../utilities/types";
 
-type Props = { closeTip: () => void; song: CommentSong; annotation?: boolean; text?: string };
+type Props = { closeTip: () => void; song: CommentSong; text: string };
 
-const AddComment = ({ closeTip, song: songNow, annotation = false, text = ''}: Props) => {
+// The annotations page's dialog (comments are written on the song's comment page).
+const AddComment = ({ closeTip, song: songNow, text }: Props) => {
 	const setMessage = useContext(MessageContext);
 	const [commenttext, setCommentText] = useState("");
 	const [saving, setSaving] = useState(false);
@@ -30,18 +31,6 @@ const AddComment = ({ closeTip, song: songNow, annotation = false, text = ''}: P
 			});
 	}
 
-	const handleCommentSubmit = () => {
-		save("/comments/add", {
-			songID: song.id,
-			songName: song.name,
-			songArtist: song.artist,
-			songImage: song.image,
-			commentBody: commenttext,
-			timestamp: song.position,
-		}, "Comment Added!");
-	}
-
-	// Special callback to handle annotation submission
 	const handleAnnotationSubmit = () => {
 		save("/annotations/add", {
 			songID: song.id,
@@ -51,7 +40,7 @@ const AddComment = ({ closeTip, song: songNow, annotation = false, text = ''}: P
 		}, "Annotation Added!");
 	}
 
-	const title = annotation ? "Add Annotation" : "Add Comment";
+	const title = "Add Annotation";
 
 	return (
 		<div className="add-comment" data-source="inside" role="dialog" aria-label={title}>
@@ -62,10 +51,10 @@ const AddComment = ({ closeTip, song: songNow, annotation = false, text = ''}: P
 				</div>
 				<div className="commentdiv" data-source="inside">
 					{/* The server takes up to 2000 characters, and not just whitespace. */}
-					<textarea className="textareacomment" name="freeform" rows={5} cols={43} maxLength={2000} autoFocus aria-label={annotation ? "Annotation" : "Comment"} value={commenttext} onChange={(event) => setCommentText(event.target.value)}></textarea>
+					<textarea className="textareacomment" name="freeform" rows={5} cols={43} maxLength={2000} autoFocus aria-label="Annotation" value={commenttext} onChange={(event) => setCommentText(event.target.value)}></textarea>
 				</div>
 				<button className="pill-button-grey" onClick={closeTip}>Cancel</button>
-				<button className="pill-button-green" disabled={saving || commenttext.trim() === ""} onClick={annotation ? handleAnnotationSubmit : handleCommentSubmit}>Add</button>
+				<button className="pill-button-green" disabled={saving || commenttext.trim() === ""} onClick={handleAnnotationSubmit}>Add</button>
 			</div>
 		</div>
 	);

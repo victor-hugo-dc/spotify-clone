@@ -14,11 +14,10 @@ import ConnectDevices from "./ConnectDevices";
 import ControlButton from "./ControlButton";
 import Icon from "../icons";
 
-import AddComment from "./AddComment";
-
 import { playerCommand, spotify } from "../../utilities/spotify";
 import { accessToken } from "../../utilities/session";
 import formatTime, { positionAt } from "../../utilities/time";
+import useWriteComment from "../../utilities/hooks/useWriteComment";
 import { LayoutContext, MessageContext, type NowPlaying as NowPlayingState, type PlaybackClock, type PlayingTrack } from "../../utilities/context";
 import "../../styles/player.css";
 
@@ -47,10 +46,6 @@ const idOf = (uri: string | null | undefined, kind: "album" | "artist") => (uri?
 
 type Props = { onNowPlaying: (nowPlaying: NowPlayingState) => void; onClock: (clock: PlaybackClock) => void; ref?: Ref<PlayerHandle> };
 
-// The Now playing view's "Add a comment" opens the player's own Add Comment dialog, which knows where the song is at.
-const ADD_COMMENT = "shoutify:add-comment";
-export const openAddComment = () => window.dispatchEvent(new Event(ADD_COMMENT));
-
 const Player = ({ onNowPlaying, onClock, ref }: Props) => {
 	const setMessage = useContext(MessageContext);
 	const { rightPanel, setRightPanel, wide } = useContext(LayoutContext);
@@ -67,18 +62,12 @@ const Player = ({ onNowPlaying, onClock, ref }: Props) => {
 	const [scrubPb, setScrubPb] = useState<number | null>(null);
 	const [volume, setVolume] = useState(1);
 	const [connectTip, setConnectTip] = useState(false);
-	const [commentTip, setCommentTip] = useState(false);
 	const [fullscreen, setFullscreen] = useState(() => !!document.fullscreenElement);
 
 	useEffect(() => {
-		const open = () => setCommentTip(true);
 		const resized = () => setFullscreen(!!document.fullscreenElement);
-		window.addEventListener(ADD_COMMENT, open);
 		document.addEventListener("fullscreenchange", resized);
-		return () => {
-			window.removeEventListener(ADD_COMMENT, open);
-			document.removeEventListener("fullscreenchange", resized);
-		};
+		return () => document.removeEventListener("fullscreenchange", resized);
 	}, []);
 
 	const [playInfo, setPlayInfo] = useState<PlayInfo>({
@@ -355,6 +344,7 @@ const Player = ({ onNowPlaying, onClock, ref }: Props) => {
 		seekVolume(volume > 0 ? 0 : unmuted.current);
 	};
 
+	const writeComment = useWriteComment();
 	const loaded = playInfo.name !== "";
 	// The comment page looks the song up as a Spotify track, which episodes and local files aren't.
 	const isTrack = playInfo.uri.startsWith("spotify:track:");
@@ -439,18 +429,12 @@ const Player = ({ onNowPlaying, onClock, ref }: Props) => {
 							onClick={() => togglePanel("now-playing")}
 						/>
 					)}
-					{commentTip && (
-						<AddComment
-							closeTip={() => setCommentTip(false)}
-							song={{ id: playInfo.id ?? "", name: playInfo.name, artist: (playInfo.artists ?? []).map((artist) => artist.name).join(", "), image: playInfo.album?.images.at(-1)?.url ?? null, position }}
-						/>
-					)}
 					<ControlButton
 						title={isTrack ? "Comment" : loaded ? "Podcasts and local files can't be commented on" : "Play a song to comment on it"}
 						icon="Comment"
 						size="x-larger"
 						disabled={!isTrack}
-						onClick={() => setCommentTip(!commentTip)}
+						onClick={() => playInfo.id && writeComment(playInfo.id)}
 					/>
 					{wide && <ControlButton title="Queue" icon="Queue" active={rightPanel === "queue"} onClick={() => togglePanel("queue")} />}
 

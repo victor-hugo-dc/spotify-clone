@@ -56,12 +56,13 @@ export type CardItem = Playlist | Album | Artist | Track | LinkCard;
 // Shoutify's own records, as the server returns them.
 type Authored = { id: number; authorID: string; authorName: string; authorImage: string | null; songID: string; timestamp: number };
 
-export type SongComment = Authored & { commentBody: string; songName: string | null; songArtist: string | null; songImage: string | null };
+// createdAt: when it was posted (ms since 1970), null on comments from before Shoutify kept that.
+export type SongComment = Authored & { commentBody: string; songName: string | null; songArtist: string | null; songImage: string | null; createdAt: number | null };
 
 export type SongAnnotation = Authored & { annotatedText: string; noteBody: string };
 
-// The song a new comment or annotation is about, and where in it (ms).
-export type CommentSong = { id: string; name: string; artist: string; image: string | null; position: number };
+// The song a new comment or annotation is about, where in it (ms), and how long it is (ms).
+export type CommentSong = { id: string; name: string; artist: string; image: string | null; position: number; duration: number };
 
 export const commentSong = (track: Track, position = 0): CommentSong => ({
   id: track.id,
@@ -69,4 +70,5 @@ export const commentSong = (track: Track, position = 0): CommentSong => ({
   artist: track.artists.map((artist) => artist.name).join(", "),
   image: track.album?.images.at(-1)?.url ?? null,
   position,
+  duration: track.duration_ms,
 });

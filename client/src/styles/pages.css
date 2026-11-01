@@ -105,8 +105,6 @@
     padding: 24px 24px 32px;
   }
 
-  .socialGrid,
-  .comment-list,
   .annotations-list {
     display: flex;
     flex-direction: column;
@@ -115,10 +113,90 @@
   }
 
   .socialGrid {
+    max-width: 600px;
     margin-top: 24px;
+    border-top: 1px solid #2a2a2a;
   }
 
-  /* A comment or annotation. */
+  /* A comment, as a row of a Twitter-like timeline: 40px picture, then who, the moment in the song in green and how
+     long ago, and what they wrote; in What's New, the song too. */
+  .comment-row {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #2a2a2a;
+    color: #fff;
+    transition: background-color 0.2s;
+  }
+
+  .comment-row:hover {
+    background-color: hsla(0, 0%, 100%, 0.03);
+  }
+
+  .comment-row .avatar,
+  .composer .avatar {
+    flex: none;
+  }
+
+  .comment-row .avatar img,
+  .composer .avatar img {
+    display: block;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .comment-row .avatar-initial,
+  .composer .avatar-initial {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 16px;
+  }
+
+  .comment-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .comment-header {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    color: #a7a7a7;
+    font-size: 14px;
+    line-height: 20px;
+    white-space: nowrap;
+  }
+
+  .comment-author {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .comment-at {
+    margin-left: 4px;
+    color: var(--spotify-green);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .comment-body {
+    margin-top: 2px;
+    font-size: 15px;
+    line-height: 20px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .comment-main .spotify-track {
+    margin-top: 8px;
+  }
+
+  /* An annotation. */
   .spotify-tweet-box {
     display: flex;
     gap: 16px;
@@ -170,10 +248,6 @@
     line-height: 24px;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-  }
-
-  .spotify-tweet-box .spotify-track {
-    margin-top: 8px;
   }
 
   .annotated-line {
@@ -232,9 +306,138 @@
     font-size: 14px;
   }
 
-  /* A song's comments, under its banner. */
+  /* A song's comments, under its banner and play button: a centred column like Twitter's, the composer on top. */
   .comments-content {
     padding: 0 24px;
+  }
+
+  .timeline {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .timeline > .empty-state {
+    padding: 24px 16px;
+  }
+
+  .composer {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  .composer-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* The chip sits at the start of the text's first line, which is indented by its width (--indent). A hidden copy of
+     the text in the same grid cell (::after) grows the box with it. */
+  .composer-field {
+    position: relative;
+    display: grid;
+  }
+
+  .composer-text,
+  .composer-field::after {
+    grid-area: 1 / 1;
+    padding: 8px 0;
+    font-size: 16px;
+    line-height: 24px;
+    text-indent: var(--indent);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  .composer-field::after {
+    content: attr(data-text) " ";
+    visibility: hidden;
+  }
+
+  .time-chip-space {
+    position: absolute;
+    top: 9px;
+    left: 0;
+    display: flex;
+    padding-right: 6px;
+  }
+
+  .time-chip {
+    height: 22px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 500px;
+    background: var(--spotify-green);
+    color: #000;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 22px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .time-chip:hover {
+    background: var(--spotify-green-bright);
+  }
+
+  input.time-chip {
+    text-align: center;
+    cursor: text;
+  }
+
+  input.time-chip:focus-visible {
+    outline-offset: 1px;
+  }
+
+  .time-chip[aria-invalid="true"] {
+    background: #f3727f;
+  }
+
+  .time-chip-error {
+    margin-top: 4px;
+    color: #f3727f;
+    font-size: 13px;
+  }
+
+  .composer-text {
+    border: 0;
+    outline: 0;
+    background: none;
+    color: #fff;
+    overflow: hidden;
+    resize: none;
+  }
+
+  .composer-text::placeholder {
+    color: #a7a7a7;
+  }
+
+  .composer-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 8px;
+  }
+
+  .composer-post {
+    height: 36px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 500px;
+    background: var(--spotify-green);
+    color: #000;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .composer-post:hover:not(:disabled) {
+    background: var(--spotify-green-bright);
+  }
+
+  .composer-post:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
 
   .comments-actions {

@@ -1,5 +1,5 @@
-  /* The player bar: what's playing, the controls, seek and volume, the devices popup and the Add Comment dialog; and
-     under it the green "Playing on" bar. */
+  /* The player bar: what's playing, the controls, seek and volume, the devices popup; under it the green "Playing on"
+     bar; and the annotation dialog (AddComment.tsx). */
 
   .player {
     height: var(--player-height);

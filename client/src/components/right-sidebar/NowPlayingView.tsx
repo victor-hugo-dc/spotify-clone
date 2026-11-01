@@ -27,8 +27,9 @@ export default function NowPlayingView({ track }: { track: PlayingTrack }) {
     const [liked, toggleLiked] = useLiked(savable ? track.uri : '')
     const artistId = track.artists[0]?.id ?? null
     const [artist, setArtist] = useState<Artist | null>(null)
-    const next = useQueue(track.uri)?.queue[0]
-    const skipTo = useSkipTo()
+    const queue = useQueue(track.uri)
+    const next = queue?.queue[0]
+    const skipTo = useSkipTo(queue)
     const writeComment = useWriteComment()
 
     // Tagged with the song they're on, so a slow answer about the last song can't show on this one.

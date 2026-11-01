@@ -25,22 +25,25 @@ export default function useQueue(uri: string | undefined) {
 
 // Plays the song `skips` places ahead (1: the next), skipping everything before it as Spotify's queue does. The Web API has
 // no command for that, so it skips that many times, each after the last: Spotify can run concurrent commands out of order.
-// Clicks while it's skipping are ignored, since they'd count from a queue that's moving.
-export function useSkipTo() {
+// Clicks on `queue` (as shown) after it has been skipped from are ignored until it's read again, since they'd count from
+// places that have moved.
+export function useSkipTo(queue: Queue | null | undefined) {
     const { deviceId } = useContext(NowPlayingContext)
     const updatePlayer = useContext(PlayContext)
     const setMessage = useContext(MessageContext)
-    const skipping = useRef(false)
+    const stale = useRef<Queue | null | undefined>(undefined)
 
     return async (skips: number) => {
-        if (skipping.current) return
-        skipping.current = true
+        if (stale.current === queue) return
+        const from = (stale.current = queue)
         try {
             for (let i = 0; i < skips; i++) await playerCommand('/me/player/next', deviceId, { method: 'POST' })
+            // The queue is read again when the playing song changes; if Spotify plays the same song again, it isn't.
+            setTimeout(() => stale.current === from && (stale.current = undefined), 3000)
         } catch (error) {
             setMessage(`ERROR: ${(error as Error).message}`)
+            stale.current = undefined
         }
-        skipping.current = false
         updatePlayer()
     }
 }

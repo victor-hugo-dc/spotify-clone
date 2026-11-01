@@ -26,7 +26,7 @@ export function QueueRow({ item, current = false, onPlay }: { item: QueueItem; c
 export default function QueueView() {
     const { track } = useContext(NowPlayingContext)
     const queue = useQueue(track?.uri)
-    const skipTo = useSkipTo()
+    const skipTo = useSkipTo(queue)
 
     if (queue === undefined) return null
     if (queue === null) return <p className='right-sidebar-note' role='alert'>Couldn't load your queue. Try again in a moment.</p>

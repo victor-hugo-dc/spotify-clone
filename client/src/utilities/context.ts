@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { createContext, useSyncExternalStore } from "react";
 import type { Artist, Image, PlayHistory, Playlist, SavedAlbum, User } from "./types";
 
 export const UserContext = createContext<User | null>(null);
@@ -31,7 +31,18 @@ export const NowPlayingContext = createContext<NowPlaying>({ trackUri: null, con
 // The player's clock, for pages that follow playback: the loaded track, and its position (ms) as read at `at`
 // (Date.now()), moving on while `play` (positionAt() in time.ts works it out). It changes with playback, not every tick.
 export type PlaybackClock = { uri: string | null; play: boolean; progress: number; at: number; total_time: number };
-export const PlaybackClockContext = createContext<PlaybackClock>({ uri: null, play: false, progress: 0, at: 0, total_time: 0 });
+// Kept outside React state: the player sets it on every poll, and only the components that read it should re-render.
+let clock: PlaybackClock = { uri: null, play: false, progress: 0, at: 0, total_time: 0 };
+const clockListeners = new Set<() => void>();
+export function setPlaybackClock(next: PlaybackClock) {
+  clock = next;
+  clockListeners.forEach((listener) => listener());
+}
+const subscribeClock = (listener: () => void) => {
+  clockListeners.add(listener);
+  return () => clockListeners.delete(listener);
+};
+export const usePlaybackClock = () => useSyncExternalStore(subscribeClock, () => clock);
 // Moves the loaded track to a position (ms), as the player's seek bar does.
 export const SeekContext = createContext<(ms: number) => void>(() => {});
 

@@ -9,7 +9,7 @@ import { api } from '../../utilities/api';
 import formatTime, { parseTime, positionAt } from '../../utilities/time';
 import useCommentsLoader, { commentsChanged } from '../../utilities/hooks/useCommentsLoader';
 import usePlayback from '../../utilities/hooks/usePlayback';
-import { MessageContext, PlaybackClockContext, SeekContext, UserContext } from '../../utilities/context';
+import { MessageContext, SeekContext, UserContext, usePlaybackClock } from '../../utilities/context';
 import { commentSong, type CommentSong, type SongComment, type Track } from '../../utilities/types';
 import '../../styles/pages.css';
 
@@ -86,7 +86,7 @@ export default function CommentPage() {
 function Composer({song}: {song: CommentSong}) {
     const me = useContext(UserContext);
     const setMessage = useContext(MessageContext);
-    const clock = useContext(PlaybackClockContext);
+    const clock = usePlaybackClock();
     const seek = useContext(SeekContext);
     const live = clock.uri === `spotify:track:${song.id}`;
     const [text, setText] = useState('');

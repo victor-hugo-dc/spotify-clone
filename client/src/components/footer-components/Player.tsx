@@ -18,7 +18,7 @@ import { playerCommand, spotify } from "../../utilities/spotify";
 import { accessToken } from "../../utilities/session";
 import formatTime, { positionAt } from "../../utilities/time";
 import useWriteComment from "../../utilities/hooks/useWriteComment";
-import { LayoutContext, MessageContext, type NowPlaying as NowPlayingState, type PlaybackClock, type PlayingTrack } from "../../utilities/context";
+import { LayoutContext, MessageContext, setPlaybackClock, type NowPlaying as NowPlayingState, type PlayingTrack } from "../../utilities/context";
 import "../../styles/player.css";
 
 export type PlayerHandle = { updateState: () => void; seek: (ms: number) => void };
@@ -44,9 +44,9 @@ const sdkRepeat: Repeat[] = ["off", "context", "track"];
 // The id in a spotify:album:… or spotify:artist:… URI; null for local files and episodes, which have neither.
 const idOf = (uri: string | null | undefined, kind: "album" | "artist") => (uri?.startsWith(`spotify:${kind}:`) ? (uri.split(":")[2] ?? null) : null);
 
-type Props = { onNowPlaying: (nowPlaying: NowPlayingState) => void; onClock: (clock: PlaybackClock) => void; ref?: Ref<PlayerHandle> };
+type Props = { onNowPlaying: (nowPlaying: NowPlayingState) => void; ref?: Ref<PlayerHandle> };
 
-const Player = ({ onNowPlaying, onClock, ref }: Props) => {
+const Player = ({ onNowPlaying, ref }: Props) => {
 	const setMessage = useContext(MessageContext);
 	const { rightPanel, setRightPanel, wide } = useContext(LayoutContext);
 	const [playbackState, setPlaybackState] = useState<PlaybackState>({
@@ -104,9 +104,9 @@ const Player = ({ onNowPlaying, onClock, ref }: Props) => {
 	// re-rendered on every tick.
 	useEffect(() => {
 		const { play, progress, at, total_time } = playbackState;
-		onClock({ uri: playInfo.uri || null, play, progress, at, total_time });
+		setPlaybackClock({ uri: playInfo.uri || null, play, progress, at, total_time });
 		// eslint-disable-next-line
-	}, [playInfo.uri, playbackState.play, playbackState.progress, playbackState.at, playbackState.total_time, onClock]);
+	}, [playInfo.uri, playbackState.play, playbackState.progress, playbackState.at, playbackState.total_time]);
 
 	// Like Spotify's tab title: what's playing, while it plays.
 	useEffect(() => {

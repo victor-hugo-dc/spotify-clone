@@ -17,12 +17,8 @@ const find = (author: Author, where: string, ...params: SQLInputValue[]) =>
     liked: comment.liked === 1,
   }));
 
-// The feed: the newest 100, without replies (they're read under their comment, on the song's page).
-router.get("/all", (_req, res) => {
-  res.send({ comments: find(res.locals.author, "WHERE parentID IS NULL ORDER BY id DESC LIMIT 100") });
-});
-
-// The Social feed: the same, by the people the signed-in user follows on Spotify, whatever their likes.
+// The Social feed: the newest 100 by the people the signed-in user follows on Spotify, whatever their likes, without
+// replies (they're read under their comment, on the song's page).
 router.get("/feed", (_req, res) => {
   res.send({ comments: find(res.locals.author, "WHERE parentID IS NULL AND authorID IN (SELECT followee FROM follows WHERE follower = $user) ORDER BY id DESC LIMIT 100") });
 });

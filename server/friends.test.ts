@@ -174,9 +174,9 @@ test("the Social feed has the top-level comments of the people you follow, whate
 
   const feed = (await get("/api/comments/feed", victor)).comments;
   assert.deepEqual(feed.map((c: { commentBody: string }) => c.commentBody), ["second from Ana", "first from Ana"]);
-  // The same rows as everyone's newest.
-  const all = (await get("/api/comments/all", victor)).comments;
-  assert.deepEqual(feed, all.filter((c: { authorID: string }) => c.authorID === "ana"));
+  // The same rows as on the song's page.
+  const onSong = (await get(`/api/comments/song/${song.songID}`, victor)).comments;
+  assert.deepEqual(feed, onSong.filter((c: { authorID: string; parentID: number | null }) => c.authorID === "ana" && c.parentID === null).reverse());
   assert.equal(feed[1].likes, 1);
   assert.deepEqual((await get("/api/comments/feed", cy)).comments, []);
   assert.equal((await fetch(`${base}/api/comments/feed`)).status, 401);

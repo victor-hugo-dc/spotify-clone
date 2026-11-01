@@ -73,6 +73,8 @@ for (const [column, type] of Object.entries({ songName: "TEXT", songArtist: "TEX
 }
 // After the loop, which adds the column to older databases.
 db.exec("CREATE INDEX IF NOT EXISTS comments_parent ON comments (parentID)");
+// When each user last opened What's New (ms since 1970; NULL until they have), for its "new" dots and the bell's.
+if (!db.prepare("SELECT 1 FROM pragma_table_info('users') WHERE name = 'seenAt'").get()) db.exec("ALTER TABLE users ADD COLUMN seenAt INTEGER");
 
 export const isText = (value: unknown, max: number): value is string =>
   typeof value === "string" && value.trim() !== "" && value.length <= max;

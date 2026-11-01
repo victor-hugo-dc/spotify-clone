@@ -89,10 +89,10 @@ test("comments need the signed author cookie, and the author comes from it", asy
       headers: { "Content-Type": "application/json", cookie },
       body: JSON.stringify({ authorID: "mallory", songID: "4uLU6hMCjMI75M1A2tKUQC", commentBody: "hi", timestamp: 0 }),
     });
-  assert.equal((await get("/api/comments/all")).status, 401);
+  assert.equal((await get("/api/comments/feed")).status, 401);
   assert.equal((await add(signedIn.replace(/\.[\w-]+$/, ".forged"))).status, 401);
   // A valid Spotify token from some other app proves nothing here.
-  assert.equal((await fetch(`${base}/api/comments/all`, { headers: { Authorization: "Bearer access" } })).status, 401);
+  assert.equal((await fetch(`${base}/api/comments/feed`, { headers: { Authorization: "Bearer access" } })).status, 401);
   const { comment } = (await (await add(signedIn)).json()) as { comment: { authorID: string } };
   assert.equal(comment.authorID, "ana");
 });

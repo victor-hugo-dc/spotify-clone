@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import type { CookieOptions } from "express";
 import commentRoute from "./routes/comments.ts";
 import noteRoute from "./routes/annotations.ts";
+import notificationRoute from "./routes/notifications.ts";
 import { activityRoute, friendRoute, remember } from "./routes/friends.ts";
 import { authorCookie, authorMaxAge, requireUser, type Author } from "./user.ts";
 
@@ -31,9 +32,10 @@ const authorKey = cookieName("author");
 const cookieOption: CookieOptions = { httpOnly: true, sameSite: "lax", secure, path: "/" };
 const year = 365 * 24 * 60 * 60 * 1000;
 
-// Only logged-in friends can read or write comments, annotations and what they play.
+// Only logged-in friends can read or write comments, annotations, what they play and their notifications.
 app.use("/api/comments", requireUser(authorKey), commentRoute);
 app.use("/api/annotations", requireUser(authorKey), noteRoute);
+app.use("/api/notifications", requireUser(authorKey), notificationRoute);
 app.use("/api/friends", requireUser(authorKey), friendRoute);
 app.use("/api/activity", requireUser(authorKey), activityRoute);
 

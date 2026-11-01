@@ -33,7 +33,7 @@ const author = { authorID: "ana", authorName: "Ana", authorImage: null };
 // A new top-level comment: no replies or likes yet.
 const fresh = { parentID: null, likes: 0, liked: false, replies: 0 };
 
-test("stores comments with their song, per song and in the feed (newest first)", async () => {
+test("stores comments with their song, per song", async () => {
   const withSong = { songID: song1, songName: "Never Gonna Give You Up", songArtist: "Rick Astley", songImage: cover, commentBody: "great drop", timestamp: 61000 };
   const before = Date.now();
   // The server says who wrote it and when.
@@ -46,10 +46,7 @@ test("stores comments with their song, per song and in the feed (newest first)",
   assert.equal((await post("/comments/add", { songID: song2, commentBody: "meh", timestamp: 0 })).status, 201);
 
   assert.deepEqual((await get(`/comments/song/${song1}`)).comments, [stored]);
-  const feed = (await get("/comments/all")).comments;
-  assert.deepEqual(feed.map((c: { id: number }) => c.id), [2, 1]);
-  assert.equal(feed[0].songName, null);
-  assert.deepEqual(feed[1], stored);
+  assert.equal((await get(`/comments/song/${song2}`)).comments[0].songName, null);
 });
 
 test("counts comments for a batch of songs in one request", async () => {
@@ -91,15 +88,13 @@ test("likes: one per person, set or cleared however often it's sent, and counted
   assert.deepEqual(await like(1, false), { likes: 1, liked: false });
   assert.deepEqual(await like(1, false), { likes: 1, liked: false });
   // Bo's like counts for Ana, but isn't hers.
-  for (const path of [`/comments/song/${song1}`, "/comments/all"]) {
-    assert.deepEqual(await mine(path), [{ likes: 1, liked: false }], path);
-    assert.deepEqual(await mine(path, "bo"), [{ likes: 1, liked: true }], path);
-  }
+  assert.deepEqual(await mine(`/comments/song/${song1}`), [{ likes: 1, liked: false }]);
+  assert.deepEqual(await mine(`/comments/song/${song1}`, "bo"), [{ likes: 1, liked: true }]);
   assert.equal(await like(999, true), 404);
   for (const liked of [undefined, null, "true", 1]) assert.equal(await like(1, liked), 400, `liked: ${liked}`);
 });
 
-test("replies go one level deep under a comment on the same song, at its moment, and stay out of the feed", async () => {
+test("replies go one level deep under a comment on the same song, at its moment", async () => {
   // Comment 1 is on song1 at 61000, comment 2 on song2.
   const added = await post("/comments/add", { songID: song1, commentBody: "agreed", parentID: 1 }, "bo");
   assert.equal(added.status, 201);
@@ -116,20 +111,21 @@ test("replies go one level deep under a comment on the same song, at its moment,
 
   const song = (await get(`/comments/song/${song1}`)).comments;
   assert.deepEqual(song.map(({ id, parentID, replies }: { id: number; parentID: number | null; replies: number }) => [id, parentID, replies]), [[1, null, 2], [3, 1, 0], [4, 1, 0]]);
-  assert.deepEqual((await get("/comments/all")).comments.map((c: { id: number; replies: number }) => [c.id, c.replies]), [[2, 0], [1, 2]]);
   // A song's comment count takes in the replies.
   assert.deepEqual(await get(`/comments/counts?songs=${song1}`), { counts: { [song1]: 3 } });
 });
 
-test("adds the song, posting-time and reply columns to a database made before they existed", async () => {
+test("adds the song, posting-time and reply columns, and when people last looked, to a database made before they existed", async () => {
   const file = path.join(mkdtempSync(path.join(tmpdir(), "shoutify-")), "old.db");
   new DatabaseSync(file).exec(`CREATE TABLE comments (id INTEGER PRIMARY KEY, authorID TEXT NOT NULL, authorName TEXT NOT NULL,
     authorImage TEXT, songID TEXT NOT NULL, commentBody TEXT NOT NULL, timestamp INTEGER NOT NULL);
-    INSERT INTO comments (authorID, authorName, songID, commentBody, timestamp) VALUES ('bo', 'Bo', '${song1}', 'old one', 5)`);
+    INSERT INTO comments (authorID, authorName, songID, commentBody, timestamp) VALUES ('bo', 'Bo', '${song1}', 'old one', 5);
+    CREATE TABLE users (id TEXT PRIMARY KEY, name TEXT NOT NULL, image TEXT); INSERT INTO users (id, name) VALUES ('bo', 'Bo')`);
   process.env.DB_PATH = file;
   // A query string loads db.ts again as a separate module, so it opens this file.
   const fresh: string = "./db.ts?old-database";
   const { db } = await import(fresh);
   assert.deepEqual({ ...db.prepare("SELECT songName, createdAt, parentID, commentBody FROM comments").get() }, { songName: null, createdAt: null, parentID: null, commentBody: "old one" });
   assert.ok(db.prepare("SELECT 1 FROM pragma_index_list('comments') WHERE name = 'comments_parent'").get(), "no index on parentID");
+  assert.deepEqual({ ...db.prepare("SELECT name, seenAt FROM users").get() }, { name: "Bo", seenAt: null });
 });

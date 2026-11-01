@@ -13,7 +13,7 @@ let failures = 0;
 const expectedConsole = {
   "login": /401/, "login-error": /401/, "autoconnect": /404/, "album-error": /404/, "comment-save-fails": /502/, "composer-save-fails": /502/,
   "like-comment-fails": /502/, "reply-post": /502/,
-  "scroll-error-once": /500/, "scroll-race": /ERR_ABORTED/,
+  "scroll-error-once": /500/, "scroll-race": /ERR_ABORTED/, "queue-play-fails": /500/,
 };
 
 // Extra screenshots of popups that a check closes again before its final shot.

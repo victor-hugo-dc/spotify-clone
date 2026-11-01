@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 import Icon from '../icons'
 import { Avatar } from './FriendActivity'
 import { QueueRow } from './QueueView'
-import useQueue from './useQueue'
+import useQueue, { useSkipTo } from './useQueue'
 import { api } from '../../utilities/api'
 import { spotify } from '../../utilities/spotify'
 import formatTime from '../../utilities/time'
@@ -28,6 +28,7 @@ export default function NowPlayingView({ track }: { track: PlayingTrack }) {
     const artistId = track.artists[0]?.id ?? null
     const [artist, setArtist] = useState<Artist | null>(null)
     const next = useQueue(track.uri)?.queue[0]
+    const skipTo = useSkipTo()
     const writeComment = useWriteComment()
 
     // Tagged with the song they're on, so a slow answer about the last song can't show on this one.
@@ -113,7 +114,7 @@ export default function NowPlayingView({ track }: { track: PlayingTrack }) {
                         <h2>Next in queue</h2>
                         <button className='npv-card-link no-outline' onClick={() => setRightPanel('queue')}>Open queue</button>
                     </div>
-                    <QueueRow item={next} />
+                    <QueueRow item={next} onPlay={() => skipTo(1)} />
                 </div>
             }
         </div>

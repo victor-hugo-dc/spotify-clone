@@ -302,16 +302,49 @@
   }
 
   .npv-next .queue-row {
+    width: calc(100% - 16px);
     margin: 8px;
   }
 
-  /* A song in the queue, here and in the Now playing view's Next in queue. */
+  /* A song in the queue, here and in the Now playing view's Next in queue. Those to come are buttons that play them. */
   .queue-row {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
+    width: 100%;
     padding: 8px;
+    border: 0;
     border-radius: 4px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+  }
+
+  button.queue-row {
+    cursor: pointer;
+  }
+
+  /* On the cover, inside the row's padding. Hidden by opacity, so the cover itself never changes. */
+  .queue-row-play {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    opacity: 0;
+  }
+
+  .queue-row:hover > .queue-row-play,
+  .queue-row:focus-visible > .queue-row-play {
+    opacity: 1;
   }
 
   .queue-row > img,

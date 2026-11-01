@@ -33,7 +33,7 @@ export default function TopBar() {
                     <Icon name='Download' width='20' height='20' />
                     <span>Install App</span>
                 </a>
-                <NavLink to='/social' className='top-bar-button no-outline' aria-label="What's New" title="What's New">
+                <NavLink to='/whats-new' className='top-bar-button no-outline' aria-label="What's New" title="What's New">
                     <Icon name='Bell' width='20' height='20' />
                 </NavLink>
                 {wide &&

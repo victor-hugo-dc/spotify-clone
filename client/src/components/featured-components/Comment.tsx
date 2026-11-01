@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useContext, useId, useState } from 'react';
 import CommentSongInfo from './CommentSongInfo';
+import Icon from '../icons';
+import { api } from '../../utilities/api';
+import { MessageContext } from '../../utilities/context';
 import formatTime, { postedAgo } from '../../utilities/time';
 import type { SongComment } from '../../utilities/types';
 
@@ -15,10 +18,28 @@ export function Avatar({name, image}: {name: string, image: string | null}) {
     )
 }
 
+type Like = {likes: number, liked: boolean};
+
 // A row of a Twitter-like timeline: who wrote it, the moment in the song it's about (green) and how long ago they posted
-// it (comments from before Shoutify kept that don't say), then what they wrote and, in the feed, the song.
+// it (comments from before Shoutify kept that don't say), then what they wrote, in the feed the song, and Like with its
+// count.
 export default function Comment({comment, showSong}: {comment: SongComment, showSong: boolean}) {
-    const {authorName, authorImage, timestamp, commentBody, createdAt} = comment;
+    const {id, authorName, authorImage, timestamp, commentBody, createdAt} = comment;
+    const setMessage = useContext(MessageContext);
+    const counts = useId();
+
+    // Your like shows at once, then as the server has it; a failure puts it back. Comments loaded again bring their own.
+    const [mine, setMine] = useState<Like & {of: SongComment}>();
+    const {likes, liked} = mine?.of === comment ? mine : comment;
+    const toggleLike = () => {
+        const set = (like: Like) => setMine({...like, of: comment});
+        set({likes: likes + (liked ? -1 : 1), liked: !liked});
+        api<Like>(`/comments/${id}/like`, {liked: !liked})
+            .then(set, (error) => {
+                set({likes, liked});
+                setMessage(`ERROR: could not like it (${error.message})`);
+            });
+    };
 
     return (
           <article className="comment-row">
@@ -36,6 +57,13 @@ export default function Comment({comment, showSong}: {comment: SongComment, show
               </div>
               <p className="comment-body">{commentBody}</p>
               {showSong && <CommentSongInfo {...comment}/>}
+              {/* Each button is named for what it does, and described by its count. */}
+              <div className="comment-actions">
+                <button className="comment-action comment-like no-outline" aria-label="Like" aria-pressed={liked} aria-describedby={likes ? `${counts}likes` : undefined} onClick={toggleLike}>
+                  <Icon name="Heart" fill={liked}/>
+                  {likes > 0 && <span id={`${counts}likes`}>{likes}</span>}
+                </button>
+              </div>
             </div>
           </article>
     )

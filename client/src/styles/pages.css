@@ -196,6 +196,58 @@
     margin-top: 8px;
   }
 
+  /* The buttons under a comment, Twitter style: muted icons in circles that light up on hover, their counts beside them.
+     The icons line up with the text above; a liked heart is filled in green. */
+  .comment-actions {
+    display: flex;
+    gap: 24px;
+    margin: 2px 0 -8px -8px;
+  }
+
+  .comment-action {
+    display: flex;
+    align-items: center;
+    min-width: 64px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #a7a7a7;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .comment-action svg {
+    box-sizing: content-box;
+    width: 18px;
+    height: 18px;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+  }
+
+  .comment-action:hover {
+    color: #fff;
+  }
+
+  .comment-action:hover svg {
+    background-color: hsla(0, 0%, 100%, 0.1);
+  }
+
+  /* The focus ring goes round the icon's circle, not the button's box. */
+  .comment-action:focus-visible {
+    outline: none;
+  }
+
+  .comment-action:focus-visible svg {
+    outline: 2px solid #fff;
+  }
+
+  .comment-like[aria-pressed="true"] {
+    color: var(--spotify-green);
+  }
+
   /* An annotation. */
   .spotify-tweet-box {
     display: flex;

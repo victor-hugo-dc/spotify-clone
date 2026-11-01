@@ -56,8 +56,19 @@ export type CardItem = Playlist | Album | Artist | Track | LinkCard;
 // Shoutify's own records, as the server returns them.
 type Authored = { id: number; authorID: string; authorName: string; authorImage: string | null; songID: string; timestamp: number };
 
-// createdAt: when it was posted (ms since 1970), null on comments from before Shoutify kept that.
-export type SongComment = Authored & { commentBody: string; songName: string | null; songArtist: string | null; songImage: string | null; createdAt: number | null };
+// createdAt: when it was posted (ms since 1970), null on comments from before Shoutify kept that. parentID: the comment
+// it replies to, null on a top-level one. likes and replies: how many it has; liked: whether you like it.
+export type SongComment = Authored & {
+  commentBody: string;
+  songName: string | null;
+  songArtist: string | null;
+  songImage: string | null;
+  createdAt: number | null;
+  parentID: number | null;
+  likes: number;
+  liked: boolean;
+  replies: number;
+};
 
 export type SongAnnotation = Authored & { annotatedText: string; noteBody: string };
 

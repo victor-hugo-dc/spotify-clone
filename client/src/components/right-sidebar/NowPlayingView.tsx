@@ -83,8 +83,8 @@ export default function NowPlayingView({ track }: { track: PlayingTrack }) {
                             <button className='npv-pill no-outline' onClick={() => writeComment(songId)}>Add a comment</button>
                         </div> :
                         <ul className='npv-comment-list'>
-                            {/* The newest three. */}
-                            {comments.slice(-3).reverse().map((comment) => (
+                            {/* The newest three, replies left out. */}
+                            {comments.filter((comment) => comment.parentID === null).slice(-3).reverse().map((comment) => (
                                 <li key={comment.id}>
                                     <div className='npv-comment-who'>
                                         <Avatar comment={comment} />

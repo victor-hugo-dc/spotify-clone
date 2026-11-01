@@ -134,12 +134,14 @@
   }
 
   .comment-row .avatar,
-  .composer .avatar {
+  .composer .avatar,
+  .reply-composer .avatar {
     flex: none;
   }
 
   .comment-row .avatar img,
-  .composer .avatar img {
+  .composer .avatar img,
+  .reply-composer .avatar img {
     display: block;
     width: 40px;
     height: 40px;
@@ -148,7 +150,8 @@
   }
 
   .comment-row .avatar-initial,
-  .composer .avatar-initial {
+  .composer .avatar-initial,
+  .reply-composer .avatar-initial {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -246,6 +249,17 @@
 
   .comment-like[aria-pressed="true"] {
     color: var(--spotify-green);
+  }
+
+  /* The comment What's New's Reply came for, lit up for a moment. */
+  .comment-row.highlight {
+    animation: comment-highlight 2.5s ease-out;
+  }
+
+  @keyframes comment-highlight {
+    from {
+      background-color: hsla(141, 76%, 48%, 0.16);
+    }
   }
 
   /* An annotation. */
@@ -468,6 +482,7 @@
   .composer-actions {
     display: flex;
     justify-content: flex-end;
+    gap: 8px;
     padding-top: 8px;
   }
 
@@ -490,6 +505,93 @@
   .composer-post:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+
+  /* A thread: the comment, its replies (oldest first) lined up with its text, with 32px pictures, then the reply
+     composer. A line runs down from the comment's picture and curves into each of theirs. */
+  .thread {
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  .thread > * {
+    position: relative;
+  }
+
+  .thread > .comment-row {
+    border-bottom: 0;
+  }
+
+  .comment-row.reply,
+  .reply-composer {
+    padding: 4px 16px 12px 68px;
+  }
+
+  .reply-composer {
+    display: flex;
+    gap: 12px;
+  }
+
+  .comment-row.reply .avatar img,
+  .comment-row.reply .avatar-initial,
+  .reply-composer .avatar img,
+  .reply-composer .avatar-initial {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  /* Down the middle of the comment's picture, from under it on past every reply but the last... */
+  .thread > :not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 35px;
+    width: 2px;
+    background: #333;
+  }
+
+  .thread > :first-child::after {
+    top: 56px;
+  }
+
+  /* ...curving into each reply's picture, and the composer's. */
+  .thread > :not(:first-child)::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 35px;
+    width: 29px;
+    height: 21px;
+    border-bottom: 2px solid #333;
+    border-left: 2px solid #333;
+    border-bottom-left-radius: 12px;
+  }
+
+  .reply-to {
+    color: #a7a7a7;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .reply-to span {
+    color: #fff;
+  }
+
+  .composer-cancel {
+    height: 36px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 500px;
+    background: none;
+    color: #a7a7a7;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .composer-cancel:hover {
+    color: #fff;
   }
 
   .comments-actions {

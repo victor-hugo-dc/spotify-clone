@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
 import PageTitle from "../featured-components/PageTitle";
 import Comment from "../featured-components/Comment";
 import type { SongComment } from "../../utilities/types";
@@ -10,6 +11,7 @@ import "../../styles/pages.css";
 export default function SocialPage() {
     const [feed,setFeed] = useState<SongComment[] | null>(null);
     const [failed, setFailed] = useState(false);
+    const navigate = useNavigate();
 
     // The server sends the newest 100, newest first.
     useCommentsLoader(() => {
@@ -28,8 +30,9 @@ export default function SocialPage() {
         <div className="socialGrid">
           {failed && <p className='empty-state' role='alert'>Couldn't load the feed. Try again in a moment.</p>}
           {!failed && feed?.length === 0 && <p className='empty-state'>No one's commented thus far. Play a song and hit the comment button to start the conversation.</p>}
+          {/* Reply goes to the song's page, where the thread is, with that comment's reply composer open. */}
           {feed?.map(comm =>
-            <Comment key={comm.id} comment={comm} showSong={true}/>)}
+            <Comment key={comm.id} comment={comm} showSong={true} onReply={() => navigate(`/comments/${comm.songID}`, {state: {reply: comm.id}})}/>)}
         </div>
       </div>
     );

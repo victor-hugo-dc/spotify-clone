@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import type { CookieOptions } from "express";
 import commentRoute from "./routes/comments.ts";
 import noteRoute from "./routes/annotations.ts";
+import { activityRoute, friendRoute, remember } from "./routes/friends.ts";
 import { authorCookie, authorMaxAge, requireUser, type Author } from "./user.ts";
 
 const {
@@ -30,9 +31,11 @@ const authorKey = cookieName("author");
 const cookieOption: CookieOptions = { httpOnly: true, sameSite: "lax", secure, path: "/" };
 const year = 365 * 24 * 60 * 60 * 1000;
 
-// Only logged-in friends can read or write comments and annotations.
+// Only logged-in friends can read or write comments, annotations and what they play.
 app.use("/api/comments", requireUser(authorKey), commentRoute);
 app.use("/api/annotations", requireUser(authorKey), noteRoute);
+app.use("/api/friends", requireUser(authorKey), friendRoute);
+app.use("/api/activity", requireUser(authorKey), activityRoute);
 
 const scope =
   "user-read-private user-read-playback-state streaming user-modify-playback-state playlist-modify-public user-library-modify user-top-read user-read-currently-playing playlist-read-private user-follow-read user-read-recently-played playlist-modify-private user-follow-modify user-library-read user-read-email";
@@ -109,6 +112,7 @@ app.get("/api/callback", async (req, res) => {
       res.redirect(`/#${new URLSearchParams({ error: "not_allowlisted" })}`);
       return;
     }
+    await remember(author, access_token);
     res.cookie(refreshKey, refresh_token, { ...cookieOption, maxAge: year });
     res.cookie(authorKey, authorCookie(author), { ...cookieOption, maxAge: authorMaxAge });
     clearOldRefreshCookie(res);
@@ -137,6 +141,7 @@ app.get("/api/token", async (req, res) => {
       res.sendStatus(401);
       return;
     }
+    await remember(author, access_token);
     res.cookie(authorKey, authorCookie(author), { ...cookieOption, maxAge: authorMaxAge });
     res.send({ access_token, expires_in });
   } catch (error) {

@@ -36,6 +36,31 @@ db.exec(`
     timestamp INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS annotations_song ON annotations (songID);
+  -- Everyone who has logged in, as Spotify last named them; who of them follows whom on Spotify; and what each last
+  -- played (at: ms since 1970; playing: 1 or 0).
+  CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    image TEXT
+  );
+  CREATE TABLE IF NOT EXISTS follows (
+    follower TEXT NOT NULL,
+    followee TEXT NOT NULL,
+    PRIMARY KEY (follower, followee)
+  );
+  CREATE TABLE IF NOT EXISTS activity (
+    userID TEXT PRIMARY KEY,
+    songID TEXT NOT NULL,
+    songName TEXT NOT NULL,
+    songArtist TEXT NOT NULL,
+    songImage TEXT,
+    albumID TEXT,
+    albumName TEXT,
+    playing INTEGER NOT NULL,
+    duration INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    at INTEGER NOT NULL
+  );
 `);
 
 // Comments carry their song's name, artist and cover so the feed needs no Spotify lookups, when they were posted

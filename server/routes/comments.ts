@@ -22,6 +22,11 @@ router.get("/all", (_req, res) => {
   res.send({ comments: find(res.locals.author, "WHERE parentID IS NULL ORDER BY id DESC LIMIT 100") });
 });
 
+// The Social feed: the same, by the people the signed-in user follows on Spotify, whatever their likes.
+router.get("/feed", (_req, res) => {
+  res.send({ comments: find(res.locals.author, "WHERE parentID IS NULL AND authorID IN (SELECT followee FROM follows WHERE follower = $user) ORDER BY id DESC LIMIT 100") });
+});
+
 // A song's comments and their replies.
 router.get("/song/:song", (req, res) => {
   res.send({ comments: find(res.locals.author, "WHERE songID = ? ORDER BY id", req.params.song) });

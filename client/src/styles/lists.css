@@ -1,17 +1,9 @@
   /* Playlist, album, Liked Songs, artist and profile pages: banner, action bar, menus, Edit details, track table. */
 
   /* Spacing and the cover grow with the page's width as Spotify's do: from 16px and 128px at 600px wide to 24px and
-     232px at 1024px. The banner measures itself too, for the song comments page, which uses it without .lists. */
+     232px at 1024px. */
   .lists {
     container: lists / inline-size;
-  }
-
-  .banner {
-    container-type: inline-size;
-  }
-
-  .lists,
-  .banner {
     --content-spacing: clamp(16px, 16px + (100cqw - 600px) / 53, 24px);
     --cover-size: clamp(128px, 128px + (100cqw - 600px) * 0.2453, 232px);
   }

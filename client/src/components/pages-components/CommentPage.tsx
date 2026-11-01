@@ -1,51 +1,33 @@
 import React, { useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type Ref } from 'react';
 import { flushSync } from 'react-dom';
 import { useLocation, useParams } from 'react-router';
-import PageBanner, { type BannerInfo } from '../featured-components/PageBanner';
+import SongHero from '../featured-components/SongHero';
 import Comment, { Avatar } from '../featured-components/Comment';
-import Icon from '../icons';
 import { spotify } from '../../utilities/spotify';
 import { api } from '../../utilities/api';
 import formatTime, { parseTime, positionAt } from '../../utilities/time';
 import useCommentsLoader, { commentsChanged } from '../../utilities/hooks/useCommentsLoader';
-import usePlayback from '../../utilities/hooks/usePlayback';
 import { MessageContext, SeekContext, UserContext, usePlaybackClock } from '../../utilities/context';
 import { commentSong, type CommentSong, type SongComment, type Track } from '../../utilities/types';
 import '../../styles/pages.css';
 
 export default function CommentPage() {
     const { id = '' } = useParams();
-    const {isPlaying, toggle} = usePlayback();
     const [feed,setFeed] = useState<SongComment[] | null>(null);
     const [failed, setFailed] = useState(false);
-    const [song, setSong] = useState<CommentSong | null>(null);
-    const uri = `spotify:track:${id}`;
-    const playing = isPlaying(uri);
+    const [track, setTrack] = useState<Track | null>(null);
+    const song = track && commentSong(track);
     const { key, state } = useLocation();
     // The reply composer goes under the thread of the comment (or reply) it answers, one at a time.
     const [replyTo, setReplyTo] = useState<SongComment | null>(null);
     const replyBox = useRef<HTMLTextAreaElement>(null);
 
-    const [bannerInfo, setbannerInfo] = useState<BannerInfo>({
-        name: '',
-        user: [],
-        primary_color: '#262626',
-    })
-
     useEffect(() => {
-        setSong(null);
+        setTrack(null);
         setReplyTo(null);
         const controller = new AbortController();
         spotify<Track>(`/tracks/${id}`, { signal: controller.signal })
-            .then((track) => {
-                setSong(commentSong(track));
-                setbannerInfo({
-                    name: track.name,
-                    user: track.artists,
-                    images: track.album?.images,
-                    release_date: track.album?.release_date,
-                })
-            })
+            .then(setTrack)
             .catch((error) => console.log(error))
         return () => controller.abort()
     }, [id])
@@ -74,39 +56,43 @@ export default function CommentPage() {
         document.querySelector<HTMLElement>(`#comment-${to.id} .comment-reply`)?.focus();
     };
 
-    // What's New's Reply buttons come here (router state `reply`): that comment is scrolled to and lit up, with its reply
-    // composer open. Once per visit, when the comments are in.
+    // A comment scrolled to and lit up a moment, until its highlight has played.
+    const [lit, setLit] = useState<number | null>(null);
+    const show = (comment: SongComment) => {
+        setLit(comment.id);
+        document.getElementById(`comment-${comment.id}`)?.scrollIntoView({block: 'center'});
+    };
+
+    // What's New's Reply buttons come here (router state `reply`): that comment is shown, with its reply composer open.
+    // Once per visit, when the comments are in.
     const arrived = useRef<string>(null);
     useEffect(() => {
         const comment = feed?.find((comm) => comm.id === state?.reply);
         if (!comment || arrived.current === key) return;
         arrived.current = key;
         setReplyTo(comment);
-        document.getElementById(`comment-${comment.id}`)?.scrollIntoView({block: 'center'});
+        show(comment);
     // eslint-disable-next-line
     }, [feed, key]);
 
     return (
         <div className='listPage'>
-            <PageBanner pageTitle='song' bannerInfo={bannerInfo}/>
+            {/* A comment's marker in the waveform shows it, and focus goes to its Reply button. */}
+            {track?.id === id &&
+                <SongHero track={track} comments={feed ?? []} onShow={(comment) => {
+                    show(comment);
+                    document.querySelector<HTMLElement>(`#comment-${comment.id} .comment-reply`)?.focus({preventScroll: true});
+                }}/>}
             <div className="playListContent comments-content">
-                {song &&
-                    <div className='comments-actions'>
-                        <button className='comments-play no-outline' title={playing ? 'Pause' : 'Play'} aria-label={`${playing ? 'Pause' : 'Play'} ${song.name}`}
-                                onClick={() => toggle(uri, {uris: [uri]})}>
-                            <Icon name={playing ? 'Pause' : 'Play'} width='24' height='24'/>
-                        </button>
-                    </div>
-                }
                 {/* Like a Twitter timeline: the composer, then the comments, newest first, each with its replies (oldest first)
                     and the reply composer under it. */}
-                <section className='timeline' aria-label='Comments'>
+                <section className='timeline' aria-label='Comments' onAnimationEnd={(event) => event.animationName === 'comment-highlight' && setLit(null)}>
                     {song?.id === id && <Composer song={song}/>}
                     {failed && <p className='empty-state' role='alert'>Couldn't load the comments. Try again in a moment.</p>}
                     {!failed && feed?.length === 0 && <p className='empty-state'>No one's commented thus far. Be the first!</p>}
                     {feed?.filter((comm) => comm.parentID === null).reverse().map(comm =>
                         <div key={comm.id} className='thread'>
-                            <Comment comment={comm} showSong={false} onReply={() => reply(comm)} highlight={comm.id === state?.reply}/>
+                            <Comment comment={comm} showSong={false} onReply={() => reply(comm)} highlight={comm.id === lit}/>
                             {feed.filter((answer) => answer.parentID === comm.id).map(answer =>
                                 <Comment key={answer.id} comment={answer} showSong={false} onReply={() => reply(answer)}/>)}
                             {replyTo && (replyTo.parentID ?? replyTo.id) === comm.id &&

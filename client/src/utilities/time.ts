@@ -6,10 +6,32 @@ export default function formatTime(ms: number) {
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
+// A time someone typed, "1:05" or past an hour "1:02:05", in ms; null if it's anything else or after `duration`.
+export function parseTime(text: string, duration: number) {
+    const match = /^(?:(\d+):([0-5]\d)|(\d+)):([0-5]\d)$/.exec(text.trim())
+    if (!match) return null
+    const [, h, mm, m, ss] = match
+    const ms = ((Number(h ?? 0) * 60 + Number(mm ?? m)) * 60 + Number(ss)) * 1000
+    return ms <= duration ? ms : null
+}
+
 // Where playback is at `now`: the position measured at `at`, plus the time since while playing, never past the end.
 // Counting time rather than timer ticks keeps it right in background tabs, whose timers browsers slow down.
 export const positionAt = ({play, progress, at, total_time}: Omit<PlaybackClock, 'uri'>, now: number) =>
     Math.min(progress + (play ? Math.max(0, now - at) : 0), total_time)
+
+// When a comment was posted, as Twitter says it: "now", "45s", "12m", "3h", "5d", then "Oct 31", or "Oct 31, 2025"
+// before this year.
+export function postedAgo(ms: number, now = Date.now()) {
+    let n = Math.floor((now - ms) / 1000)
+    if (n < 5) return 'now'
+    for (const [size, unit] of [[60, 's'], [60, 'm'], [24, 'h'], [7, 'd']] as const) {
+        if (n < size) return `${n}${unit}`
+        n = Math.floor(n / size)
+    }
+    const date = new Date(ms)
+    return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: date.getFullYear() === new Date(now).getFullYear() ? undefined : 'numeric'})
+}
 
 // Spotify's "Date added": "14 hours ago" up to a month back, then "Sep 3, 2025".
 export function addedAgo(iso: string, now = Date.now()) {

@@ -87,7 +87,7 @@ export default function NowPlayingView({ track }: { track: PlayingTrack }) {
                             {comments.filter((comment) => comment.parentID === null).slice(-3).reverse().map((comment) => (
                                 <li key={comment.id}>
                                     <div className='npv-comment-who'>
-                                        <Avatar comment={comment} />
+                                        <Avatar name={comment.authorName} image={comment.authorImage} />
                                         <span className='npv-comment-author ellipsis-one-line'>{comment.authorName}</span>
                                         <span className='npv-comment-at'>at {formatTime(comment.timestamp)}</span>
                                     </div>

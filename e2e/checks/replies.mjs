@@ -16,7 +16,7 @@ export async function as(t, name, path, body) {
   const cookie = `author=${data}.${createHmac("sha256", "y").update(data).digest("base64url")}`;
   const response = await fetch(`${t.base}/api${path}`, { method: "POST", headers: { "Content-Type": "application/json", cookie }, body: JSON.stringify(body) });
   if (!response.ok) throw new Error(`${name}'s POST ${path} answered ${response.status}`);
-  return response.json();
+  return response.status === 204 ? null : response.json();
 }
 const comment = async (t, name, commentBody, more = {}) => (await as(t, name, "/comments/add", { songID: song.id, commentBody, timestamp: 61000, ...more })).comment;
 
@@ -38,6 +38,8 @@ async function settles(p, read, want, what) {
 }
 // A Like button's state: pressed or not, and the count beside the heart.
 const likeState = async (button) => `${await button.getAttribute("aria-pressed")} ${await button.innerText()}`.trim();
+// For friends.mjs's copy of reply-from-whats-new.
+export { comment, far, main, row, thread, replyButton, likeButton, box, composer, settles, likeState };
 
 // The thread the checks build on Thread Track: Ana's comment at 1:01, which Bo likes, and Bo's newer one.
 const ana = "the bassline at 1:01 is unreal", bo = "this chorus though";

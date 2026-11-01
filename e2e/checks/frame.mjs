@@ -28,7 +28,7 @@ async function expectFrame(p, rightPanel) {
 }
 
 // Navigations re-render a moment after the URL changes, so wait (up to 3s) for what should follow.
-const until = (p, state, failure) => p.waitForFunction(state, null, { timeout: 3000 }).catch(() => { throw new Error(failure); });
+export const until = (p, state, failure) => p.waitForFunction(state, null, { timeout: 3000 }).catch(() => { throw new Error(failure); });
 
 export const checks = [
   ["frame-top-bar", "/", async (p) => {

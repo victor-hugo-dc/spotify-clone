@@ -5,20 +5,20 @@ export const fixtures = {};
 // The "• • •" keyboard check Tabs on to the first link named "Artist One", meaning the one in the track list; the first
 // on the page is now the followed artist in Your Library, so the copy below looks for it in the page.
 
-const panel = (p) => p.getByRole("complementary", { name: "Your Library" });
-const row = (p, name) => panel(p).getByRole("link", { name, exact: true });
+export const panel = (p) => p.getByRole("complementary", { name: "Your Library" });
+export const row = (p, name) => panel(p).getByRole("link", { name, exact: true });
 const rowTitles = (p) => p.evaluate(() => [...document.querySelectorAll(".library .library-row-name")].map((el) => el.textContent));
 // Lists re-render after loads and clicks: wait (up to 3s) for the rows to read `wanted`, top to bottom.
-const expectRows = (p, wanted, failure) => p.waitForFunction((wanted) =>
+export const expectRows = (p, wanted, failure) => p.waitForFunction((wanted) =>
   JSON.stringify([...document.querySelectorAll(".library .library-row-name")].map((el) => el.textContent)) === JSON.stringify(wanted), wanted, { timeout: 3000 })
   .catch(async () => { throw new Error(`${failure}: ${JSON.stringify(await rowTitles(p))}`); });
 // Whether the locator's element has (or soon gets) keyboard focus.
-const focused = async (locator) =>
+export const focused = async (locator) =>
   locator.page().waitForFunction((el) => el === document.activeElement, await locator.elementHandle({ timeout: 2000 }), { timeout: 2000 }).then(() => true, () => false);
 
 // Recents: the fake account last played Mix, Album Two, Artist One (and a song on its own), then Road Trip; the rest
 // follow in Spotify's order: playlists, then saved albums, then followed artists.
-const recents = ["Liked Songs", "Mix", "Album Two", "Artist One", "Road Trip", "Late Night", "Someone Else's Mix", "Workout", "Chill",
+export const recents = ["Liked Songs", "Mix", "Album Two", "Artist One", "Road Trip", "Late Night", "Someone Else's Mix", "Workout", "Chill",
   "Throwbacks", "Focus", "Single Three", "Album One", "Artist Two"];
 
 export const checks = [

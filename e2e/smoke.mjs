@@ -12,6 +12,7 @@ let failures = 0;
 // caught). Matched against the console text.
 const expectedConsole = {
   "login": /401/, "login-error": /401/, "autoconnect": /404/, "album-error": /404/, "comment-save-fails": /502/, "composer-save-fails": /502/,
+  "like-comment-fails": /502/, "reply-post": /502/,
   "scroll-error-once": /500/, "scroll-race": /ERR_ABORTED/,
 };
 

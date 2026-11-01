@@ -25,7 +25,7 @@ const green = "rgb(30, 215, 96)";
 const mss = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
 
 // Waits (up to 3 s) for the locator's element to have keyboard focus.
-async function hasFocus(locator, what) {
+export async function hasFocus(locator, what) {
   const el = await locator.elementHandle({ timeout: 3000 });
   await locator.page().waitForFunction((el) => el === document.activeElement, el, { timeout: 3000 })
     .catch(() => { throw new Error(`${what} doesn't have focus`); });

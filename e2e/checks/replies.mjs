@@ -11,7 +11,7 @@ const playing = listed[3];
 export const fixtures = { [`/v1/tracks/${song.id}`]: song, [`/v1/tracks/${far.id}`]: far };
 
 // POSTs to Shoutify's API as `name`.
-async function as(t, name, path, body) {
+export async function as(t, name, path, body) {
   const data = Buffer.from(JSON.stringify({ id: name.toLowerCase(), name, image: null, issued: Date.now() })).toString("base64url");
   const cookie = `author=${data}.${createHmac("sha256", "y").update(data).digest("base64url")}`;
   const response = await fetch(`${t.base}/api${path}`, { method: "POST", headers: { "Content-Type": "application/json", cookie }, body: JSON.stringify(body) });

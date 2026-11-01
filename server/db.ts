@@ -19,6 +19,12 @@ db.exec(`
     timestamp INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS comments_song ON comments (songID);
+  CREATE TABLE IF NOT EXISTS comment_likes (
+    commentID INTEGER NOT NULL,
+    userID TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    PRIMARY KEY (commentID, userID)
+  );
   CREATE TABLE IF NOT EXISTS annotations (
     id INTEGER PRIMARY KEY,
     authorID TEXT NOT NULL,
@@ -32,14 +38,16 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS annotations_song ON annotations (songID);
 `);
 
-// Comments carry their song's name, artist and cover so the feed needs no Spotify lookups, and when they were posted
-// (ms since 1970; NULL on comments saved before that was kept). Older databases (and new ones, from the table above)
-// get those columns here.
-for (const [column, type] of Object.entries({ songName: "TEXT", songArtist: "TEXT", songImage: "TEXT", createdAt: "INTEGER" })) {
+// Comments carry their song's name, artist and cover so the feed needs no Spotify lookups, when they were posted
+// (ms since 1970; NULL on comments saved before that was kept), and the comment they reply to (parentID; NULL on
+// top-level ones). Older databases (and new ones, from the table above) get those columns here.
+for (const [column, type] of Object.entries({ songName: "TEXT", songArtist: "TEXT", songImage: "TEXT", createdAt: "INTEGER", parentID: "INTEGER" })) {
   if (!db.prepare("SELECT 1 FROM pragma_table_info('comments') WHERE name = ?").get(column)) {
     db.exec(`ALTER TABLE comments ADD COLUMN ${column} ${type}`);
   }
 }
+// After the loop, which adds the column to older databases.
+db.exec("CREATE INDEX IF NOT EXISTS comments_parent ON comments (parentID)");
 
 export const isText = (value: unknown, max: number): value is string =>
   typeof value === "string" && value.trim() !== "" && value.length <= max;

@@ -1,13 +1,13 @@
 import React, { useId } from 'react'
 import { NavLink } from 'react-router'
-import Icon from '../icons'
+import Icon, { type IconName } from '../icons'
 
-type Props = {to: string, name: string, subtitle: string, image?: string, round?: boolean, pinned?: boolean, loaded: boolean, playing: boolean}
+type Props = {to: string, name: string, subtitle: string, image?: string, icon?: IconName, round?: boolean, pinned?: boolean, loaded: boolean, playing: boolean}
 
 // A row of Your Library: a link to the item's page, named by its title and described by the line under it. The page
 // you're on gets a lighter background (NavLink's `active`); what the player has loaded gets a green title, and a
-// speaker while it plays.
-export default function LibraryRow({to, name, subtitle, image, round, pinned, loaded, playing}: Props) {
+// speaker while it plays. Shoutify's own pages (Social) get a tile with their `icon` instead of a cover.
+export default function LibraryRow({to, name, subtitle, image, icon, round, pinned, loaded, playing}: Props) {
     const id = useId()
     const cover = `library-cover${round ? ' round' : ''}`
     return (
@@ -16,7 +16,7 @@ export default function LibraryRow({to, name, subtitle, image, round, pinned, lo
                      aria-describedby={playing ? `${id}sub ${id}playing` : `${id}sub`}>
                 {image ?
                     <img className={cover} src={image} alt='' loading='lazy'/> :
-                    <span className={cover}><Icon name='Music'/></span>
+                    <span className={`${cover}${icon ? ' tile' : ''}`}><Icon name={icon ?? 'Music'}/></span>
                 }
                 <span className='library-row-text'>
                     <span id={`${id}name`} className='library-row-name'>{name}</span>

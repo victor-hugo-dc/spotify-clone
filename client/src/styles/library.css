@@ -272,6 +272,12 @@
     height: 24px;
   }
 
+  /* Social's tile: people on a green gradient, as Liked Songs has its heart on purple. */
+  .library-cover.tile {
+    background: linear-gradient(135deg, #1a8c47, #1ed760 60%, #7cf0a5);
+    color: #fff;
+  }
+
   .library-row-text {
     flex: 1;
     min-width: 0;

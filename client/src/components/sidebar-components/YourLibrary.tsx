@@ -19,8 +19,8 @@ const chips: {kind: Kind, label: string, list: 'playlists' | 'artists' | 'albums
 ]
 const subtitle = (item: Item) => item.kind === 'artist' ? 'Artist' : `${item.kind === 'album' ? 'Album' : 'Playlist'} • ${item.by}`
 
-// The left panel, Spotify's "Your Library": your playlists, albums and artists, Liked Songs pinned first, with filters,
-// a search and a sort.
+// The left panel, Spotify's "Your Library": your playlists, albums and artists, Liked Songs and Social pinned first,
+// with filters, a search and a sort.
 export default function YourLibrary() {
     const library = useContext(LibraryContext)
     const {playlists, albums, artists, recentlyPlayed, likedTotal, refresh} = library
@@ -51,10 +51,12 @@ export default function YourLibrary() {
     const search = query?.trim() ?? ''
     const shown = sorted.filter((item) => (!chip || item.kind === chip) && matches(item, search))
     const liked = (!chip || chip === 'playlist') && matches({name: 'Liked Songs', by: ''}, search)
+    // Your friends' comments aren't a playlist, album or artist: whatever the chip, only a search hides them.
+    const social = matches({name: 'Social', by: ''}, search)
     const lists = chips.filter((c) => !chip || c.kind === chip)
     const failed = lists.filter((c) => library.failed.includes(c.list)).map((c) => c.list)
     const note = failed.length ? `Couldn't load your ${failed.join(' and ')}.` :
-        shown.length || (search && liked) ? null :
+        shown.length || (search && (liked || social)) ? null :
         search ? `Nothing in Your Library matches “${search}”.` :
         lists.every((c) => library[c.list] !== first[c.list]) ? (chip ? lists[0]?.empty : 'Playlists, albums and artists you save show up here.') :
         null
@@ -122,6 +124,7 @@ export default function YourLibrary() {
                                 subtitle={likedTotal === null ? 'Playlist' : `Playlist • ${likedTotal.toLocaleString('en-US')} ${likedTotal === 1 ? 'song' : 'songs'}`}
                                 loaded={inPlayer(collection)} playing={playing && inPlayer(collection)}/>
                 }
+                {social && <LibraryRow to='/social' name='Social' subtitle="Your friends' comments" icon='Friends' pinned loaded={false} playing={false}/>}
                 {shown.map((item) => (
                     <LibraryRow key={item.uri} to={`/${item.kind}/${item.id}`} name={item.name} subtitle={subtitle(item)} image={item.image}
                                 round={item.kind === 'artist'} loaded={inPlayer(item.uri)} playing={playing && inPlayer(item.uri)}/>

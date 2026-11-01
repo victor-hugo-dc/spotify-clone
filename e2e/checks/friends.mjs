@@ -1,7 +1,7 @@
 // Friends: the people Victor follows on Spotify who use this Shoutify. mock-spotify.mjs logs Ana and Bo in with their own
 // refresh cookies and says Victor follows Ana, not Bo; Victor's next token refresh (when his page loads again) asks.
-// Friend Activity in the right panel lists them and what they play; Social, pinned in Your Library, has their comments;
-// the bell's What's New, now at /whats-new, keeps everyone's.
+// Friend Activity in the right panel lists them and what they play; Social, pinned in Your Library, has their comments.
+// The bell's What's New, at /whats-new, is notifications.mjs's.
 import { img, recentlyPlayed, track } from "../data.mjs";
 import { as, comment, far, likeButton, likeState, main, replyButton, row as commentRow, settles, thread, box as replyBox, composer } from "./replies.mjs";
 import { hasFocus } from "./comments.mjs";
@@ -22,7 +22,7 @@ export const replaces = [
 const panel = (p, name) => p.getByRole("complementary", { name });
 const restorePanel = (p) => p.evaluate(() => localStorage.removeItem("shoutify:right-panel"));
 // Logs `name` in, as their browser would, so the server knows them.
-async function login(t, name) {
+export async function login(t, name) {
   const response = await fetch(`${t.base}/api/token`, { headers: { cookie: `refresh_key=${name}-refresh` } });
   if (!response.ok) throw new Error(`${name}'s login answered ${response.status}`);
 }

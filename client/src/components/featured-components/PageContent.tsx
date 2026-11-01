@@ -12,6 +12,7 @@ import ArtistPage from "../pages-components/ArtistPage";
 import CollectionPage from "../pages-components/CollectionPage";
 import LikePage from "../pages-components/LikePage";
 import SocialPage from "../pages-components/SocialPage";
+import WhatsNewPage from "../pages-components/WhatsNewPage";
 
 import AnnotationsPage from '../pages-components/AnnotationsPage'
 import CommentPage from "../pages-components/CommentPage";
@@ -33,9 +34,8 @@ export default function PageContent({ message, status }: PageContentProps) {
         <Route path="/album/:id" element={<AlbumPage />} />
         <Route path="/user/:id" element={<UserPage />} />
         <Route path="/artist/:id" element={<ArtistPage />} />
-        {/* Keyed, so going from one feed to the other loads it afresh. */}
-        <Route path="/social" element={<div className="social-page-content" key="social"><SocialPage kind="social" /></div>} />
-        <Route path="/whats-new" element={<div className="social-page-content" key="whats-new"><SocialPage kind="whats-new" /></div>} />
+        <Route path="/social" element={<div className="social-page-content"><SocialPage /></div>} />
+        <Route path="/whats-new" element={<WhatsNewPage />} />
         <Route path="/collection/*" element={<CollectionPage />} />
         <Route path="/tracks" element={<LikePage />} />
         <Route path="/annotations" element={<AnnotationsPage />} />

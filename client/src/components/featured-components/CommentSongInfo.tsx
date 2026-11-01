@@ -18,8 +18,9 @@ function lookup(id: string) {
 
 type Song = Pick<SongComment, 'songID' | 'songName' | 'songArtist' | 'songImage'>
 
-// The song a comment (or a page) is about, as a row like Spotify's lists, linking to the song's comments.
-export default function CommentSongInfo({songID, songName, songArtist, songImage}: Song) {
+// The song a comment (or a page) is about, as a row like Spotify's lists, linking to the song's comments (with router
+// `state` for that page, if given).
+export default function CommentSongInfo({songID, songName, songArtist, songImage, state}: Song & {state?: object}) {
     const [song, setSong] = useState({name: songName ?? '', artist: songArtist ?? '', image: songImage ?? ''});
 
     useEffect(() => {
@@ -30,7 +31,7 @@ export default function CommentSongInfo({songID, songName, songArtist, songImage
     }, [songID, songName])
 
     return (
-        <Link to={`/comments/${songID}`} className="spotify-track">
+        <Link to={`/comments/${songID}`} state={state} className="spotify-track">
             <div className="player-cover">
                 {song.image && <img src={song.image} alt=''></img>}
             </div>

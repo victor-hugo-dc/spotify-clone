@@ -14,6 +14,7 @@ export type Album = {
   artists: Artist[];
   images: Image[];
   release_date: string;
+  release_date_precision: "year" | "month" | "day";
 };
 
 export type Track = {
@@ -71,6 +72,22 @@ export type SongComment = Authored & {
 };
 
 export type SongAnnotation = Authored & { annotatedText: string; noteBody: string };
+
+// What's New's news from Shoutify (/api/notifications): someone (user*) replied to your comment, liked one, or, someone
+// you follow, commented; `at` is when (ms since 1970). The comment is the reply, the one liked (yours) or the new one.
+export type Notification = {
+  kind: "reply" | "like" | "comment";
+  at: number;
+  userID: string;
+  userName: string;
+  userImage: string | null;
+  commentID: number;
+  commentBody: string;
+  songID: string;
+  songName: string | null;
+  songArtist: string | null;
+  songImage: string | null;
+};
 
 // The song a new comment or annotation is about, where in it (ms), and how long it is (ms).
 export type CommentSong = { id: string; name: string; artist: string; image: string | null; position: number; duration: number };

@@ -63,8 +63,8 @@ export default function CommentPage() {
         document.getElementById(`comment-${comment.id}`)?.scrollIntoView({block: 'center'});
     };
 
-    // What's New's Reply buttons come here (router state `reply`): that comment is shown, with its reply composer open.
-    // Once per visit, when the comments are in.
+    // Social's Reply buttons and What's New's replies come here (router state `reply`): that comment (or reply) is shown,
+    // with its reply composer open. Once per visit, when the comments are in.
     const arrived = useRef<string>(null);
     useEffect(() => {
         const comment = feed?.find((comm) => comm.id === state?.reply);
@@ -94,7 +94,7 @@ export default function CommentPage() {
                         <div key={comm.id} className='thread'>
                             <Comment comment={comm} showSong={false} onReply={() => reply(comm)} highlight={comm.id === lit}/>
                             {feed.filter((answer) => answer.parentID === comm.id).map(answer =>
-                                <Comment key={answer.id} comment={answer} showSong={false} onReply={() => reply(answer)}/>)}
+                                <Comment key={answer.id} comment={answer} showSong={false} onReply={() => reply(answer)} highlight={answer.id === lit}/>)}
                             {replyTo && (replyTo.parentID ?? replyTo.id) === comm.id &&
                                 <ReplyComposer key={replyTo.id} to={replyTo} ref={replyBox} close={() => closeReply(replyTo)}/>}
                         </div>)}
